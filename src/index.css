@@ -1,0 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background-color: #FBF4E8;
+  color: #2D1F14;
+  -webkit-font-smoothing: antialiased;
+}
