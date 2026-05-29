@@ -1,10 +1,11 @@
-import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import { getDraft } from '../utils/storage'
 
 export default function Paywall() {
-  const navigate = useNavigate()
   const draft = getDraft()
   const { fromName, toName, startDate, endDate, regularCount } = draft.phase1 || {}
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   const start = startDate ? new Date(startDate) : null
   const end = endDate ? new Date(endDate) : null
@@ -13,7 +14,30 @@ export default function Paywall() {
       ? Math.round((end - start) / (1000 * 60 * 60 * 24))
       : null
 
-  const handlePay = () => navigate('/ai-interview')
+  const handlePay = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fromName: draft.phase1?.fromName || 'Someone',
+          toName: draft.phase1?.toName || 'Someone special',
+        }),
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        setError('Payment setup failed. Please try again.')
+        setLoading(false)
+      }
+    } catch {
+      setError('Something went wrong. Please try again.')
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 py-12 max-w-lg mx-auto">
@@ -86,11 +110,16 @@ export default function Paywall() {
         ))}
       </div>
 
+      {error && (
+        <p className="text-rose text-sm text-center mb-3">{error}</p>
+      )}
       <button
+        type="button"
         onClick={handlePay}
-        className="w-full bg-rose text-white py-4 rounded-2xl text-base font-medium active:scale-95 transition-transform mb-3"
+        disabled={loading}
+        className="w-full bg-rose text-white py-4 rounded-2xl text-base font-medium active:scale-95 transition-transform disabled:opacity-60 mb-3"
       >
-        Get started — $39
+        {loading ? 'Redirecting to checkout...' : 'Get started — $39'}
       </button>
       <p className="text-xs text-text-muted">
         One-time payment · Yours to keep forever

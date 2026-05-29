@@ -1,9 +1,11 @@
 import { useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { getDraft, saveDraft } from '../utils/storage'
 
 export default function Editor() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const paymentSuccess = searchParams.get('payment') === 'success'
   const draft = getDraft()
   const phase1 = draft.phase1 || {}
   const phase2 = draft.phase2 || {}
@@ -77,6 +79,12 @@ export default function Editor() {
           />
         </div>
       </div>
+
+      {paymentSuccess && (
+        <div className="mx-4 mt-3 bg-green-50 border border-green-200 rounded-2xl px-4 py-3 text-sm text-green-700 text-center">
+          ✅ Payment successful! Now fill in your letters.
+        </div>
+      )}
 
       <div className="flex border-b border-warm-200 bg-warm-50 sticky top-12 z-10">
         <button
