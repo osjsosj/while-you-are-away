@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { saveDraft } from '../utils/storage'
 
@@ -54,6 +54,11 @@ export default function Interview() {
   const [bubbles, setBubbles] = useState([
     { type: 'question', text: STEPS[0].question },
   ])
+  const bottomRef = useRef(null)
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [bubbles])
 
   const handleAnswer = (value) => {
     const current = STEPS[step]
@@ -74,10 +79,7 @@ export default function Interview() {
       else if (value === 'Every two weeks') inferredCount = Math.round(days / 14)
     }
 
-    if (inferredCount !== null) {
-      newAnswers.regularCount = inferredCount
-    }
-
+    if (inferredCount !== null) newAnswers.regularCount = inferredCount
     saveDraft({ phase1: newAnswers })
 
     setBubbles((prev) => [
@@ -87,7 +89,7 @@ export default function Interview() {
         ? [
             {
               type: 'system',
-              text: `📌 Based on your dates, we've set ${inferredCount} letters automatically!`,
+              text: `${inferredCount} letters set automatically based on your dates.`,
             },
           ]
         : []),
@@ -113,51 +115,107 @@ export default function Interview() {
   const progress = Math.round(((step + 1) / (STEPS.length + 1)) * 50)
 
   return (
-    <div className="min-h-screen flex flex-col max-w-lg mx-auto">
-      <div className="sticky top-0 bg-warm-50 px-4 py-3 border-b border-warm-200 z-10">
-        <div className="flex items-center justify-between text-xs text-text-muted mb-2">
-          <span>Basic info</span>
-          <span>
-            {step + 1} / {STEPS.length}
+    <div
+      className="min-h-screen flex flex-col max-w-lg mx-auto"
+      style={{ background: '#FBF4E8' }}
+    >
+      <div
+        className="sticky top-0 z-10 px-5 py-3"
+        style={{
+          background: 'rgba(251, 244, 232, 0.95)',
+          backdropFilter: 'blur(8px)',
+          borderBottom: '1px solid #E8D5B5',
+        }}
+      >
+        <div className="flex items-center justify-between mb-2">
+          <span className="font-display italic text-sm text-text-mid">
+            Step {step + 1} of {STEPS.length}
+          </span>
+          <span className="text-xs text-text-muted font-sans font-light">
+            Basic info
           </span>
         </div>
-        <div className="h-1 bg-warm-200 rounded-full">
+        <div className="h-0.5 rounded-full" style={{ background: '#E8D5B5' }}>
           <div
-            className="h-full bg-rose rounded-full transition-all duration-500"
-            style={{ width: `${progress}%` }}
+            className="h-full rounded-full transition-all duration-500"
+            style={{ width: `${progress}%`, background: '#C8706E' }}
           />
         </div>
       </div>
 
-      <div className="flex-1 px-4 py-6 space-y-4 overflow-y-auto pb-40">
+      <div className="flex-1 px-5 py-6 space-y-4 overflow-y-auto pb-44">
         {bubbles.map((b, i) => (
           <div
             key={i}
-            className={`flex ${b.type === 'answer' ? 'justify-end' : 'justify-start'}`}
+            className={`flex items-end gap-3 ${b.type === 'answer' ? 'justify-end' : 'justify-start'} animate-bubble-in`}
           >
             {b.type === 'question' && (
-              <div className="text-2xl mr-2 mt-1 flex-shrink-0">📮</div>
+              <div
+                className="flex-shrink-0 flex items-center justify-center font-display italic text-white"
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  background: '#C8706E',
+                  fontSize: 13,
+                  boxShadow: '0 2px 8px rgba(200,112,110,0.3)',
+                }}
+              >
+                W
+              </div>
             )}
             {b.type === 'system' && (
-              <div className="text-2xl mr-2 mt-1 flex-shrink-0">✨</div>
+              <div
+                className="flex-shrink-0 flex items-center justify-center text-warm-300"
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  background: '#F5E8D0',
+                  fontSize: 14,
+                }}
+              >
+                ✦
+              </div>
             )}
+
             <div
-              className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap
-              ${
-                b.type === 'answer'
-                  ? 'bg-rose text-white rounded-tr-sm'
+              className="max-w-[78%] px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap font-sans"
+              style={{
+                borderRadius:
+                  b.type === 'answer' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                ...(b.type === 'answer'
+                  ? { background: '#C8706E', color: 'white' }
                   : b.type === 'system'
-                    ? 'bg-warm-100 text-text-mid border border-warm-200 rounded-tl-sm'
-                    : 'bg-white border border-warm-200 text-text-base rounded-tl-sm'
-              }`}
+                    ? {
+                        background: '#F5E8D0',
+                        color: '#6B5040',
+                        border: '1px solid #E8D5B5',
+                        fontStyle: 'italic',
+                        fontSize: 12,
+                      }
+                    : {
+                        background: '#FFFDF9',
+                        color: '#2D1F14',
+                        border: '1px solid #E8D5B5',
+                      }),
+              }}
             >
               {b.text}
             </div>
           </div>
         ))}
+        <div ref={bottomRef} />
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-warm-50 border-t border-warm-200 px-4 py-4 max-w-lg mx-auto">
+      <div
+        className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto px-5 py-4"
+        style={{
+          background: 'rgba(251, 244, 232, 0.98)',
+          backdropFilter: 'blur(8px)',
+          borderTop: '1px solid #E8D5B5',
+        }}
+      >
         {current.type === 'select' && (
           <div className="flex flex-wrap gap-2">
             {current.options.map((opt) => (
@@ -165,7 +223,14 @@ export default function Interview() {
                 key={opt}
                 type="button"
                 onClick={() => handleAnswer(opt)}
-                className="bg-white border border-warm-200 rounded-2xl px-4 py-2 text-sm active:scale-95 transition-transform"
+                className="font-sans text-sm transition-all active:scale-95"
+                style={{
+                  background: '#FFFDF9',
+                  border: '1px solid #E8D5B5',
+                  borderRadius: 20,
+                  padding: '8px 18px',
+                  color: '#2D1F14',
+                }}
               >
                 {opt}
               </button>
@@ -173,7 +238,7 @@ export default function Interview() {
           </div>
         )}
         {(current.type === 'text' || current.type === 'date') && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <input
               type={current.type}
               value={input}
@@ -182,12 +247,29 @@ export default function Interview() {
                 e.key === 'Enter' && input.trim() && handleAnswer(input.trim())
               }
               placeholder={current.placeholder || 'Type your answer...'}
-              className="flex-1 bg-white border border-warm-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-rose-light"
+              autoFocus
+              className="flex-1 font-sans text-sm focus:outline-none"
+              style={{
+                background: '#FFFDF9',
+                border: '1px solid #E8D5B5',
+                borderRadius: 20,
+                padding: '12px 18px',
+                color: '#2D1F14',
+              }}
             />
             <button
               type="button"
               onClick={() => input.trim() && handleAnswer(input.trim())}
-              className="bg-rose text-white px-5 rounded-2xl text-sm active:scale-95 transition-transform"
+              className="flex items-center justify-center transition-all active:scale-95"
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                background: input.trim() ? '#C8706E' : '#E8D5B5',
+                color: 'white',
+                fontSize: 18,
+                transition: 'all 0.2s ease',
+              }}
             >
               →
             </button>

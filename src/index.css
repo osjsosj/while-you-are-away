@@ -1,12 +1,285 @@
-@import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --warm-50: #FDF8EE;
+  --warm-100: #F5E8D0;
+  --warm-200: #E8D5B5;
+  --warm-300: #D4BC95;
+  --rose: #C8706E;
+  --rose-dark: #9E4E4C;
+  --rose-light: #EFC5C4;
+  --rose-pale: #FAF0EF;
+  --text-base: #2D1F14;
+  --text-mid: #6B5040;
+  --text-muted: #9B8070;
+  --ink: #1A1008;
+}
+
 body {
-  font-family: 'Noto Sans KR', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   background-color: #FBF4E8;
-  color: #2D1F14;
+  color: var(--text-base);
   -webkit-font-smoothing: antialiased;
+}
+
+.font-display {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.font-sans {
+  font-family: 'DM Sans', sans-serif;
+}
+
+.paper-texture {
+  position: relative;
+}
+
+.paper-texture::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+.envelope-card {
+  background: #FFFDF9;
+  border: 1px solid var(--warm-200);
+  box-shadow:
+    0 2px 20px rgba(45, 31, 20, 0.06),
+    0 1px 4px rgba(45, 31, 20, 0.04);
+  position: relative;
+}
+
+.envelope-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--warm-200), transparent);
+}
+
+.stamp {
+  border: 2px solid var(--warm-200);
+  box-shadow: inset 0 0 0 2px #FBF4E8;
+  position: relative;
+}
+
+.stamp::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border: 1px dashed var(--warm-200);
+  border-radius: 4px;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes letterOpen {
+  0% {
+    transform: scaleY(0) translateY(-10px);
+    opacity: 0;
+  }
+  100% {
+    transform: scaleY(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.6s ease forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.delay-100 {
+  animation-delay: 0.1s;
+  opacity: 0;
+}
+
+.delay-200 {
+  animation-delay: 0.2s;
+  opacity: 0;
+}
+
+.delay-300 {
+  animation-delay: 0.3s;
+  opacity: 0;
+}
+
+.delay-400 {
+  animation-delay: 0.4s;
+  opacity: 0;
+}
+
+.delay-500 {
+  animation-delay: 0.5s;
+  opacity: 0;
+}
+
+.delay-600 {
+  animation-delay: 0.6s;
+  opacity: 0;
+}
+
+.btn-primary {
+  background: var(--rose);
+  color: white;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.btn-primary:hover {
+  background: var(--rose-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(200, 112, 110, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: none;
+}
+
+.ornament-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--warm-300);
+}
+
+.ornament-divider::before,
+.ornament-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--warm-200);
+}
+
+.feature-pill {
+  background: rgba(255, 253, 249, 0.8);
+  border: 1px solid var(--warm-200);
+  backdrop-filter: blur(4px);
+  transition: all 0.2s ease;
+}
+
+.feature-pill:hover {
+  border-color: var(--rose-light);
+  background: var(--rose-pale);
+}
+
+.wax-seal {
+  width: 48px;
+  height: 48px;
+  background: var(--rose);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  box-shadow:
+    0 2px 8px rgba(200, 112, 110, 0.4),
+    inset 0 1px 2px rgba(255, 255, 255, 0.2);
+  position: relative;
+}
+
+.wax-seal::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1.5px solid var(--rose-light);
+  opacity: 0.6;
+}
+
+.animate-bubble-in {
+  animation: bubble-in 0.3s ease forwards;
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--warm-200);
+  border-radius: 3px;
 }
