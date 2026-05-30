@@ -3,30 +3,64 @@ import { useNavigate } from 'react-router-dom'
 import { getDraft, saveDraft } from '../utils/storage'
 import { generateLetterboxConfig } from '../utils/aiService'
 
+function LoadingScreen() {
+  const [dotStep, setDotStep] = useState(0)
+  const lines = [
+    'Reading everything you shared...',
+    'Choosing colors that feel like you...',
+    'Writing a welcome message...',
+    'Putting it all together...',
+  ]
+  useEffect(() => {
+    const t = setInterval(() => setDotStep(s => (s + 1) % lines.length), 1800)
+    return () => clearInterval(t)
+  }, [])
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center px-8" style={{ background: '#FBF4E8' }}>
+      <div className="mb-8" style={{ animation: 'float 3s ease-in-out infinite' }}>
+        <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+          <circle cx="40" cy="40" r="38" stroke="#E8D5B5" strokeWidth="1.5" />
+          <circle cx="40" cy="40" r="38" stroke="#C8706E" strokeWidth="1.5"
+            strokeDasharray="239" strokeDashoffset="60"
+            style={{ animation: 'spin 3s linear infinite', transformOrigin: '40px 40px' }} />
+          <text x="40" y="46" textAnchor="middle"
+            style={{ fontFamily: 'Playfair Display', fontStyle: 'italic', fontSize: 22, fill: '#C8706E' }}>
+            W
+          </text>
+        </svg>
+      </div>
+      <h2 className="font-display italic text-2xl text-ink mb-3 text-center" style={{ letterSpacing: '-0.02em' }}>
+        Creating something<br />just for you
+      </h2>
+      <p
+        className="font-sans text-sm text-text-muted text-center transition-all duration-500"
+        style={{ fontWeight: 300, minHeight: 20 }}
+        key={dotStep}
+      >
+        {lines[dotStep]}
+      </p>
+      <style>{`@keyframes spin { from { stroke-dashoffset: 239; } to { stroke-dashoffset: 0; } }`}</style>
+    </div>
+  )
+}
+
 export default function AIGenerate() {
   const navigate = useNavigate()
   const draft = getDraft()
-  const [status, setStatus] = useState('loading') // loading | done | error
+  const [status, setStatus] = useState('loading')
   const [config, setConfig] = useState(null)
   const [selectedName, setSelectedName] = useState(0)
   const [editingName, setEditingName] = useState(false)
   const [customName, setCustomName] = useState('')
 
-  useEffect(() => {
-    generate()
-  }, [])
+  useEffect(() => { generate() }, [])
 
   const generate = async () => {
     setStatus('loading')
-    const allData = {
-      ...draft.phase1,
-      ...draft.phase2,
-    }
+    const allData = { ...draft.phase1, ...draft.phase2 }
     const result = await generateLetterboxConfig(allData)
-    if (!result) {
-      setStatus('error')
-      return
-    }
+    if (!result) { setStatus('error'); return }
     setConfig(result)
     setCustomName(result.appNames?.[0] || '')
     setStatus('done')
@@ -36,110 +70,92 @@ export default function AIGenerate() {
     const finalName = editingName
       ? customName
       : config.appNames?.[selectedName] || customName
-    saveDraft({
-      generatedConfig: {
-        ...config,
-        chosenName: finalName,
-      },
-    })
+    saveDraft({ generatedConfig: { ...config, chosenName: finalName } })
     navigate('/editor')
   }
 
-  if (status === 'loading')
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6">
-        <div className="text-4xl animate-pulse">✨</div>
-        <p className="font-serif text-xl text-rose-dark text-center">
-          Creating something just for you...
-        </p>
-        <p className="text-text-muted text-sm text-center">
-          Picking colors, a name, and the perfect moments
-        </p>
-      </div>
-    )
+  if (status === 'loading') return <LoadingScreen />
 
-  if (status === 'error')
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6">
-        <div className="text-4xl">😢</div>
-        <p className="text-text-base text-center">
-          Something went wrong. Let's try again.
-        </p>
-        <button
-          type="button"
-          onClick={generate}
-          className="bg-rose text-white px-8 py-3 rounded-2xl text-sm"
-        >
-          Try again
-        </button>
-      </div>
-    )
+  if (status === 'error') return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-5 px-8" style={{ background: '#FBF4E8' }}>
+      <div className="wax-seal" style={{ width: 48, height: 48, fontSize: 20 }}>!</div>
+      <p className="font-display italic text-xl text-ink text-center">Something went wrong</p>
+      <p className="font-sans text-sm text-text-muted text-center" style={{ fontWeight: 300 }}>
+        Let's try again — your info is still saved.
+      </p>
+      <button type="button" onClick={generate} className="btn-primary px-8 py-3 rounded-2xl text-sm">
+        Try again
+      </button>
+    </div>
+  )
 
-  const {
-    appNames = [],
-    theme = {},
-    welcomeMessage = '',
-    situationLabels = [],
-  } = config
+  const { appNames = [], theme = {}, welcomeMessage = '', situationLabels = [] } = config
+  const primary = theme.primary || '#C8706E'
+  const secondary = theme.secondary || '#FBF4E8'
+  const accent = theme.accent || '#EFC5C4'
+  const chosenNameDisplay = editingName ? customName : (appNames[selectedName] || 'Your Letter Box')
 
   return (
-    <div className="min-h-screen max-w-lg mx-auto px-4 py-8">
-      <div className="text-center mb-8">
-        <div className="text-4xl mb-3">🎨</div>
-        <h1 className="font-serif text-2xl text-rose-dark mb-2">
+    <div className="min-h-screen max-w-lg mx-auto px-5 py-8" style={{ background: '#FBF4E8' }}>
+
+      {/* Header */}
+      <div className="text-center mb-7 animate-fade-up">
+        <p className="font-sans text-xs mb-3 uppercase tracking-widest" style={{ fontSize: 10, color: '#9B8070' }}>
           Here's what we made
-        </h1>
-        <p className="text-text-muted text-sm">
-          Review and adjust anything before we continue
         </p>
+        <h1 className="font-display italic text-3xl text-ink" style={{ letterSpacing: '-0.02em' }}>
+          Your letter box
+        </h1>
       </div>
 
+      {/* Preview card */}
       <div
-        className="rounded-2xl overflow-hidden border border-warm-200 mb-6"
-        style={{ backgroundColor: theme.secondary || '#FBF4E8' }}
+        className="rounded-2xl overflow-hidden mb-6 animate-fade-up delay-100"
+        style={{ boxShadow: '0 4px 24px rgba(45,31,20,0.1)', border: '1px solid rgba(232,213,181,0.5)' }}
       >
-        <div
-          className="p-6"
-          style={{ backgroundColor: theme.primary || '#C8706E' }}
-        >
-          <p className="text-white text-xs opacity-75 mb-1 uppercase tracking-widest">
+        {/* Header band - uses AI-generated primary color */}
+        <div className="px-6 pt-6 pb-5" style={{ background: primary }}>
+          <p className="font-sans text-xs mb-2" style={{ color: 'rgba(255,255,255,0.65)', letterSpacing: '0.08em' }}>
             From {draft.phase1?.fromName} · To {draft.phase1?.toName}
           </p>
-          <p className="text-white font-serif text-xl">
-            {editingName ? (
-              <input
-                value={customName}
-                onChange={(e) => setCustomName(e.target.value)}
-                className="bg-white bg-opacity-20 text-white placeholder-white placeholder-opacity-60 rounded-lg px-2 py-1 text-xl font-serif w-full focus:outline-none"
-              />
-            ) : (
-              appNames[selectedName] || 'Your Letter Box'
-            )}
-          </p>
-          <p className="text-white text-opacity-80 text-sm mt-1">
+          {editingName ? (
+            <input
+              value={customName}
+              onChange={(e) => setCustomName(e.target.value)}
+              className="font-display italic text-xl text-white w-full focus:outline-none"
+              style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 8, padding: '4px 8px', border: 'none' }}
+            />
+          ) : (
+            <h2 className="font-display italic text-2xl text-white mb-1" style={{ letterSpacing: '-0.01em' }}>
+              {chosenNameDisplay}
+            </h2>
+          )}
+          <p className="font-sans text-sm" style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 300 }}>
             {welcomeMessage}
           </p>
         </div>
-        <div
-          className="p-4"
-          style={{ backgroundColor: theme.secondary || '#FBF4E8' }}
-        >
+
+        {/* Situation tags - uses AI secondary color */}
+        <div className="px-5 py-4" style={{ background: secondary }}>
           <div className="flex gap-2 flex-wrap">
             {situationLabels.slice(0, 3).map((s, i) => (
               <span
                 key={i}
-                className="text-xs px-3 py-1.5 rounded-full border"
+                className="font-sans text-xs px-3 py-1.5 rounded-full"
                 style={{
-                  borderColor: theme.primary,
-                  color: theme.primary,
-                  backgroundColor: 'white',
+                  border: `1px solid ${accent}`,
+                  color: primary,
+                  background: 'rgba(255,255,255,0.7)',
                 }}
               >
                 {s.emoji} {s.label}
               </span>
             ))}
             {situationLabels.length > 3 && (
-              <span className="text-xs px-3 py-1.5 rounded-full border border-warm-200 text-text-muted">
+              <span
+                className="font-sans text-xs px-3 py-1.5 rounded-full"
+                style={{ border: '1px solid #E8D5B5', color: '#9B8070', background: 'rgba(255,255,255,0.7)' }}
+              >
                 +{situationLabels.length - 3} more
               </span>
             )}
@@ -147,8 +163,9 @@ export default function AIGenerate() {
         </div>
       </div>
 
-      <div className="mb-6">
-        <p className="text-xs text-text-muted font-medium uppercase tracking-wider mb-3">
+      {/* Name selection */}
+      <div className="mb-6 animate-fade-up delay-200">
+        <p className="font-sans text-xs uppercase tracking-widest mb-3" style={{ fontSize: 10, color: '#9B8070' }}>
           Choose a name
         </p>
         <div className="space-y-2">
@@ -156,34 +173,32 @@ export default function AIGenerate() {
             <button
               key={i}
               type="button"
-              onClick={() => {
-                setSelectedName(i)
-                setEditingName(false)
+              onClick={() => { setSelectedName(i); setEditingName(false) }}
+              className="w-full text-left px-4 py-3.5 rounded-2xl font-sans text-sm transition-all"
+              style={{
+                background: !editingName && selectedName === i ? 'rgba(200,112,110,0.06)' : '#FFFDF9',
+                border: `1px solid ${!editingName && selectedName === i ? '#C8706E' : '#E8D5B5'}`,
+                color: !editingName && selectedName === i ? '#C8706E' : '#2D1F14',
+                fontWeight: !editingName && selectedName === i ? 500 : 400,
               }}
-              className={`w-full text-left px-4 py-3 rounded-2xl border text-sm transition-all
-                ${
-                  !editingName && selectedName === i
-                    ? 'border-rose bg-rose bg-opacity-5 text-rose font-medium'
-                    : 'border-warm-200 bg-white text-text-base'
-                }`}
             >
               {name}
+              {!editingName && selectedName === i && (
+                <span className="ml-2 font-sans text-xs" style={{ color: '#C8706E' }}>✓</span>
+              )}
             </button>
           ))}
           <button
             type="button"
-            onClick={() => {
-              setEditingName(true)
-              setCustomName('')
+            onClick={() => { setEditingName(true); setCustomName('') }}
+            className="w-full text-left px-4 py-3.5 rounded-2xl font-sans text-sm transition-all"
+            style={{
+              background: editingName ? 'rgba(200,112,110,0.06)' : '#FFFDF9',
+              border: `1px solid ${editingName ? '#C8706E' : '#E8D5B5'}`,
+              color: editingName ? '#C8706E' : '#9B8070',
             }}
-            className={`w-full text-left px-4 py-3 rounded-2xl border text-sm transition-all
-              ${
-                editingName
-                  ? 'border-rose bg-rose bg-opacity-5 text-rose font-medium'
-                  : 'border-warm-200 bg-white text-text-muted'
-              }`}
           >
-            ✏️ Write my own name
+            Write my own name...
           </button>
         </div>
         {editingName && (
@@ -191,26 +206,36 @@ export default function AIGenerate() {
             value={customName}
             onChange={(e) => setCustomName(e.target.value)}
             placeholder="Type your letter box name..."
-            className="mt-2 w-full border border-warm-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-rose-light"
+            autoFocus
+            className="mt-2 w-full font-sans text-sm focus:outline-none"
+            style={{
+              background: '#FFFDF9', border: '1px solid #C8706E',
+              borderRadius: 16, padding: '12px 16px', color: '#2D1F14',
+            }}
           />
         )}
       </div>
 
+      {/* Situation letters list */}
       {situationLabels.length > 0 && (
-        <div className="mb-6">
-          <p className="text-xs text-text-muted font-medium uppercase tracking-wider mb-3">
-            Situation letters
+        <div className="mb-7 animate-fade-up delay-300">
+          <p className="font-sans text-xs uppercase tracking-widest mb-3" style={{ fontSize: 10, color: '#9B8070' }}>
+            Moment letters ({situationLabels.length})
           </p>
-          <div className="bg-white border border-warm-200 rounded-2xl overflow-hidden">
+          <div
+            className="rounded-2xl overflow-hidden"
+            style={{ background: '#FFFDF9', border: '1px solid #E8D5B5' }}
+          >
             {situationLabels.map((s, i) => (
               <div
                 key={i}
-                className={`flex items-center gap-3 px-4 py-3 ${i < situationLabels.length - 1 ? 'border-b border-warm-200' : ''}`}
+                className="flex items-center gap-3 px-4 py-3.5"
+                style={{ borderBottom: i < situationLabels.length - 1 ? '1px solid #F5E8D0' : 'none' }}
               >
-                <span className="text-xl">{s.emoji}</span>
+                <span className="text-xl flex-shrink-0">{s.emoji}</span>
                 <div>
-                  <p className="text-sm font-medium text-text-base">{s.label}</p>
-                  <p className="text-xs text-text-muted">{s.hint}</p>
+                  <p className="font-sans text-sm font-medium" style={{ color: '#1A1008' }}>{s.label}</p>
+                  {s.hint && <p className="font-sans text-xs" style={{ color: '#9B8070', fontWeight: 300 }}>{s.hint}</p>}
                 </div>
               </div>
             ))}
@@ -218,20 +243,20 @@ export default function AIGenerate() {
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={handleConfirm}
-        className="w-full bg-rose text-white py-4 rounded-2xl text-base font-medium active:scale-95 transition-transform"
-      >
-        Looks great — let's write the letters →
-      </button>
-      <button
-        type="button"
-        onClick={generate}
-        className="w-full mt-2 py-3 text-sm text-text-muted"
-      >
-        Regenerate ↺
-      </button>
+      {/* Actions */}
+      <div className="animate-fade-up delay-400">
+        <button type="button" onClick={handleConfirm} className="btn-primary w-full py-4 rounded-2xl text-sm font-sans mb-2">
+          Looks great — write letters →
+        </button>
+        <button
+          type="button"
+          onClick={generate}
+          className="w-full py-3 font-sans text-sm text-text-muted"
+          style={{ fontWeight: 300 }}
+        >
+          Regenerate ↺
+        </button>
+      </div>
     </div>
   )
 }

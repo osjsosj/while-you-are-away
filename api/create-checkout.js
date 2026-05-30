@@ -8,10 +8,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { toName, fromName } = req.body
+    const { toName, fromName, email } = req.body
+    const origin = req.headers.origin || process.env.SITE_URL || 'http://localhost:5173'
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
+      customer_email: email || undefined,
       line_items: [
         {
           price_data: {
@@ -26,8 +28,13 @@ export default async function handler(req, res) {
         },
       ],
       mode: 'payment',
-      success_url: `${req.headers.origin}/editor?payment=success`,
-      cancel_url: `${req.headers.origin}/paywall?payment=cancelled`,
+      success_url: `${origin}/auth/callback?payment=success`,
+      cancel_url: `${origin}/paywall?payment=cancelled`,
+      metadata: {
+        fromName: fromName || '',
+        toName: toName || '',
+        email: email || '',
+      },
     })
 
     res.status(200).json({ url: session.url })

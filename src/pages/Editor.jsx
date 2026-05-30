@@ -36,9 +36,7 @@ export default function Editor() {
 
   const allCapsules = [...weeklyCapsules, ...situationCapsules]
 
-  const [capsuleData, setCapsuleData] = useState(() => {
-    return draft.capsuleData || {}
-  })
+  const [capsuleData, setCapsuleData] = useState(() => draft.capsuleData || {})
   const [activeId, setActiveId] = useState(null)
   const [tab, setTab] = useState('weekly')
 
@@ -60,94 +58,193 @@ export default function Editor() {
   }).length
 
   const progress = Math.round((filledCount / allCapsules.length) * 100)
-
   const displayCapsules = tab === 'weekly' ? weeklyCapsules : situationCapsules
 
   return (
-    <div className="min-h-screen max-w-lg mx-auto flex flex-col">
-      <div className="sticky top-0 bg-warm-50 border-b border-warm-200 z-10 px-4 py-3">
+    <div
+      className="min-h-screen max-w-lg mx-auto flex flex-col"
+      style={{ background: '#FBF4E8' }}
+    >
+      <div
+        className="sticky top-0 z-10 px-5 pt-4 pb-3"
+        style={{
+          background: 'rgba(251,244,232,0.97)',
+          backdropFilter: 'blur(8px)',
+          borderBottom: '1px solid #E8D5B5',
+        }}
+      >
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-text-muted">
-            {filledCount} / {allCapsules.length} letters filled
-          </span>
-          <span className="text-xs text-rose font-medium">{progress}%</span>
+          <div>
+            <span className="font-display italic text-sm text-text-mid">
+              Your letters
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-text-muted font-sans font-light">
+              {filledCount}/{allCapsules.length}
+            </span>
+            <span
+              className="font-sans text-xs font-medium"
+              style={{ color: progress === 100 ? '#7B9E5A' : '#C8706E' }}
+            >
+              {progress}%
+            </span>
+          </div>
         </div>
-        <div className="h-1.5 bg-warm-200 rounded-full">
+
+        <div className="h-1 rounded-full mb-3" style={{ background: '#E8D5B5' }}>
           <div
-            className="h-full bg-rose rounded-full transition-all duration-500"
-            style={{ width: `${progress}%` }}
+            className="h-full rounded-full transition-all duration-700"
+            style={{
+              width: `${progress}%`,
+              background:
+                progress === 100
+                  ? 'linear-gradient(90deg, #7B9E5A, #9EC475)'
+                  : 'linear-gradient(90deg, #C8706E, #E8A0A0)',
+            }}
           />
+        </div>
+
+        <div className="flex gap-2">
+          {[
+            { key: 'weekly', label: 'Weekly', count: weeklyCapsules.length },
+            { key: 'situation', label: 'Moments', count: situationCapsules.length },
+          ].map(({ key, label, count }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setTab(key)}
+              className="flex-1 py-2 rounded-xl font-sans text-xs transition-all"
+              style={{
+                background: tab === key ? '#C8706E' : 'transparent',
+                color: tab === key ? 'white' : '#9B8070',
+                border: tab === key ? '1px solid #C8706E' : '1px solid #E8D5B5',
+                fontWeight: tab === key ? 500 : 400,
+              }}
+            >
+              {label} <span style={{ opacity: 0.7 }}>({count})</span>
+            </button>
+          ))}
         </div>
       </div>
 
       {paymentSuccess && (
-        <div className="mx-4 mt-3 bg-green-50 border border-green-200 rounded-2xl px-4 py-3 text-sm text-green-700 text-center">
-          ✅ Payment successful! Now fill in your letters.
+        <div
+          className="mx-4 mt-4 px-4 py-3 rounded-2xl text-center font-sans text-xs"
+          style={{
+            background: '#EDF6E5',
+            border: '1px solid #C4DFB0',
+            color: '#4A7A30',
+          }}
+        >
+          Payment successful — now fill in your letters ✓
         </div>
       )}
 
-      <div className="flex border-b border-warm-200 bg-warm-50 sticky top-12 z-10">
-        <button
-          type="button"
-          onClick={() => setTab('weekly')}
-          className={`flex-1 py-3 text-sm transition-all border-b-2
-            ${tab === 'weekly' ? 'border-rose text-rose font-medium' : 'border-transparent text-text-muted'}`}
-        >
-          📅 Weekly ({weeklyCapsules.length})
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab('situation')}
-          className={`flex-1 py-3 text-sm transition-all border-b-2
-            ${tab === 'situation' ? 'border-rose text-rose font-medium' : 'border-transparent text-text-muted'}`}
-        >
-          💛 Moments ({situationCapsules.length})
-        </button>
-      </div>
-
-      <div className="flex-1 px-4 py-4 space-y-3 pb-32">
-        {displayCapsules.map((cap) => {
+      <div className="flex-1 px-4 py-4 space-y-2.5 pb-36">
+        {displayCapsules.map((cap, idx) => {
           const data = capsuleData[cap.id] || {}
           const filled = data.letter || data.photo || data.voice
+          const isActive = activeId === cap.id
+          const dotCount = [data.letter, data.photo, data.voice].filter(Boolean).length
+
           return (
             <button
               key={cap.id}
               type="button"
               onClick={() => setActiveId(cap.id)}
-              className={`w-full text-left bg-white border rounded-2xl px-4 py-3.5 transition-all
-                ${filled ? 'border-rose-light' : 'border-warm-200'}
-                ${activeId === cap.id ? 'ring-2 ring-rose ring-opacity-30' : ''}`}
+              className="w-full text-left rounded-2xl transition-all"
+              style={{
+                background: '#FFFDF9',
+                border: `1px solid ${isActive ? '#C8706E' : filled ? '#EFC5C4' : '#E8D5B5'}`,
+                padding: '14px 16px',
+                boxShadow: isActive
+                  ? '0 0 0 3px rgba(200,112,110,0.15)'
+                  : filled
+                    ? '0 2px 12px rgba(200,112,110,0.08)'
+                    : '0 1px 4px rgba(45,31,20,0.04)',
+                animation: `fadeUp 0.3s ease ${idx * 0.04}s both`,
+              }}
             >
               <div className="flex items-center gap-3">
-                <span className="text-2xl">{cap.emoji}</span>
+                <div
+                  className="flex-shrink-0 flex items-center justify-center font-sans text-xs font-medium"
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 10,
+                    background: filled ? '#FAF0EF' : '#F5E8D0',
+                    color: filled ? '#C8706E' : '#9B8070',
+                  }}
+                >
+                  {cap.type === 'weekly' ? (
+                    <span
+                      style={{
+                        fontFamily: 'Playfair Display',
+                        fontStyle: 'italic',
+                        fontSize: 13,
+                      }}
+                    >
+                      {parseInt(cap.id.slice(1), 10) + 1}
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: 16 }}>{cap.emoji}</span>
+                  )}
+                </div>
+
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-text-base">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span
+                      className="font-sans text-sm"
+                      style={{ color: '#1A1008', fontWeight: filled ? 500 : 400 }}
+                    >
                       {cap.label}
                     </span>
-                    {filled && <span className="text-xs text-rose">✓</span>}
+                    {filled && (
+                      <span className="font-sans text-xs" style={{ color: '#C8706E' }}>
+                        ✓
+                      </span>
+                    )}
                   </div>
                   {cap.unlockDate && (
-                    <div className="text-xs text-text-muted mt-0.5">
+                    <div
+                      className="font-sans text-xs font-light"
+                      style={{ color: '#9B8070' }}
+                    >
                       Unlocks {formatDate(cap.unlockDate)}
                     </div>
                   )}
                   {cap.hint && (
-                    <div className="text-xs text-text-muted mt-0.5">
+                    <div
+                      className="font-sans text-xs italic font-light"
+                      style={{ color: '#9B8070' }}
+                    >
                       {cap.hint}
                     </div>
                   )}
                 </div>
-                <div className="flex gap-1">
-                  <div
-                    className={`w-1.5 h-1.5 rounded-full ${data.letter ? 'bg-rose' : 'bg-warm-200'}`}
-                  />
-                  <div
-                    className={`w-1.5 h-1.5 rounded-full ${data.photo ? 'bg-rose' : 'bg-warm-200'}`}
-                  />
-                  <div
-                    className={`w-1.5 h-1.5 rounded-full ${data.voice ? 'bg-rose' : 'bg-warm-200'}`}
-                  />
+
+                <div className="flex flex-col gap-1 items-end">
+                  <div className="flex gap-1">
+                    {['letter', 'photo', 'voice'].map((field) => (
+                      <div
+                        key={field}
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: '50%',
+                          background: data[field] ? '#C8706E' : '#E8D5B5',
+                          transition: 'background 0.2s',
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <span
+                    className="font-sans font-light"
+                    style={{ fontSize: 9, color: '#9B8070' }}
+                  >
+                    {dotCount === 0 ? 'empty' : `${dotCount}/3`}
+                  </span>
                 </div>
               </div>
             </button>
@@ -155,11 +252,18 @@ export default function Editor() {
         })}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto px-4 py-4 bg-warm-50 border-t border-warm-200">
+      <div
+        className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto px-5 py-4"
+        style={{
+          background: 'rgba(251,244,232,0.98)',
+          backdropFilter: 'blur(8px)',
+          borderTop: '1px solid #E8D5B5',
+        }}
+      >
         <button
           type="button"
           onClick={() => navigate('/preview')}
-          className="w-full bg-rose text-white py-4 rounded-2xl text-base font-medium active:scale-95 transition-transform"
+          className="btn-primary w-full py-4 rounded-2xl text-sm font-sans"
         >
           {filledCount === 0
             ? 'Skip to preview →'
@@ -238,57 +342,122 @@ function CapsuleEditor({ capsule, data, onChange, onClose }) {
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col justify-end"
-      style={{ background: 'rgba(30,15,8,0.55)' }}
+      style={{ background: 'rgba(26,16,8,0.6)', backdropFilter: 'blur(4px)' }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-t-3xl max-h-[90vh] overflow-y-auto max-w-lg mx-auto w-full">
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 bg-warm-200 rounded-full" />
+      <div
+        className="max-h-[92vh] overflow-y-auto max-w-lg mx-auto w-full"
+        style={{
+          background: '#FFFDF9',
+          borderRadius: '28px 28px 0 0',
+          boxShadow: '0 -8px 40px rgba(45,31,20,0.15)',
+        }}
+      >
+        <div className="flex justify-center pt-3 pb-2">
+          <div
+            style={{ width: 36, height: 4, background: '#E8D5B5', borderRadius: 2 }}
+          />
         </div>
-        <div className="px-5 pb-10">
-          <div className="flex items-center gap-3 mb-6 mt-2">
-            <span className="text-3xl">{capsule.emoji}</span>
+
+        <div className="px-6 pb-10">
+          <div
+            className="flex items-center gap-4 mb-7 pb-5"
+            style={{ borderBottom: '1px solid #F5E8D0' }}
+          >
+            <div
+              className="flex items-center justify-center text-2xl flex-shrink-0"
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: 16,
+                background: '#FAF0EF',
+                border: '1px solid #EFC5C4',
+              }}
+            >
+              {capsule.emoji}
+            </div>
             <div>
-              <h2 className="font-serif text-lg text-rose-dark">
+              <h2
+                className="font-display italic text-xl text-ink mb-0.5"
+                style={{ letterSpacing: '-0.01em' }}
+              >
                 {capsule.label}
               </h2>
               {capsule.hint && (
-                <p className="text-xs text-text-muted">{capsule.hint}</p>
+                <p className="font-sans text-xs font-light" style={{ color: '#9B8070' }}>
+                  {capsule.hint}
+                </p>
+              )}
+              {capsule.unlockDate && (
+                <p className="font-sans text-xs font-light" style={{ color: '#9B8070' }}>
+                  Unlocks {formatDate(capsule.unlockDate)}
+                </p>
               )}
             </div>
           </div>
 
-          <div className="mb-5">
-            <label className="text-xs font-medium text-text-muted uppercase tracking-wider block mb-2">
-              ✉️ Letter
+          <div className="mb-6">
+            <label
+              className="font-sans uppercase tracking-widest block mb-3"
+              style={{ fontSize: 10, color: '#9B8070', letterSpacing: '0.12em' }}
+            >
+              Letter
             </label>
             <textarea
               value={data.letter || ''}
               onChange={(e) => onChange('letter', e.target.value)}
               placeholder="Write your letter here..."
-              rows={5}
-              className="w-full bg-warm-50 border border-warm-200 rounded-2xl px-4 py-3 text-sm font-serif leading-relaxed focus:outline-none focus:border-rose-light resize-none"
+              rows={6}
+              className="w-full focus:outline-none resize-none font-display"
+              style={{
+                background: '#FBF4E8',
+                border: '1px solid #E8D5B5',
+                borderRadius: 16,
+                padding: '14px 16px',
+                fontSize: 14,
+                lineHeight: 1.8,
+                color: '#1A1008',
+                fontStyle: data.letter ? 'normal' : 'italic',
+              }}
             />
           </div>
 
-          <div className="mb-5">
-            <label className="text-xs font-medium text-text-muted uppercase tracking-wider block mb-2">
-              📷 Photo
+          <div className="mb-6">
+            <label
+              className="font-sans uppercase tracking-widest block mb-3"
+              style={{ fontSize: 10, color: '#9B8070', letterSpacing: '0.12em' }}
+            >
+              Photo
             </label>
             <div
               onClick={() => fileRef.current?.click()}
-              className="border-2 border-dashed border-warm-300 rounded-2xl overflow-hidden cursor-pointer hover:border-rose-light transition-colors"
+              className="cursor-pointer transition-all overflow-hidden"
               style={{
-                minHeight: data.photo ? 'auto' : '80px',
+                border: `1.5px dashed ${data.photo ? '#EFC5C4' : '#D4BC95'}`,
+                borderRadius: 16,
+                minHeight: data.photo ? 'auto' : 88,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                background: data.photo ? 'transparent' : '#FBF4E8',
               }}
             >
               {data.photo ? (
-                <img src={data.photo} alt="" className="w-full h-auto block" />
+                <img
+                  src={data.photo}
+                  alt=""
+                  className="w-full h-auto block"
+                  style={{ borderRadius: 16 }}
+                />
               ) : (
-                <p className="text-text-muted text-sm py-6">Tap to add a photo</p>
+                <div className="text-center py-6">
+                  <div className="font-sans text-2xl mb-1" style={{ opacity: 0.4 }}>
+                    +
+                  </div>
+                  <p className="font-sans text-xs font-light" style={{ color: '#9B8070' }}>
+                    Tap to add a photo
+                  </p>
+                </div>
               )}
             </div>
             <input
@@ -302,55 +471,81 @@ function CapsuleEditor({ capsule, data, onChange, onClose }) {
               <button
                 type="button"
                 onClick={() => onChange('photo', null)}
-                className="mt-2 text-xs text-text-muted"
+                className="mt-2 font-sans text-xs font-light"
+                style={{ color: '#9B8070' }}
               >
                 Remove photo ✕
               </button>
             )}
           </div>
 
-          <div className="mb-5">
-            <label className="text-xs font-medium text-text-muted uppercase tracking-wider block mb-2">
-              🎙️ Voice message
+          <div className="mb-7">
+            <label
+              className="font-sans uppercase tracking-widest block mb-3"
+              style={{ fontSize: 10, color: '#9B8070', letterSpacing: '0.12em' }}
+            >
+              Voice message
             </label>
+
             {data.voice && !recording && (
-              <div className="flex items-center gap-3 bg-warm-100 rounded-2xl px-4 py-3 mb-2">
-                <span className="text-lg">🎙️</span>
-                <span className="flex-1 text-sm text-text-mid">
+              <div
+                className="flex items-center gap-3 mb-3 px-4 py-3 rounded-xl"
+                style={{ background: '#F5E8D0', border: '1px solid #E8D5B5' }}
+              >
+                <span className="text-base">🎙️</span>
+                <span
+                  className="font-sans text-xs flex-1"
+                  style={{ color: '#6B5040', fontWeight: 400 }}
+                >
                   Voice message saved
                 </span>
                 <button
                   type="button"
                   onClick={() => onChange('voice', null)}
-                  className="text-xs text-text-muted"
+                  className="font-sans text-xs font-light"
+                  style={{ color: '#9B8070' }}
                 >
                   Remove
                 </button>
               </div>
             )}
-            <div className="flex items-center gap-4 bg-warm-100 rounded-2xl px-4 py-3">
+
+            <div
+              className="flex items-center gap-4 px-4 py-4 rounded-xl"
+              style={{ background: '#FBF4E8', border: '1px solid #E8D5B5' }}
+            >
               <button
                 type="button"
                 onClick={recording ? stopRec : startRec}
-                className={`w-12 h-12 rounded-full flex items-center justify-center text-xl flex-shrink-0 border-2 transition-all
-                  ${recording ? 'bg-rose border-rose animate-pulse' : 'bg-white border-rose'}`}
+                className="flex-shrink-0 flex items-center justify-center transition-all"
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: '50%',
+                  background: recording ? '#C8706E' : '#FFFDF9',
+                  border: `2px solid ${recording ? '#C8706E' : '#E8D5B5'}`,
+                  fontSize: 18,
+                  animation: recording ? 'pulse 1.5s ease-in-out infinite' : 'none',
+                }}
               >
                 {recording ? '⏹' : '🎙️'}
               </button>
               <div>
-                <div className="text-lg font-light tabular-nums">
-                  {recording
-                    ? fmtTime(recSecs)
-                    : data.voice
-                      ? 'Recorded ✓'
-                      : '0:00'}
+                <div
+                  className="font-display italic text-xl mb-0.5"
+                  style={{
+                    color: recording ? '#C8706E' : '#2D1F14',
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  {recording ? fmtTime(recSecs) : data.voice ? 'Recorded' : '0:00'}
                 </div>
-                <div className="text-xs text-text-muted">
+                <div className="font-sans text-xs font-light" style={{ color: '#9B8070' }}>
                   {recording
                     ? 'Tap to stop'
                     : data.voice
                       ? 'Tap to re-record'
-                      : 'Tap to start recording'}
+                      : 'Tap to record'}
                 </div>
               </div>
             </div>
@@ -359,7 +554,7 @@ function CapsuleEditor({ capsule, data, onChange, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="w-full bg-rose text-white py-3.5 rounded-2xl text-sm font-medium active:scale-95 transition-transform"
+            className="btn-primary w-full py-4 rounded-2xl text-sm font-sans"
           >
             Save & close ✓
           </button>
