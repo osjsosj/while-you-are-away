@@ -55,7 +55,8 @@ export default function AIInterview() {
         const json = response.match(/<COMPLETE>([\s\S]*?)<\/COMPLETE>/)?.[1]
         if (json) {
           const parsed = JSON.parse(json)
-          saveDraft({ phase2: parsed, phase2Done: true })
+          parsed.diaryUnlock = parsed.diaryUnlock === 'all' ? 'all' : 'mirror'
+          saveDraft({ phase2: parsed, phase2Done: true, diaryUnlock: parsed.diaryUnlock })
           const cleanResponse = response.replace(/<COMPLETE>[\s\S]*?<\/COMPLETE>/, '').trim()
           setMessages([...newMessages, {
             role: 'assistant',

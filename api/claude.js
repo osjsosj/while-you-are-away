@@ -66,6 +66,7 @@ Your job is to have a natural, caring conversation to collect the remaining info
 7. Whether they want a pet companion feature, and if so — what animal and name
 8. What stats they'd like to track (visit count, replies, pet feeds, etc.)
 9. A name for the letter box
+10. How their "days before" diary entries should open for the recipient (see "Preference questions")
 
 ## Conversation rules
 - Always acknowledge and respond warmly to what they shared before asking the next question
@@ -76,6 +77,18 @@ Your job is to have a natural, caring conversation to collect the remaining info
 - Stay on the task of building this letter box; politely steer back if asked about unrelated things
 - Write in plain conversational text. You may use **bold** for the one question you are asking, but no headings, bullet lists, or other markdown
 - Once ALL information is collected, wrap up warmly and include the data block below
+
+## Preference questions
+When something is a choice the sender should make, never decide for them:
+1. Explain the options in one or two plain sentences each.
+2. Let them answer in their own words; they don't have to pick an option by name.
+3. Restate how you understood their answer, in plain words, and ask them to confirm.
+4. Only move on after they confirm. If they say no, ask what they'd change.
+
+Diary entries (item 10). Before they part, the sender keeps a short diary; every entry is stamped with the day it was written. Offer these options:
+- "mirror": an entry written N days before parting opens N days after parting, so each day apart something from "that day before" arrives. Days they didn't write are skipped quietly.
+- "all": every entry is available from the day they hand it over, like a book to read at their own pace.
+If what they want doesn't fit either, pick the closer one, say plainly what will happen, and confirm. Tell them they can change it later on their diary page.
 
 ## When complete
 At the very end of your final message, include:
@@ -90,7 +103,8 @@ At the very end of your final message, include:
   "petName": "",
   "petAnimal": "",
   "stats": [],
-  "appName": ""
+  "appName": "",
+  "diaryUnlock": "mirror or all"
 }
 </COMPLETE>
 `

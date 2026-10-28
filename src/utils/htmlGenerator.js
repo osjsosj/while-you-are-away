@@ -1,3 +1,36 @@
+import { stampFor, formatLong, daysBetween, normalizeUnlock } from './diary.js'
+
+// JSON that is safe to embed inside a <script> tag (a letter containing "</script>" can't break the file)
+const safeJson = (v) => JSON.stringify(v).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029')
+
+function addDays(iso, n) {
+  const [y, m, d] = iso.split('-').map(Number)
+  const t = new Date(Date.UTC(y, m - 1, d + n))
+  return t.toISOString().slice(0, 10)
+}
+
+function buildDiary(draft, partDate) {
+  const unlock = normalizeUnlock(draft.diaryUnlock || draft.phase2?.diaryUnlock)
+  const entries = (Array.isArray(draft.diary) ? draft.diary : [])
+    .filter((e) => e && e.body && e.writtenOn)
+    .map((e) => {
+      const before = partDate ? Math.max(0, daysBetween(e.writtenOn, partDate)) : 0
+      return {
+        id: String(e.id),
+        stamp: stampFor(e.writtenOn, partDate, 'I'),
+        date: formatLong(e.writtenOn),
+        prompt: e.prompt || '',
+        body: e.body,
+        writtenOn: e.writtenOn,
+        opensOn: unlock === 'mirror' && partDate ? addDays(partDate, before) : null,
+      }
+    })
+  entries.sort((a, b) =>
+    unlock === 'mirror' ? (a.opensOn < b.opensOn ? -1 : a.opensOn > b.opensOn ? 1 : 0) : (a.writtenOn < b.writtenOn ? -1 : 1),
+  )
+  return { unlock, entries }
+}
+
 export function generateHTML(draft) {
   const phase1 = draft.phase1 || {}
   const phase2 = draft.phase2 || {}
@@ -35,6 +68,7 @@ export function generateHTML(draft) {
 
   // Build pet config from phase2 data
   const petConfig = buildPetConfig(phase2)
+  const diary = buildDiary(draft, phase1.startDate || '')
 
   const seedData = {}
   Object.entries(capsuleData).forEach(([id, data]) => {
@@ -170,6 +204,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .reply-save{width:100%;padding:13px;background:var(--primary);color:white;border:none;border-radius:14px;font-size:14px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:10px;transition:opacity .2s;}
 .reply-save:active{opacity:.8;}
 
+/* DIARY */
+.dr-list{display:flex;flex-direction:column;gap:10px;margin-bottom:12px;}
+.dr{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--warm-200);border-radius:18px;padding:16px 18px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .18s;position:relative;}
+.dr:hover{box-shadow:0 6px 20px var(--p15);border-color:var(--accent);transform:translateY(-1px);}
+.dr.opened{background:var(--p08);border-color:var(--accent);}
+.dr-stamp{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);margin-bottom:6px;}
+.dr-dot{width:7px;height:7px;border-radius:50%;background:var(--primary);flex-shrink:0;}
+.dr-prev{font-family:'Playfair Display',serif;font-size:15px;line-height:1.6;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.dr-new{position:absolute;top:14px;right:14px;background:var(--primary);color:white;font-size:9px;padding:2px 7px;border-radius:100px;}
+.dr-more{font-size:12px;color:var(--text-muted);font-weight:300;margin-bottom:24px;font-style:italic;}
+.dr-prompt{font-size:12px;color:var(--text-muted);font-style:italic;margin-bottom:10px;}
+
 /* MISC */
 .empty{text-align:center;padding:40px 16px;color:var(--text-muted);font-family:'Playfair Display',serif;font-style:italic;font-size:15px;line-height:1.8;}
 .btn{flex:1;padding:13px;border-radius:14px;border:none;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
@@ -203,16 +249,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 </div></div></div>
 
 <script>
-const WEEKLY_CAPS   = ${JSON.stringify(weeklyCapsules)};
-const SITUATION_CAPS = ${JSON.stringify(situationCapsules)};
-const TIMELINE_DATA = ${JSON.stringify(timeline)};
-const PET_CONFIG    = ${JSON.stringify(petConfig)};
-const SEED_DATA     = ${JSON.stringify(seedData)};
-const APP_NAME      = ${JSON.stringify(appName)};
-const WELCOME_MSG   = ${JSON.stringify(welcomeMsg)};
-const FROM_NAME     = ${JSON.stringify(phase1.fromName || '')};
-const TO_NAME       = ${JSON.stringify(phase1.toName || '')};
-const RETURN_DATE   = ${JSON.stringify(phase1.endDate || '')};
+const WEEKLY_CAPS   = ${safeJson(weeklyCapsules)};
+const SITUATION_CAPS = ${safeJson(situationCapsules)};
+const TIMELINE_DATA = ${safeJson(timeline)};
+const PET_CONFIG    = ${safeJson(petConfig)};
+const SEED_DATA     = ${safeJson(seedData)};
+const APP_NAME      = ${safeJson(appName)};
+const WELCOME_MSG   = ${safeJson(welcomeMsg)};
+const FROM_NAME     = ${safeJson(phase1.fromName || '')};
+const TO_NAME       = ${safeJson(phase1.toName || '')};
+const RETURN_DATE   = ${safeJson(phase1.endDate || '')};
+const DIARY         = ${safeJson(diary.entries)};
 
 ${getClientScript()}
 </script>
@@ -306,6 +353,9 @@ function ddayText(){
   return 'Back '+Math.abs(diff)+' days ago 💛';
 }
 function isOpen(cap){ return !cap.unlockDate||new Date()>=new Date(cap.unlockDate); }
+function todayISO(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function diaryOpen(e){ return !e.opensOn||todayISO()>=e.opensOn; }
+const DR={ get:(id)=>{ try{return JSON.parse(localStorage.getItem('ltr_dr_'+id))||{};}catch{return{};} }, set:(id,d)=>{ try{localStorage.setItem('ltr_dr_'+id,JSON.stringify(d));}catch{} } };
 function fmtDate(s){ const d=new Date(s); return (d.getMonth()+1)+'/'+d.getDate(); }
 function fmtTime(s){ return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'); }
 function esc(s){ if(!s)return''; return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -317,7 +367,7 @@ function trackVisit(){
   if(d.lastDate!==today){d.count+=1;d.lastDate=today;localStorage.setItem('ltr_visits',JSON.stringify(d));}
 }
 function getVisitCount(){ try{return JSON.parse(localStorage.getItem('ltr_visits'))?.count||0;}catch{return 0;} }
-function getReplyCount(){ let c=0;[...WEEKLY_CAPS,...SITUATION_CAPS].forEach(cap=>{if(S.cap(cap.id).reply?.trim())c++;});return c; }
+function getReplyCount(){ let c=0;[...WEEKLY_CAPS,...SITUATION_CAPS].forEach(cap=>{if(S.cap(cap.id).reply?.trim())c++;});DIARY.forEach(e=>{if(DR.get(e.id).reply?.trim())c++;});return c; }
 
 // ── PET SYSTEM ─────────────────────────────────────────────────
 function shadeHex(hex,amt){
@@ -463,8 +513,50 @@ function renderHome(){
   if(tab==='timeline'&&PET_CONFIG) renderPet();
 }
 
+function renderDiary(){
+  if(!DIARY.length) return '';
+  const open=DIARY.map((e,i)=>({e,i})).filter(x=>diaryOpen(x.e));
+  const waiting=DIARY.length-open.length;
+  if(!open.length&&!waiting) return '';
+  const list=open.slice().reverse().map(({e,i})=>{
+    const st=DR.get(e.id);
+    return '<button class="dr'+(st.opened?' opened':'')+'" onclick="openDiary('+i+')">'
+      +(st.opened?'':'<span class="dr-new">NEW</span>')
+      +'<div class="dr-stamp"><span class="dr-dot"></span>'+esc(e.stamp)+'</div>'
+      +'<div class="dr-prev">'+esc(e.body)+'</div></button>';
+  }).join('');
+  return '<div class="sec"><div class="sec-label">Written before I left</div>'
+    +(open.length?'<div class="dr-list">'+list+'</div>':'')
+    +(waiting?'<div class="dr-more">'+(open.length?'More are on their way.':'The first one arrives soon.')+'</div>':'<div style="height:12px"></div>')
+    +'</div>';
+}
+
+function openDiary(i){
+  const e=DIARY[i]; if(!e||!diaryOpen(e)) return;
+  const st=DR.get(e.id); st.opened=true; DR.set(e.id,st);
+  let html='<div class="v-hdr"><div class="v-title">'+esc(e.stamp)+'</div><div class="v-date">'+esc(e.date)+'</div></div>';
+  if(e.prompt) html+='<div class="dr-prompt">'+esc(e.prompt)+'</div>';
+  html+='<div class="letter">'+esc(e.body)+'</div>';
+  html+='<div class="reply-wrap"><div class="reply-lbl">My reply</div>'
+    +(st.reply?'<div class="reply-prev">'+esc(st.reply)+'</div><div class="reply-date">'+esc(st.replyDate||'')+'</div>':'')
+    +'<textarea class="reply-ta" id="replyIn" placeholder="Write your reply here...">'+esc(st.reply||'')+'</textarea>'
+    +'<button class="reply-save" onclick="saveDiaryReply('+i+')">Save reply</button>'
+    +'</div>';
+  document.getElementById('viewBody').innerHTML=html;
+  document.getElementById('viewOv').classList.add('show');
+}
+
+function saveDiaryReply(i){
+  const e=DIARY[i], inp=document.getElementById('replyIn'); if(!e||!inp) return;
+  const st=DR.get(e.id);
+  st.reply=inp.value.trim();
+  st.replyDate=new Date().toLocaleString('en-US',{year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  DR.set(e.id,st);
+  openDiary(i);
+}
+
 function renderLetters(){
-  return '<div class="sec"><div class="sec-label">Weekly letters</div><div class="cap-grid">'+WEEKLY_CAPS.map(renderCard).join('')+'</div></div>'
+  return renderDiary()+'<div class="sec"><div class="sec-label">Weekly letters</div><div class="cap-grid">'+WEEKLY_CAPS.map(renderCard).join('')+'</div></div>'
     +(SITUATION_CAPS.length?'<div class="sec"><div class="sec-label">Open when...</div><div class="cap-grid">'+SITUATION_CAPS.map(renderCard).join('')+'</div></div>':'');
 }
 
@@ -568,7 +660,8 @@ function openEdit(id,label,emoji){}
 function exportFile(){
   const data={};Object.keys(localStorage).filter(k=>k.startsWith('ltr_')).forEach(k=>{data[k]=localStorage.getItem(k);});
   const html=document.documentElement.outerHTML;
-  const updated=html.replace(/const SEED_DATA\s*=\s*\{[\s\S]*?\};/,'const SEED_DATA = '+JSON.stringify(data)+';');
+  const seed=JSON.stringify(data).replace(/</g,'\\\\u003c');
+  const updated=html.replace(/const SEED_DATA\\s*=\\s*\\{[\\s\\S]*?\\};(\\s*const APP_NAME)/,function(m,tail){return 'const SEED_DATA = '+seed+';'+tail;});
   const blob=new Blob([updated],{type:'text/html;charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;

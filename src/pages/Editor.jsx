@@ -141,6 +141,33 @@ export default function Editor() {
         </div>
       )}
 
+      <div className="px-4 pt-4">
+        <button
+          type="button"
+          onClick={() => navigate('/diary')}
+          className="w-full text-left transition-all"
+          style={{
+            background: 'linear-gradient(135deg, #0B1430 0%, #18234A 100%)',
+            borderRadius: 16,
+            padding: '16px 18px',
+            color: '#E9ECF2',
+            boxShadow: '0 10px 28px -14px rgba(11,20,48,0.7)',
+          }}
+        >
+          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <span>
+              <span style={{ display: 'block', fontFamily: 'Literata, Georgia, serif', fontSize: 18 }}>The days before</span>
+              <span style={{ display: 'block', fontSize: 13, color: '#B9C2D3', marginTop: 2 }}>
+                {(draft.diary || []).length
+                  ? `${(draft.diary || []).length} ${(draft.diary || []).length === 1 ? 'entry' : 'entries'} so far · write today's`
+                  : 'A few lines each day before you part'}
+              </span>
+            </span>
+            <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: '50%', background: '#F0B341', boxShadow: '0 0 0 4px rgba(240,179,65,0.18)', flex: 'none' }} />
+          </span>
+        </button>
+      </div>
+
       <div className="flex-1 px-4 py-4 space-y-2.5 pb-36">
         {displayCapsules.map((cap, idx) => {
           const data = capsuleData[cap.id] || {}
