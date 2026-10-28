@@ -18,6 +18,8 @@ export default function AuthCallback() {
   const [email, setEmail] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState(null)
+  const [code, setCode] = useState('')
+  const [verifying, setVerifying] = useState(false)
 
   useEffect(() => {
     if (!supabase) {
@@ -32,6 +34,7 @@ export default function AuthCallback() {
       if (session) {
         done = true
         await hydrateFromDB()
+        saveDraft({}) // 로그인 직후 이 기기의 작성 내용을 DB에 올림 → 다른 기기에서 이어하기
         setPhase('success')
         setTimeout(() => {
           if (isPaymentSuccess) navigate('/ai-interview')
@@ -55,6 +58,7 @@ export default function AuthCallback() {
     // 결제할 때 입력한 이메일로 로그인 링크 자동 발송
     const autoSend = async (addr) => {
       setEmail(addr)
+      setError(null)
       setPhase('sending')
       const { error: err } = await supabase.auth.signInWithOtp({
         email: addr,
@@ -93,6 +97,31 @@ export default function AuthCallback() {
     return () => subscription.unsubscribe()
   }, [isPaymentSuccess, navigate])
 
+  const verifyCode = async () => {
+    const token = code.replace(/\D/g, '')
+    if (token.length < 6) {
+      setError('Please enter the code from your email.')
+      return
+    }
+    setVerifying(true)
+    setError(null)
+    const { data, error: err } = await supabase.auth.verifyOtp({
+      email: email.trim(),
+      token,
+      type: 'email',
+    })
+    if (err || !data?.session) {
+      console.error('verifyOtp:', err)
+      setError('That code didn\'t work. Check the newest email, or send a new code.')
+      setVerifying(false)
+      return
+    }
+    await hydrateFromDB()
+    saveDraft({})
+    setPhase('success')
+    setTimeout(() => navigate(isPaymentSuccess ? '/ai-interview' : '/'), 800)
+  }
+
   const sendMagicLink = async () => {
     if (!email.trim() || !email.includes('@')) {
       setError('Please enter a valid email address.')
@@ -116,6 +145,8 @@ export default function AuthCallback() {
       setError(friendlyAuthError(err))
       setSending(false)
     } else {
+      setError(null)
+      setCode('')
       setPhase('sending')
     }
   }
@@ -219,9 +250,42 @@ export default function AuthCallback() {
           Check your email
         </h2>
         <p className="font-sans text-sm text-text-muted mb-6" style={{ fontWeight: 300, lineHeight: 1.7 }}>
-          We sent a sign-in link to<br />
+          We sent a sign-in code to<br />
           <strong style={{ color: '#2D1F14', fontWeight: 500 }}>{email}</strong>
         </p>
+
+        <div className="w-full max-w-xs mb-3">
+          <input
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 10))}
+            onKeyDown={(e) => e.key === 'Enter' && verifyCode()}
+            placeholder="Enter code"
+            autoFocus
+            className="w-full font-sans text-center focus:outline-none"
+            style={{
+              background: '#FFFDF9',
+              border: `1px solid ${error ? '#C8706E' : '#E8D5B5'}`,
+              borderRadius: 16, padding: '13px 16px', color: '#1A1008',
+              fontSize: 22, letterSpacing: '0.3em',
+            }}
+          />
+          {error && (
+            <p className="font-sans mt-1.5" style={{ fontSize: 11, color: '#C8706E' }}>{error}</p>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={verifyCode}
+          disabled={verifying}
+          className="btn-primary w-full max-w-xs py-4 rounded-2xl font-sans text-sm mb-6"
+          style={{ opacity: verifying ? 0.7 : 1 }}
+        >
+          {verifying ? 'Checking...' : 'Sign in →'}
+        </button>
+
         <div
           className="rounded-2xl p-5 w-full max-w-xs text-left"
           style={{ background: '#FFFDF9', border: '1px solid #E8D5B5' }}
@@ -231,7 +295,7 @@ export default function AuthCallback() {
           </p>
           <button
             type="button"
-            onClick={() => setPhase('needEmail')}
+            onClick={() => { setError(null); setCode(''); setPhase('needEmail') }}
             className="font-sans text-xs font-medium"
             style={{ color: '#C8706E' }}
           >
