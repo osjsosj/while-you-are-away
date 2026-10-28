@@ -47,6 +47,7 @@ Your job is to have a natural, caring conversation to collect the remaining info
 
 ## Information already collected
 - Situation: ${str(p.situation)}
+- Writing to (relationship): ${str(p.relationship)}
 - Sender name: ${str(p.fromName)}
 - Recipient name: ${str(p.toName)}
 - Departure date: ${str(p.startDate)}

@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { saveDraft } from '../utils/storage'
+import { getDraft, saveDraft } from '../utils/storage'
 
-const STEPS = [
+const ALL_STEPS = [
   {
     id: 'situation',
     question: "What's the situation?",
@@ -46,12 +46,23 @@ const STEPS = [
   },
 ]
 
+// What the landing page's start form already asked
+function landingAnswers() {
+  const landing = getDraft().landing || {}
+  const seed = {}
+  if (landing.relationship) seed.relationship = landing.relationship
+  if (landing.startDate) seed.startDate = landing.startDate
+  return seed
+}
+
 export default function Interview() {
   const navigate = useNavigate()
+  const [seed] = useState(landingAnswers)
+  const [STEPS] = useState(() => ALL_STEPS.filter((s) => !(s.id in seed)))
   const [step, setStep] = useState(0)
-  const [answers, setAnswers] = useState({})
+  const [answers, setAnswers] = useState(seed)
   const [input, setInput] = useState('')
-  const [bubbles, setBubbles] = useState([
+  const [bubbles, setBubbles] = useState(() => [
     { type: 'question', text: STEPS[0].question },
   ])
   const bottomRef = useRef(null)

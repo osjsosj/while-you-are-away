@@ -1,488 +1,418 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { clearDraft } from '../utils/storage'
-import { useState, useEffect, useRef } from 'react'
+import { clearDraft, saveDraft } from '../utils/storage'
+import { HeroSky, EndSky, Grain, Sundial } from './landing/Sky'
+import { LETTERS, STEPS, CHAPTERS, PHONE_ROWS, FAQ, WHO, FOUNDER_PHOTO, SCENES } from './landing/content'
+import './landing/landing.css'
 
-// ─── SVG assets ───────────────────────────────────────────────
-
-const EnvelopeOpen = () => (
-  <svg width="110" height="84" viewBox="0 0 110 84" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="2" y="18" width="106" height="64" rx="6" fill="#FFFDF9" stroke="#E8D5B5" strokeWidth="1.5"/>
-    <path d="M2 24L55 56L108 24" stroke="#E8D5B5" strokeWidth="1.5" strokeLinecap="round"/>
-    <path d="M2 82L44 52" stroke="#E8D5B5" strokeWidth="1" strokeLinecap="round"/>
-    <path d="M108 82L66 52" stroke="#E8D5B5" strokeWidth="1" strokeLinecap="round"/>
-    {/* open flap */}
-    <path d="M2 18L55 2L108 18" fill="#FAF0EF" stroke="#EFC5C4" strokeWidth="1.5" strokeLinejoin="round"/>
-    {/* letter peeking out */}
-    <rect x="28" y="6" width="54" height="36" rx="3" fill="white" stroke="#E8D5B5" strokeWidth="1"/>
-    <line x1="36" y1="18" x2="74" y2="18" stroke="#E8D5B5" strokeWidth="1.5" strokeLinecap="round"/>
-    <line x1="36" y1="24" x2="74" y2="24" stroke="#E8D5B5" strokeWidth="1" strokeLinecap="round"/>
-    <line x1="36" y1="30" x2="60" y2="30" stroke="#E8D5B5" strokeWidth="1" strokeLinecap="round"/>
-    {/* stamp */}
-    <rect x="66" y="10" width="18" height="14" rx="2" fill="none" stroke="#EFC5C4" strokeWidth="1" strokeDasharray="2 1.5"/>
-    <circle cx="75" cy="17" r="4" fill="#EFC5C4" opacity="0.6"/>
-    <circle cx="75" cy="17" r="2" fill="#C8706E" opacity="0.5"/>
-  </svg>
-)
+const prefersReducedMotion = () => {
+  try {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  } catch {
+    return false
+  }
+}
 
 const LockIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-    <rect x="2" y="6" width="10" height="7" rx="2" fill="#C8706E" opacity="0.15" stroke="#C8706E" strokeWidth="1.2"/>
-    <path d="M4 6V4.5a3 3 0 0 1 6 0V6" stroke="#C8706E" strokeWidth="1.2" strokeLinecap="round"/>
+  <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <rect x="3" y="7" width="10" height="7" rx="1.5" />
+    <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
+  </svg>
+)
+const ChevronIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M6 3l5 5-5 5" />
+  </svg>
+)
+const Mark = ({ size = 22, halo = false }) => (
+  <svg width={size} height={size} viewBox="0 0 22 22" aria-hidden="true">
+    {halo && <circle cx="11" cy="11" r="9" fill="#F0B341" opacity="0.14" />}
+    <circle cx="11" cy="11" r="5" fill="#F0B341" />
+    <circle cx="11" cy="11" r="10" fill="none" stroke="#E9ECF2" strokeWidth={halo ? 1 : 1.5} />
   </svg>
 )
 
-const CheckIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-    <circle cx="7" cy="7" r="6.25" stroke="#C8706E" strokeWidth="1.5"/>
-    <path d="M4.5 7l2 2 3-3" stroke="#C8706E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-)
-
-// ─── Data ─────────────────────────────────────────────────────
-
-const SITUATIONS = [
-  { emoji: '🪖', label: 'Military deployment' },
-  { emoji: '✈️', label: 'Study abroad' },
-  { emoji: '💼', label: 'Work travel' },
-  { emoji: '🌏', label: 'Long distance' },
-]
-
-const TESTIMONIALS = [
-  {
-    quote: "He cried opening the first one. That alone was worth everything.",
-    name: "Sarah M.",
-    role: "Army spouse, Fort Bragg",
-    initials: "SM",
-  },
-  {
-    quote: "I felt like she was still with me. Every Monday felt like a little gift.",
-    name: "Marcus T.",
-    role: "USMC, 2nd deployment",
-    initials: "MT",
-  },
-  {
-    quote: "I've never seen him get emotional. Week 4 letter broke him open.",
-    name: "Jen R.",
-    role: "Navy, wife of 6 years",
-    initials: "JR",
-  },
-  {
-    quote: "Best $39 I've spent in years. She still talks about it.",
-    name: "Priya K.",
-    role: "Long distance, NY→London",
-    initials: "PK",
-  },
-]
-
-const HOW_IT_WORKS = [
-  {
-    step: '01',
-    title: 'You talk, AI listens',
-    desc: 'Claude asks about your relationship — nicknames, memories, the things only you two know. Nothing generic.',
-  },
-  {
-    step: '02',
-    title: 'Letters unlock on schedule',
-    desc: 'Week 1, Week 2... Each letter opens exactly when it should. Plus "open when you miss me" moments for the hard days.',
-  },
-  {
-    step: '03',
-    title: 'They keep a piece of you',
-    desc: 'One file. No app to download, no account to make. It works offline. They can reply, feed the pet, and send it back.',
-  },
-]
-
-const WHATS_INSIDE = [
-  'Scheduled weekly letters that unlock automatically',
-  '"Open when..." letters for specific moments',
-  'Voice messages & photos in every letter',
-  'A growing pet companion they can feed each week',
-  'A timeline of your relationship milestones',
-  'A reply system to keep the conversation going',
-]
-
-// ─── Sub-components ───────────────────────────────────────────
-
-function SocialProof() {
-  return (
-    <div
-      className="flex items-center justify-center gap-3 py-2 px-4 rounded-full mx-auto"
-      style={{ background: 'rgba(200,112,110,0.06)', border: '1px solid #EFC5C4', width: 'fit-content' }}
-    >
-      {/* Avatar stack */}
-      <div className="flex -space-x-2">
-        {['SM','MT','JR','PK','AL'].map((initials, i) => (
-          <div
-            key={i}
-            className="flex items-center justify-center font-sans font-medium"
-            style={{
-              width: 24, height: 24, borderRadius: '50%',
-              background: ['#C8706E','#D4926E','#C87890','#9E6EC8','#6E9EC8'][i],
-              color: 'white', fontSize: 8,
-              border: '1.5px solid #FBF4E8',
-              zIndex: 5 - i,
-            }}
-          >
-            {initials}
-          </div>
-        ))}
-      </div>
-      <span className="font-sans text-xs" style={{ color: '#6B5040', fontWeight: 400 }}>
-        <strong style={{ fontWeight: 600 }}>400+</strong> letter boxes sent
-      </span>
-    </div>
+// Crossfade helper: fades out, swaps the value, fades back in.
+function useCrossfade(initial, ms) {
+  const [value, setValue] = useState(initial)
+  const [fading, setFading] = useState(false)
+  const timer = useRef(null)
+  const show = useCallback(
+    (next) => {
+      if (prefersReducedMotion()) return setValue(next)
+      clearTimeout(timer.current)
+      setFading(true)
+      timer.current = setTimeout(() => {
+        setValue(next)
+        setFading(false)
+      }, ms)
+    },
+    [ms],
   )
+  useEffect(() => () => clearTimeout(timer.current), [])
+  return [value, fading, show]
 }
-
-function TestimonialCard({ t, active }) {
-  return (
-    <div
-      className="transition-all duration-500"
-      style={{
-        opacity: active ? 1 : 0,
-        transform: active ? 'translateY(0)' : 'translateY(6px)',
-        position: active ? 'relative' : 'absolute',
-        pointerEvents: active ? 'auto' : 'none',
-      }}
-    >
-      <p className="font-display italic text-base text-text-mid mb-3 leading-relaxed" style={{ fontSize: 16 }}>
-        "{t.quote}"
-      </p>
-      <div className="flex items-center justify-center gap-2">
-        <div
-          className="flex items-center justify-center font-sans font-medium text-white"
-          style={{ width: 28, height: 28, borderRadius: '50%', background: '#C8706E', fontSize: 9 }}
-        >
-          {t.initials}
-        </div>
-        <div className="text-left">
-          <p className="font-sans text-xs font-medium" style={{ color: '#2D1F14' }}>{t.name}</p>
-          <p className="font-sans" style={{ fontSize: 10, color: '#9B8070', fontWeight: 300 }}>{t.role}</p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Main ─────────────────────────────────────────────────────
 
 export default function Landing() {
   const navigate = useNavigate()
-  const [activeSituation, setActiveSituation] = useState(0)
-  const [activeTestimonial, setActiveTestimonial] = useState(0)
-  const [letterVisible, setLetterVisible] = useState(false)
-  const letterRef = useRef(null)
+  const scrollerRef = useRef(null)
+  const farRef = useRef(null)
+  const nearRef = useRef(null)
+  const parallaxFrame = useRef(null)
+
+  const [letterIdx, letterFading, showLetter] = useCrossfade(0, 260)
+  const [paused, setPaused] = useState(false)
+  const [chapterIdx, chapterFading, showChapter] = useCrossfade(0, 200)
+  const [faqOpen, setFaqOpen] = useState(0)
+  const [who, setWho] = useState(0)
+  const [partDate, setPartDate] = useState('')
+  const [active, setActive] = useState(0)
+  const [hour, setHour] = useState(SCENES[0].hour)
+  const [seen, setSeen] = useState(() => SCENES.map((_, i) => i === 0))
 
   useEffect(() => {
-    // Rotate situations
-    const s = setInterval(() => setActiveSituation(p => (p + 1) % SITUATIONS.length), 2200)
-    // Rotate testimonials
-    const t = setInterval(() => setActiveTestimonial(p => (p + 1) % TESTIMONIALS.length), 4500)
-    return () => { clearInterval(s); clearInterval(t) }
+    document.title = "While You're Away — letters for the time apart"
   }, [])
 
+  // Auto-advance the example letters until someone picks one
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setLetterVisible(true) },
-      { threshold: 0.3 }
-    )
-    if (letterRef.current) observer.observe(letterRef.current)
-    return () => observer.disconnect()
+    if (paused || prefersReducedMotion()) return
+    const t = setInterval(() => showLetter((letterIdx + 1) % LETTERS.length), 7500)
+    return () => clearInterval(t)
+  }, [paused, letterIdx, showLetter])
+
+  // Scroll position → active scene, sundial hour, reveals
+  useEffect(() => {
+    const sc = scrollerRef.current
+    if (!sc) return
+    const reduce = prefersReducedMotion()
+    let frame = null
+    const measure = () => {
+      frame = null
+      const tops = Array.from(sc.querySelectorAll('[data-scene]'), (el) => el.offsetTop)
+      const h = sc.clientHeight || window.innerHeight
+      const probe = sc.scrollTop + h * 0.5
+      let i = 0
+      for (let k = 0; k < tops.length; k++) if (tops[k] <= probe) i = k
+      // the hand sits exactly on a scene's time when that scene fills the screen
+      let j = 0
+      for (let k = 0; k < tops.length; k++) if (tops[k] <= sc.scrollTop + 1) j = k
+      let hr = SCENES[j].hour
+      if (j < tops.length - 1) {
+        const f = Math.max(0, Math.min(1, (sc.scrollTop - tops[j]) / Math.max(1, tops[j + 1] - tops[j])))
+        hr += (SCENES[j + 1].hour - SCENES[j].hour) * f
+      }
+      setActive(i)
+      setHour(hr)
+      setSeen((prev) => {
+        const next = prev.map((v, k) => v || reduce || tops[k] < sc.scrollTop + h * 0.78)
+        return next.every((v, k) => v === prev[k]) ? prev : next
+      })
+    }
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(measure) }
+    measure()
+    sc.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      sc.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (frame) cancelAnimationFrame(frame)
+    }
   }, [])
 
-  const handleStart = () => { clearDraft(); navigate('/interview') }
+  const goTo = (i) => {
+    scrollerRef.current?.querySelector(`[data-scene="${i}"]`)?.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' })
+  }
+
+  const moveSky = (mx, my) => {
+    if (farRef.current) farRef.current.style.transform = `translate(${(mx * -6).toFixed(1)}px, ${(my * -4).toFixed(1)}px)`
+    if (nearRef.current) nearRef.current.style.transform = `translate(${(mx * -14).toFixed(1)}px, ${(my * -9).toFixed(1)}px)`
+  }
+  const onHeroMove = (e) => {
+    if (prefersReducedMotion() || parallaxFrame.current) return
+    const r = e.currentTarget.getBoundingClientRect()
+    const mx = ((e.clientX - r.left) / r.width - 0.5) * 2
+    const my = ((e.clientY - r.top) / r.height - 0.5) * 2
+    parallaxFrame.current = requestAnimationFrame(() => {
+      parallaxFrame.current = null
+      moveSky(mx, my)
+    })
+  }
+
+  const handleStart = (e) => {
+    e.preventDefault()
+    clearDraft()
+    saveDraft({ landing: { relationship: WHO[who], startDate: partDate || '' } })
+    navigate('/interview')
+  }
+
+  const reveal = (i) => `wya-inner wya-reveal${seen[i] ? '' : ' is-hidden'}`
+  const letter = LETTERS[letterIdx]
+  const chapter = CHAPTERS[chapterIdx]
 
   return (
-    <div className="min-h-screen" style={{ background: '#FBF4E8' }}>
+    <div className="wya" ref={scrollerRef}>
+      <Sundial hour={hour} active={active} scenes={SCENES} />
 
-      {/* ── Topbar ── */}
-      <div className="flex justify-between items-center px-5 pt-5 pb-1">
-        <span className="font-display italic text-sm" style={{ color: '#6B5040' }}>While You're Away</span>
-        <span
-          className="font-sans text-xs px-3 py-1 rounded-full"
-          style={{ background: 'rgba(200,112,110,0.08)', color: '#C8706E', border: '1px solid #EFC5C4', fontWeight: 500 }}
-        >
-          $39 one-time
-        </span>
-      </div>
-
-      {/* ── Hero ── */}
-      <div className="px-5 pt-6 pb-4 text-center">
-
-        {/* Situation switcher */}
-        <div
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 font-sans text-xs"
-          style={{ background: 'rgba(200,112,110,0.06)', border: '1px solid #EFC5C4', color: '#6B5040' }}
-        >
-          <span style={{ fontSize: 14, transition: 'all 0.3s' }}>{SITUATIONS[activeSituation].emoji}</span>
-          <span style={{ fontWeight: 300 }}>For {SITUATIONS[activeSituation].label.toLowerCase()} couples</span>
-        </div>
-
-        {/* Envelope */}
-        <div className="flex justify-center mb-6 animate-fade-up animate-float">
-          <EnvelopeOpen />
-        </div>
-
-        {/* Headline */}
-        <h1
-          className="font-display animate-fade-up delay-100"
-          style={{
-            fontSize: 34, fontStyle: 'italic', letterSpacing: '-0.025em',
-            lineHeight: 1.15, color: '#1A1008', marginBottom: 12,
-          }}
-        >
-          Be there for every<br />
-          hard day<span style={{ color: '#C8706E' }}>.</span> Every<br />
-          lonely night<span style={{ color: '#C8706E' }}>.</span>
-        </h1>
-
-        <p
-          className="font-sans animate-fade-up delay-200 mx-auto"
-          style={{ fontSize: 13, color: '#9B8070', lineHeight: 1.75, fontWeight: 300, maxWidth: 280, marginBottom: 20 }}
-        >
-          Build a letter box before you leave — letters, photos,
-          and voice messages that open exactly when they need them.
-        </p>
-
-        {/* Social proof */}
-        <div className="animate-fade-up delay-300 mb-6">
-          <SocialProof />
-        </div>
-
-        {/* Primary CTA */}
-        <div className="animate-fade-up delay-400">
-          <button
-            onClick={handleStart}
-            className="btn-primary w-full py-4 rounded-2xl font-sans mb-2"
-            style={{ fontSize: 14, maxWidth: 320, display: 'block', margin: '0 auto 10px' }}
-          >
-            Build their letter box — $39 →
-          </button>
-          <p className="font-sans" style={{ fontSize: 11, color: '#9B8070', fontWeight: 300 }}>
-            Takes 5 minutes · One-time · No subscription
-          </p>
-        </div>
-      </div>
-
-      {/* ── Letter preview mockup ── */}
-      <div
-        ref={letterRef}
-        className="mx-5 mb-5"
-        style={{
-          background: '#FFFDF9',
-          border: '1px solid #E8D5B5',
-          borderRadius: 20,
-          overflow: 'hidden',
-          boxShadow: '0 4px 24px rgba(45,31,20,0.08)',
-          opacity: letterVisible ? 1 : 0,
-          transform: letterVisible ? 'translateY(0)' : 'translateY(16px)',
-          transition: 'all 0.6s ease',
-        }}
+      {/* ── Night: the goodbye ── */}
+      <section
+        data-scene="0"
+        className="wya-scene wya-hero"
+        onMouseMove={onHeroMove}
+        onMouseLeave={() => moveSky(0, 0)}
+        aria-label="While You're Away"
       >
-        {/* mock header */}
-        <div style={{ background: '#C8706E', padding: '14px 18px' }}>
-          <p className="font-sans" style={{ fontSize: 9, color: 'rgba(255,255,255,0.55)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 5 }}>
-            From Jake · To Emily
-          </p>
-          <p className="font-display italic" style={{ fontSize: 18, color: 'white', letterSpacing: '-0.01em' }}>
-            Always With You
-          </p>
-        </div>
-        {/* mock letter cards */}
-        <div style={{ padding: '14px 14px 10px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-          {[
-            { label: 'Week 1', icon: '💌', status: 'Open me!', open: true },
-            { label: 'Week 2', icon: '🔒', status: 'Jun 15', open: false },
-            { label: 'Week 3', icon: '🔒', status: 'Jun 22', open: false },
-          ].map((card) => (
-            <div
-              key={card.label}
-              style={{
-                background: card.open ? 'rgba(200,112,110,0.05)' : '#F5E8D0',
-                border: `1px solid ${card.open ? '#EFC5C4' : '#E8D5B5'}`,
-                borderRadius: 12, padding: '10px 6px', textAlign: 'center',
-              }}
-            >
-              <div style={{ fontSize: 22, marginBottom: 4 }}>{card.icon}</div>
-              <div className="font-display italic" style={{ fontSize: 11, color: '#1A1008' }}>{card.label}</div>
-              <div className="font-sans" style={{ fontSize: 9, color: card.open ? '#C8706E' : '#9B8070', fontWeight: card.open ? 500 : 300, marginTop: 2 }}>
-                {card.status}
-              </div>
-            </div>
-          ))}
-        </div>
-        <div style={{ padding: '0 14px 14px', display: 'flex', gap: 6 }}>
-          {[
-            { label: 'When you miss me', emoji: '💛' },
-            { label: 'Our anniversary', emoji: '🤍' },
-          ].map((m) => (
-            <div
-              key={m.label}
-              className="font-sans"
-              style={{
-                flex: 1, background: '#FFFDF9', border: '1px solid #E8D5B5',
-                borderRadius: 10, padding: '8px 6px', textAlign: 'center',
-                fontSize: 10, color: '#6B5040',
-              }}
-            >
-              <span style={{ fontSize: 16, display: 'block', marginBottom: 3 }}>{m.emoji}</span>
-              {m.label}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── How it works ── */}
-      <div className="px-5 mb-6">
-        <div className="ornament-divider mb-5">
-          <span className="font-display italic" style={{ fontSize: 11, color: '#D4BC95' }}>how it works</span>
-        </div>
-        <div className="space-y-3">
-          {HOW_IT_WORKS.map(({ step, title, desc }) => (
-            <div
-              key={step}
-              className="envelope-card rounded-2xl p-5 flex gap-4 items-start"
-            >
-              <div
-                className="flex-shrink-0 font-display italic"
-                style={{
-                  width: 36, height: 36, borderRadius: '50%',
-                  background: '#FAF0EF', border: '1px solid #EFC5C4',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 13, color: '#C8706E', fontWeight: 700,
-                }}
-              >
-                {step}
-              </div>
-              <div>
-                <p className="font-sans font-medium text-sm mb-1" style={{ color: '#1A1008' }}>{title}</p>
-                <p className="font-sans text-xs leading-relaxed" style={{ color: '#9B8070', fontWeight: 300 }}>{desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── What's inside ── */}
-      <div className="px-5 mb-6">
-        <div className="ornament-divider mb-5">
-          <span className="font-display italic" style={{ fontSize: 11, color: '#D4BC95' }}>what's inside</span>
-        </div>
-        <div
-          className="rounded-2xl p-5"
-          style={{ background: '#FFFDF9', border: '1px solid #E8D5B5' }}
-        >
-          <div className="space-y-3">
-            {WHATS_INSIDE.map((item) => (
-              <div key={item} className="flex items-start gap-3">
-                <div className="flex-shrink-0 mt-0.5"><CheckIcon /></div>
-                <p className="font-sans text-xs leading-relaxed" style={{ color: '#2D1F14', fontWeight: 300 }}>{item}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Testimonials ── */}
-      <div className="px-5 mb-6">
-        <div className="ornament-divider mb-5">
-          <span className="font-display italic" style={{ fontSize: 11, color: '#D4BC95' }}>real stories</span>
-        </div>
-        <div
-          className="rounded-2xl p-6 text-center"
-          style={{ background: '#FFFDF9', border: '1px solid #E8D5B5', position: 'relative', minHeight: 140 }}
-        >
-          {TESTIMONIALS.map((t, i) => (
-            <TestimonialCard key={i} t={t} active={i === activeTestimonial} />
-          ))}
-          <div className="flex justify-center gap-2 mt-4" style={{ position: 'relative', zIndex: 1 }}>
-            {TESTIMONIALS.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveTestimonial(i)}
-                className="rounded-full transition-all duration-300"
-                style={{
-                  width: i === activeTestimonial ? 18 : 6,
-                  height: 6,
-                  background: i === activeTestimonial ? '#C8706E' : '#E8D5B5',
-                  border: 'none', cursor: 'pointer',
-                }}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Objection handling ── */}
-      <div className="px-5 mb-6">
-        <div
-          className="rounded-2xl p-5"
-          style={{ background: 'rgba(200,112,110,0.04)', border: '1px solid #EFC5C4' }}
-        >
-          <p className="font-display italic text-base text-center mb-4" style={{ color: '#1A1008' }}>
-            Common questions
-          </p>
-          <div className="space-y-4">
-            {[
-              {
-                q: 'Do they need to install anything?',
-                a: 'No. It\'s a single HTML file — opens in any browser, works offline. Just send it over iMessage or WhatsApp.',
-              },
-              {
-                q: 'What if my schedule changes?',
-                a: 'You can re-download and update letters anytime before they open. Just send the new file.',
-              },
-              {
-                q: 'Can they reply to my letters?',
-                a: 'Yes — they write replies inside the app, then export the file back to you. No accounts, no servers.',
-              },
-            ].map(({ q, a }) => (
-              <div key={q}>
-                <p className="font-sans text-xs font-medium mb-1" style={{ color: '#1A1008' }}>{q}</p>
-                <p className="font-sans text-xs leading-relaxed" style={{ color: '#9B8070', fontWeight: 300 }}>{a}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Final CTA ── */}
-      <div className="px-5 pb-14">
-        <div
-          className="rounded-2xl p-6 text-center"
-          style={{ background: '#FFFDF9', border: '1px solid #E8D5B5', boxShadow: '0 4px 24px rgba(45,31,20,0.07)' }}
-        >
-          <div
-            className="mx-auto mb-4 flex items-center justify-center font-display italic text-white"
-            style={{ width: 44, height: 44, borderRadius: '50%', background: '#C8706E', fontSize: 18, boxShadow: '0 2px 8px rgba(200,112,110,0.35)' }}
-          >
-            W
-          </div>
-          <p className="font-display italic mb-1" style={{ fontSize: 18, color: '#1A1008', letterSpacing: '-0.01em' }}>
-            Don't leave empty-handed.
-          </p>
-          <p className="font-sans mb-5" style={{ fontSize: 12, color: '#9B8070', fontWeight: 300, lineHeight: 1.7 }}>
-            Give them something to hold onto.<br />
-            A letter box that grows with them while you're gone.
-          </p>
-          <button
-            onClick={handleStart}
-            className="btn-primary w-full py-4 rounded-2xl font-sans mb-3"
-            style={{ fontSize: 14 }}
-          >
-            Build their letter box — $39 →
+        <HeroSky farRef={farRef} nearRef={nearRef} />
+        <header className="wya-header">
+          <a href="/" className="wya-brand">
+            <Mark />
+            While You're Away
+          </a>
+          <button type="button" className="wya-btn wya-btn--outline" onClick={() => goTo(5)}>
+            Start your letter box
           </button>
-          <div className="flex items-center justify-center gap-3 flex-wrap">
-            {['One-time · no subscription', 'Download & share instantly', 'Private by design'].map((g) => (
-              <div key={g} className="flex items-center gap-1.5">
-                <CheckIcon />
-                <span className="font-sans" style={{ fontSize: 10, color: '#9B8070', fontWeight: 300 }}>{g}</span>
+        </header>
+
+        <div className="wya-hero-body">
+          <div className="wya-inner">
+            <div className="wya-hero-grid">
+              <div className="wya-hero-copy">
+                <h1 className="wya-hero-title wya-in-1">Goodbyes can be beautiful, too.</h1>
+                <p className="wya-hero-lede wya-in-2">
+                  Every hello feels like a gift. Goodbyes usually just happen to us. The more you prepare one, the more it can hold.
+                </p>
+                <p className="wya-hero-sub wya-in-2">
+                  Write to them in the days before you part. They'll open it one letter at a time, for as long as you're apart.
+                </p>
+                <div className="wya-cta-row wya-in-3">
+                  <button type="button" className="wya-btn wya-btn--light" onClick={() => goTo(5)}>
+                    Start your letter box
+                  </button>
+                  <button type="button" className="wya-link" onClick={() => goTo(1)}>
+                    See how it works
+                  </button>
+                </div>
               </div>
-            ))}
+
+              <div className="wya-letter-col wya-in-4">
+                <div className="wya-stack">
+                  <div className="wya-sheet wya-sheet--a" aria-hidden="true" />
+                  <div className="wya-sheet wya-sheet--b" aria-hidden="true" />
+                  <article className="wya-letter" aria-live="polite">
+                    <Grain id="wyaGrainLetter" />
+                    <div className={`wya-letter-content${letterFading ? ' is-fading' : ''}`}>
+                      <p className="wya-letter-to">{letter.to}</p>
+                      <p className="wya-letter-body">{letter.body}</p>
+                    </div>
+                    <div className={`wya-letter-meta${letterFading ? ' is-fading' : ''}`}>
+                      <span className="wya-dot" aria-hidden="true" />
+                      <span>{letter.written}</span>
+                    </div>
+                  </article>
+                </div>
+                <div className="wya-tabs" role="group" aria-label="Example letters">
+                  {LETTERS.map((l, i) => (
+                    <button
+                      key={l.label}
+                      type="button"
+                      className="wya-pill wya-pill--dark"
+                      aria-pressed={i === letterIdx}
+                      onClick={() => { setPaused(true); if (i !== letterIdx) showLetter(i) }}
+                    >
+                      {l.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
+      {/* ── Before dawn: how it works ── */}
+      <section data-scene="1" className="wya-scene wya-how" aria-labelledby="wya-how-title">
+        <div className={reveal(1)}>
+          <h2 id="wya-how-title" className="wya-h2" style={{ maxWidth: '18em' }}>
+            You prepare the goodbye. They get something to hold on to.
+          </h2>
+          <p className="wya-lede">You do the writing before you part. They do the opening while you're apart.</p>
+          <ol className="wya-steps" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            {STEPS.map((s) => (
+              <li key={s.title} className={`wya-step${s.now ? ' wya-step--now' : ''}`}>
+                <p className="wya-step-when">{s.when}</p>
+                <h3>{s.title}</h3>
+                <p>{s.body}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* ── Morning: what they receive ── */}
+      <section data-scene="2" className="wya-scene wya-receive" aria-labelledby="wya-receive-title">
+        <div className={reveal(2)}>
+          <div className="wya-receive-grid">
+            <div className="wya-phone-col">
+              <div className="wya-phone" role="img" aria-label="Example of a letter box on a phone">
+                <div className="wya-screen">
+                  <div className="wya-notch" aria-hidden="true" />
+                  <div className="wya-screen-head">
+                    <div>
+                      <p style={{ fontSize: 12, color: '#9AA4B8' }}>Letters from Jae</p>
+                      <p className="wya-serif" style={{ marginTop: 2, fontSize: 24, color: '#F4F1E6' }}>For Mina</p>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <p className="wya-serif" style={{ fontSize: 30, lineHeight: 1, color: '#F0B341' }}>47</p>
+                      <p style={{ marginTop: 4, fontSize: 11, color: '#C9D0DC' }}>days to go</p>
+                    </div>
+                  </div>
+                  <div className="wya-screen-rule" />
+                  {PHONE_ROWS.map((r, i) => (
+                    <div key={r.title} className={`wya-row${i === chapter.row ? ' is-on' : ''}`}>
+                      <div style={{ minWidth: 0 }}>
+                        <p className="wya-row-title">{r.title}</p>
+                        <p className="wya-row-sub">{r.sub}</p>
+                      </div>
+                      {r.locked ? <LockIcon /> : <ChevronIcon />}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="wya-receive-copy">
+              <h2 id="wya-receive-title" className="wya-h2">Everything you wrote, in one place they can carry.</h2>
+              <p className="wya-lede">
+                A private letter box on their phone, in the name and colors you choose. It works offline, counts down with them, and lets them write back to every letter.
+              </p>
+              <div className="wya-chips" role="group" aria-label="Kinds of letters">
+                {CHAPTERS.map((c, i) => (
+                  <button
+                    key={c.label}
+                    type="button"
+                    className="wya-pill wya-pill--light"
+                    aria-pressed={i === chapterIdx}
+                    onClick={() => { if (i !== chapterIdx) showChapter(i) }}
+                  >
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+              <div className={`wya-chapter${chapterFading ? ' is-fading' : ''}`} aria-live="polite">
+                <p className="wya-chapter-desc">{chapter.desc}</p>
+                <p className="wya-chapter-example">{chapter.example}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Afternoon: questions ── */}
+      <section data-scene="3" className="wya-scene wya-faq-scene" aria-labelledby="wya-faq-title">
+        <div className={reveal(3)}>
+          <div className="wya-faq-grid">
+            <h2 id="wya-faq-title" className="wya-h2">Questions people ask</h2>
+            <div className="wya-faq">
+              {FAQ.map((f, i) => {
+                const open = i === faqOpen
+                return (
+                  <div key={f.q} className={`wya-faq-item${open ? ' is-open' : ''}`}>
+                    <h3>
+                      <button
+                        type="button"
+                        className="wya-faq-btn"
+                        aria-expanded={open}
+                        aria-controls={`wya-faq-${i}`}
+                        onClick={() => setFaqOpen(open ? -1 : i)}
+                      >
+                        <span>{f.q}</span>
+                        <span className="wya-faq-sign" aria-hidden="true">+</span>
+                      </button>
+                    </h3>
+                    <div className="wya-faq-panel" id={`wya-faq-${i}`}>
+                      <div><p>{f.a}</p></div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Dusk: why I made this ── */}
+      <section data-scene="4" className="wya-scene wya-why" aria-labelledby="wya-why-title">
+        <div className={reveal(4)}>
+          <div className="wya-why-grid">
+            {FOUNDER_PHOTO && (
+              <div className="wya-why-photo">
+                <img src={FOUNDER_PHOTO} alt="Jin, founder of While You're Away" />
+              </div>
+            )}
+            <div className="wya-why-copy">
+              <h2 id="wya-why-title" className="wya-eyebrow">Why I made this</h2>
+              <p className="wya-why-roles">I'm a soldier. A student far from home. A son. Someone's partner. Someone's best friend.</p>
+              <div className="wya-why-body">
+                <p>
+                  Each of those has come with a goodbye. The last night before basic training, holding on until we ran out of tears. An airport bus I boarded with a straight face, then cried on the whole way. A phone call telling me my closest friend was gone. A hospital room, my mother beside me, when the doctor said my father might not wake up.
+                </p>
+                <p>Every time, gifts and good dinners felt like grasping at straws. Even “I love you” couldn't carry it. What stayed with me were the words I hadn't said.</p>
+                <p>
+                  So I started writing them down: the days we'd had, the things I'd never said out loud, the future I hoped for. While You're Away is that letter box, made for anyone with a goodbye coming.
+                </p>
+                <p>We won't write it for you. It will be as good as the care you put in, and we're here to help you get every bit of it onto the page.</p>
+              </div>
+              <p className="wya-sign">Jin, founder</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Night again: start ── */}
+      <section data-scene="5" className="wya-scene wya-start" aria-labelledby="wya-start-title">
+        <EndSky />
+        <div className="wya-start-body">
+          <div className={reveal(5)}>
+            <div className="wya-start-grid">
+              <div className="wya-start-copy">
+                <Mark size={40} halo />
+                <h2 id="wya-start-title" className="wya-h2">Leave the light on for them.</h2>
+                <p className="wya-lede">
+                  Start a month before you part, or a week. Give them something to hold on to, and a kind of waiting that feels less like waiting.
+                </p>
+                <p className="wya-price">$39, once, for the whole letter box. No subscription.</p>
+              </div>
+
+              <form className="wya-form" onSubmit={handleStart}>
+                <Grain id="wyaGrainForm" />
+                <fieldset>
+                  <legend>Who are you writing to?</legend>
+                  <div className="wya-who">
+                    {WHO.map((w, i) => (
+                      <button key={w} type="button" className="wya-pill wya-pill--light" aria-pressed={i === who} onClick={() => setWho(i)}>
+                        {w}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+                <label htmlFor="wya-date">When do you part?</label>
+                <input
+                  id="wya-date"
+                  className="wya-input"
+                  type="date"
+                  value={partDate}
+                  onChange={(e) => setPartDate(e.target.value)}
+                />
+                <button type="submit" className="wya-btn wya-btn--ink">Start your letter box</button>
+                <p className="wya-form-note">Free to start. You pay only when you're ready to build the box.</p>
+              </form>
+            </div>
+          </div>
+        </div>
+        <footer className="wya-footer">
+          <span>While You're Away</span>
+          <span>getwhileyouareaway.com</span>
+        </footer>
+      </section>
     </div>
   )
 }
