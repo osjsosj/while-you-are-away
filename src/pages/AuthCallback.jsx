@@ -10,7 +10,7 @@ export default function AuthCallback() {
   const stripeSessionId = searchParams.get('session_id')
 
   // Stripe에서 돌아온 직후 결제 세션 ID 저장 — /api/claude가 이걸로 결제 여부를 확인함
-  if (stripeSessionId && getDraftSessionId() !== stripeSessionId) {
+  if (stripeSessionId && getDraftValue('paymentSessionId') !== stripeSessionId) {
     saveDraft({ paymentSessionId: stripeSessionId })
   }
 
@@ -44,8 +44,29 @@ export default function AuthCallback() {
         }, 800)
       } else if (!done) {
         done = true
-        if (isPaymentSuccess) setPhase('needEmail')
-        else setPhase('error')
+        if (isPaymentSuccess) {
+          const savedEmail = getDraftValue('email')
+          if (savedEmail) autoSend(savedEmail)
+          else setPhase('needEmail')
+        } else setPhase('error')
+      }
+    }
+
+    // 결제할 때 입력한 이메일로 로그인 링크 자동 발송
+    const autoSend = async (addr) => {
+      setEmail(addr)
+      setPhase('sending')
+      const { error: err } = await supabase.auth.signInWithOtp({
+        email: addr,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          shouldCreateUser: true,
+        },
+      })
+      if (err) {
+        console.error('signInWithOtp:', err)
+        setError(friendlyAuthError(err))
+        setPhase('needEmail')
       }
     }
 
@@ -91,7 +112,8 @@ export default function AuthCallback() {
     })
 
     if (err) {
-      setError('Something went wrong. Please try again.')
+      console.error('signInWithOtp:', err)
+      setError(friendlyAuthError(err))
       setSending(false)
     } else {
       setPhase('sending')
@@ -242,10 +264,19 @@ export default function AuthCallback() {
   )
 }
 
-function getDraftSessionId() {
+function getDraftValue(key) {
   try {
-    return JSON.parse(localStorage.getItem('lbs_draft') || '{}').paymentSessionId
+    return JSON.parse(localStorage.getItem('lbs_draft') || '{}')[key]
   } catch {
     return undefined
   }
+}
+
+function friendlyAuthError(err) {
+  const msg = (err?.message || '').toLowerCase()
+  if (err?.status === 429 || msg.includes('rate limit') || msg.includes('security purposes')) {
+    return 'Too many emails sent just now. Please wait a minute and try again — or continue without saving.'
+  }
+  if (msg.includes('invalid') && msg.includes('email')) return 'That email address looks invalid.'
+  return `Couldn't send the email (${err?.message || 'unknown error'}). You can continue without saving.`
 }

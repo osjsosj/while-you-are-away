@@ -37,7 +37,7 @@ export default async function handler(req, res) {
       },
     })
 
-    res.status(200).json({ url: session.url })
+    res.status(200).json({ url: session.url, sessionId: session.id })
   } catch (error) {
     console.error('Stripe error:', error)
     res.status(500).json({ error: error.message })

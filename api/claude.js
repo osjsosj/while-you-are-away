@@ -11,8 +11,8 @@ import Stripe from 'stripe'
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
 const MODELS = {
-  interview: 'claude-haiku-4-5-20251001',
-  theme: 'claude-sonnet-4-20250514',
+  interview: 'claude-haiku-5-5',
+  theme: 'claude-sonnet-5-5',
 }
 
 const MAX_MESSAGES = 60 // 인터뷰 대화 최대 길이
@@ -73,6 +73,7 @@ Your job is to have a natural, caring conversation to collect the remaining info
 - If an answer is vague or very short, gently ask one follow-up
 - Keep the tone warm and personal, like a friend helping plan something meaningful
 - Stay on the task of building this letter box; politely steer back if asked about unrelated things
+- Write in plain conversational text. You may use **bold** for the one question you are asking, but no headings, bullet lists, or other markdown
 - Once ALL information is collected, wrap up warmly and include the data block below
 
 ## When complete

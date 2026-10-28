@@ -134,7 +134,7 @@ export default function AIInterview() {
                 ),
               }}
             >
-              {m.content}
+              {renderInline(m.content)}
             </div>
           </div>
         ))}
@@ -231,4 +231,15 @@ export default function AIInterview() {
       </div>
     </div>
   )
+}
+
+/** **굵게** 표시만 지원 — 나머지 텍스트는 그대로 (HTML 주입 없음) */
+function renderInline(text) {
+  return String(text)
+    .split(/(\*\*[^*]+\*\*)/g)
+    .map((part, i) =>
+      part.startsWith('**') && part.endsWith('**') && part.length > 4
+        ? <strong key={i} style={{ fontWeight: 600 }}>{part.slice(2, -2)}</strong>
+        : part,
+    )
 }

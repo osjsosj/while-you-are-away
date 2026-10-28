@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { getDraft } from '../utils/storage'
+import { getDraft, saveDraft } from '../utils/storage'
 
 const CheckIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -24,7 +24,7 @@ const guarantees = [
 export default function Paywall() {
   const draft = getDraft()
   const { fromName, toName, startDate, endDate, regularCount } = draft.phase1 || {}
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(draft.email || '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -51,6 +51,8 @@ export default function Paywall() {
       })
       const data = await res.json()
       if (data.url) {
+        // 결제 페이지로 가기 전에 저장 — 결제 후 탭을 닫아도 결제 기록이 남도록
+        saveDraft({ paymentSessionId: data.sessionId, email: email.trim() })
         window.location.href = data.url
       } else {
         setError('Payment setup failed. Please try again.')
