@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDraft, saveDraft } from '../utils/storage'
-import { generateLetterboxConfig } from '../utils/aiService'
+import { generateLetterboxConfig, PaymentRequiredError } from '../utils/aiService'
 
 function LoadingScreen() {
   const [dotStep, setDotStep] = useState(0)
@@ -59,7 +59,13 @@ export default function AIGenerate() {
   const generate = async () => {
     setStatus('loading')
     const allData = { ...draft.phase1, ...draft.phase2 }
-    const result = await generateLetterboxConfig(allData)
+    let result
+    try {
+      result = await generateLetterboxConfig(allData)
+    } catch (err) {
+      if (err instanceof PaymentRequiredError) return navigate('/paywall')
+      result = null
+    }
     if (!result) { setStatus('error'); return }
     setConfig(result)
     setCustomName(result.appNames?.[0] || '')

@@ -1,12 +1,18 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../utils/supabase'
-import { hydrateFromDB } from '../utils/storage'
+import { hydrateFromDB, saveDraft } from '../utils/storage'
 
 export default function AuthCallback() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const isPaymentSuccess = searchParams.get('payment') === 'success'
+  const stripeSessionId = searchParams.get('session_id')
+
+  // Stripe에서 돌아온 직후 결제 세션 ID 저장 — /api/claude가 이걸로 결제 여부를 확인함
+  if (stripeSessionId && getDraftSessionId() !== stripeSessionId) {
+    saveDraft({ paymentSessionId: stripeSessionId })
+  }
 
   const [phase, setPhase] = useState('checking') // checking | needEmail | sending | success | error
   const [email, setEmail] = useState('')
@@ -234,4 +240,12 @@ export default function AuthCallback() {
       </button>
     </div>
   )
+}
+
+function getDraftSessionId() {
+  try {
+    return JSON.parse(localStorage.getItem('lbs_draft') || '{}').paymentSessionId
+  } catch {
+    return undefined
+  }
 }

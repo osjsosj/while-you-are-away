@@ -61,7 +61,9 @@ export async function hydrateFromDB() {
   const localTime = local._savedAt || 0
 
   if (remoteTime >= localTime) {
-    localSet(remote)
+    // 결제 세션 ID는 어느 쪽에 있든 보존
+    const paymentSessionId = remote.paymentSessionId || local.paymentSessionId
+    localSet(paymentSessionId ? { ...remote, paymentSessionId } : remote)
   }
 }
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDraft, saveDraft } from '../utils/storage'
-import { runAIInterview } from '../utils/aiService'
+import { runAIInterview, PaymentRequiredError } from '../utils/aiService'
 
 export default function AIInterview() {
   const navigate = useNavigate()
@@ -21,7 +21,13 @@ export default function AIInterview() {
   const startInterview = async () => {
     setLoading(true)
     const phase1 = getDraft().phase1 || {}
-    const firstMessage = await runAIInterview([], phase1, true)
+    let firstMessage
+    try {
+      firstMessage = await runAIInterview([], phase1, true)
+    } catch (err) {
+      if (err instanceof PaymentRequiredError) return navigate('/paywall')
+      throw err
+    }
     setMessages([{ role: 'assistant', content: firstMessage }])
     setLoading(false)
     setTimeout(() => inputRef.current?.focus(), 100)
@@ -36,7 +42,13 @@ export default function AIInterview() {
     setLoading(true)
 
     const phase1 = getDraft().phase1 || {}
-    const response = await runAIInterview(newMessages, phase1, false)
+    let response
+    try {
+      response = await runAIInterview(newMessages, phase1, false)
+    } catch (err) {
+      if (err instanceof PaymentRequiredError) return navigate('/paywall')
+      throw err
+    }
 
     if (response.includes('<COMPLETE>')) {
       try {
