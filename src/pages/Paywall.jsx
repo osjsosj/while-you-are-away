@@ -70,11 +70,15 @@ export default function Paywall() {
       </ul>
 
       <form onSubmit={pay} className="wf-paper" noValidate>
+        <p style={{ margin: '0 0 6px', fontFamily: 'var(--serif)', fontSize: 22, lineHeight: 1.25 }}>Pay only for the pen and paper.</p>
+        <p style={{ margin: '0 0 16px', fontSize: 15, lineHeight: 1.55, color: 'var(--ink-soft)' }}>
+          You bring the words, the memories, the time. That’s the real gift. We only charge what a good box of letter paper and a pen would cost.
+        </p>
         <p style={{ display: 'flex', alignItems: 'baseline', gap: 10, margin: '0 0 4px' }}>
-          <span style={{ fontFamily: 'var(--serif)', fontSize: 44, lineHeight: 1 }}>$39</span>
+          <span style={{ fontFamily: 'var(--serif)', fontSize: 44, lineHeight: 1 }}>$24</span>
           <span className="wf-note">once</span>
         </p>
-        <p className="wf-note" style={{ marginBottom: 20 }}>No subscription. Everything above, for this letter box.</p>
+        <p className="wf-note" style={{ marginBottom: 20 }}>No subscription. Full refund within 14 days, for any reason.</p>
         <label className="wf-label" htmlFor="p-email" style={{ color: 'var(--ink)' }}>Your email</label>
         <p className="wf-help" style={{ color: 'var(--ink-muted)' }}>For your receipt and a sign-in code, so you can keep writing from any device.</p>
         <input
@@ -92,7 +96,9 @@ export default function Paywall() {
         <button type="submit" className="wf-btn wf-btn--ink wf-btn--block" style={{ marginTop: 18 }} disabled={loading}>
           {loading ? 'Opening secure checkout…' : 'Continue to checkout'}
         </button>
-        <p className="wf-note" style={{ marginTop: 12, textAlign: 'center' }}>Payments are handled by Stripe.</p>
+        <p className="wf-fine">
+          Payments are handled by Stripe. By continuing you agree to our <a href="/terms" target="_blank" rel="noopener">Terms</a> and <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>. <a href="/refunds" target="_blank" rel="noopener">Refunds</a>.
+        </p>
       </form>
 
       <button type="button" className="wf-link" style={{ marginTop: 16 }} onClick={() => navigate('/interview')}>Change the basics</button>

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { hydrateFromDB } from './utils/storage'
+import Legal from './pages/Legal'
 import Landing from './pages/Landing'
 import Interview from './pages/Interview'
 import Paywall from './pages/Paywall'
@@ -32,6 +33,9 @@ export default function App() {
         <Route path="/preview" element={<Preview />} />
         <Route path="/export" element={<Export />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/terms" element={<Legal doc="terms" />} />
+        <Route path="/privacy" element={<Legal doc="privacy" />} />
+        <Route path="/refunds" element={<Legal doc="refunds" />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>

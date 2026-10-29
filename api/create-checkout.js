@@ -22,7 +22,7 @@ export default async function handler(req, res) {
               name: "While You're Away — Letter Box",
               description: `A personalized letter box from ${fromName} to ${toName}`,
             },
-            unit_amount: 3900,
+            unit_amount: 2400,
           },
           quantity: 1,
         },

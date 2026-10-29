@@ -461,3 +461,7 @@
   .wya *, .wya *::before, .wya *::after { animation: none !important; transition: none !important; }
   .wya-shoot { display: none; }
 }
+.wya-footer { justify-content: space-between; }
+.wya-footer-links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.wya-footer-links a { color: #B9C2D3; text-decoration: none; }
+.wya-footer-links a:hover { color: #E9ECF2; text-decoration: underline; text-underline-offset: 4px; }

@@ -379,7 +379,7 @@ export default function Landing() {
                 <p className="wya-lede">
                   Start a month before you part, or a week. Give them something to hold on to, and a kind of waiting that feels less like waiting.
                 </p>
-                <p className="wya-price">$39, once, for the whole letter box. No subscription.</p>
+                <p className="wya-price">Pay only for the pen and paper: $24, once, for the whole letter box. No subscription, and a full refund within 14 days.</p>
               </div>
 
               <form className="wya-form" onSubmit={handleStart}>
@@ -410,7 +410,12 @@ export default function Landing() {
         </div>
         <footer className="wya-footer">
           <span>While You're Away</span>
-          <span>getwhileyouareaway.com</span>
+          <span className="wya-footer-links">
+            <a href="/terms">Terms</a>
+            <a href="/privacy">Privacy</a>
+            <a href="/refunds">Refunds</a>
+            <a href="mailto:hello@getwhileyouareaway.com">hello@getwhileyouareaway.com</a>
+          </span>
         </footer>
       </section>
     </div>
