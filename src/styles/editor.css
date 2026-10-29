@@ -118,3 +118,11 @@
 .we-film .wm-btn.we-film-btn:hover:not(:disabled) { color: #fff; border-color: var(--mist); }
 .we-film-voice { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 14px; }
 .we-film-voice audio { height: 40px; max-width: 100%; }
+
+/* signature */
+.ws-pad, .ws-view { display: block; width: 100%; max-width: 440px; aspect-ratio: 400 / 150; border-radius: 12px; background: var(--paper); }
+.ws-pad { touch-action: none; cursor: crosshair; }
+.ws-pad path, .ws-view path { fill: none; stroke: #1B2536; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.ws-line { stroke: #CFC8B6; stroke-width: 1.5; stroke-dasharray: 4 6; }
+.ws-hint { fill: #9AA1AD; font: 20px 'Literata', Georgia, serif; pointer-events: none; }
+.ws-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; margin-top: 12px; }

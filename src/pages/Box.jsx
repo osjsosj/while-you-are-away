@@ -4,6 +4,9 @@ import { localISODate, daysBetween, formatLong } from '../utils/diary'
 import Dog from '../components/pets/Dog'
 import Cat from '../components/pets/Cat'
 import FilmPlayer from '../components/FilmPlayer'
+import Constellation from '../components/Constellation'
+import Moon from '../components/Moon'
+import { moonOn } from '../utils/sky'
 import { filmFrom } from '../utils/film'
 import './box.css'
 
@@ -112,7 +115,7 @@ export default function Box() {
       </div>
       <main className="wb-main">
         {tab === 'letters'
-          ? <Letters items={items} openSet={openSet} onOpen={(id) => { setOpenId(id); markOpened(id) }} />
+          ? <><OurSky ids={opened} /><Letters items={items} openSet={openSet} onOpen={(id) => { setOpenId(id); markOpened(id) }} /></>
           : <Story box={box} token={token} onFilm={film ? () => setPlaying(true) : null} />}
       </main>
       <InstallHint token={token} />
@@ -122,6 +125,7 @@ export default function Box() {
           replies={replies.filter((r) => r.item_id === current.id)}
           toName={box.toName}
           fromName={box.fromName}
+          signature={box.signature}
           onClose={() => setOpenId(null)}
           onReply={async (body) => {
             const { reply } = await post({ action: 'reply', itemId: current.id, body })
@@ -257,7 +261,7 @@ function Row({ item, isNew, onOpen }) {
   )
 }
 
-export function LetterSheet({ item, replies, toName, fromName, onClose, onReply, preview = false }) {
+export function LetterSheet({ item, replies, toName, fromName, signature = null, onClose, onReply, preview = false }) {
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -302,7 +306,9 @@ export function LetterSheet({ item, replies, toName, fromName, onClose, onReply,
             <audio controls src={item.voice.url} preload="metadata" />
           </div>
         )}
-        {fromName && item.letter && <p className="wb-sign">— {fromName}</p>}
+        {item.letter && (signature?.d
+          ? <svg className="wb-signature" viewBox="0 0 400 150" role="img" aria-label={`Signed, ${fromName || 'me'}`}><path d={signature.d} /></svg>
+          : fromName && <p className="wb-sign">— {fromName}</p>)}
 
         {preview ? (
           <p className="wb-quiet wb-small" style={{ marginTop: 28 }}>Here, {toName || 'they'} can write back to you. Replies arrive on your hand-over page.</p>
@@ -349,6 +355,7 @@ export function Story({ box, token, today: day, onFilm = null }) {
           </button>
         </section>
       )}
+      <Moons partDate={box.partDate} today={today} />
       {box.pet && (
         <section className="wb-section wb-pet" aria-labelledby="wb-pet-name">
           <div className="wb-pet-art" aria-hidden="true">
@@ -376,7 +383,7 @@ export function Story({ box, token, today: day, onFilm = null }) {
           </ol>
         </section>
       )}
-      {!onFilm && !box.pet && box.timeline.length === 0 && <p className="wb-note">Nothing here yet.</p>}
+      {!onFilm && !box.partDate && !box.pet && box.timeline.length === 0 && <p className="wb-note">Nothing here yet.</p>}
     </>
   )
 }
@@ -406,3 +413,39 @@ const ChevronIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 3l5 5-5 5" /></svg>
 )
 
+
+/** The constellation of letters opened so far. */
+export function OurSky({ ids, label }) {
+  if (!ids?.length) return null
+  const n = ids.length
+  return (
+    <section className="wb-sky" aria-label="Your constellation">
+      <Constellation ids={ids} />
+      <p className="wb-note">{label || `${n} ${n === 1 ? 'letter' : 'letters'} opened. Each one is a star.`}</p>
+    </section>
+  )
+}
+
+function Moons({ partDate, today }) {
+  if (!partDate) return null
+  const then = moonOn(partDate)
+  const now = today > partDate ? moonOn(today) : null
+  if (!then) return null
+  return (
+    <section className="wb-section" aria-labelledby="wb-moon">
+      <h2 id="wb-moon">The same moon</h2>
+      <div className="wb-moons">
+        <figure>
+          <Moon phase={then.phase} label={`${then.name}, ${Math.round(then.lit * 100)}% lit`} />
+          <figcaption><span className="wb-row-title">{today >= partDate ? 'The night we said goodbye' : 'The night we say goodbye'}</span><span className="wb-row-sub">{then.name} · {formatLong(partDate)}</span></figcaption>
+        </figure>
+        {now && (
+          <figure>
+            <Moon phase={now.phase} label={`${now.name}, ${Math.round(now.lit * 100)}% lit`} />
+            <figcaption><span className="wb-row-title">Tonight</span><span className="wb-row-sub">{now.name} · wherever we both are</span></figcaption>
+          </figure>
+        )}
+      </div>
+    </section>
+  )
+}

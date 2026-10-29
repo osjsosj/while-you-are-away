@@ -6,6 +6,7 @@ import { stampFor, formatLong, daysBetween, normalizeUnlock } from './diary.js'
 import { buildPetConfig } from './htmlGenerator.js'
 import { getPlan, planSlots } from './plan.js'
 import { normalizeFilm } from './film.js'
+import { cleanSignature } from './sky.js'
 
 export function addDays(iso, n) {
   const [y, m, d] = iso.split('-').map(Number)
@@ -86,6 +87,7 @@ export function recipientView(draft, today) {
       theme: config.theme || null,
       accent: typeof draft.accent === 'string' && /^#[0-9a-f]{6}$/i.test(draft.accent) ? draft.accent : null,
       pet: buildPetConfig(phase2),
+      signature: cleanSignature(draft.signature),
       timeline: (phase2.timeline || []).filter((t) => t && t.label).map((t) => ({ date: t.date || '', label: t.label, emoji: t.emoji || '' })),
     },
     items: visible,

@@ -70,3 +70,5 @@
 .wh-ready li.is-some::before { background: linear-gradient(90deg, var(--light) 50%, transparent 50%); border-color: var(--light); }
 .wh-ready li.is-none { color: var(--mist-soft); }
 .wh-inline-link { padding: 0; border: none; background: none; color: var(--mist); font-size: inherit; text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--light); cursor: pointer; }
+.wh-sky { width: 100%; padding: 8px 0; }
+.wc-sky { display: block; width: 100%; height: auto; overflow: visible; }

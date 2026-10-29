@@ -173,3 +173,21 @@ button.wb-row:hover:not(:disabled) { border-color: rgba(233, 236, 242, 0.3); tra
 .wb-film:hover { border-color: var(--light); }
 .wb-film > span:last-child { display: flex; flex-direction: column; gap: 2px; }
 .wb-film-play { flex: none; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; padding-left: 2px; border-radius: 50%; background: var(--light); color: #101A33; }
+
+/* constellation of opened letters */
+.wb-sky { max-width: 560px; margin: 0 auto; padding: 8px 20px 0; }
+.wc-sky { display: block; width: 100%; height: auto; overflow: visible; }
+.wc-pulse { animation: wcPulse 2.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes wcPulse { 50% { opacity: 0.05; transform: scale(1.6); } }
+.wb-sky .wb-note { margin-top: 4px; text-align: center; }
+
+/* moons */
+.wb-moons { display: flex; flex-wrap: wrap; gap: 20px 32px; }
+.wb-moons figure { margin: 0; display: flex; align-items: center; gap: 14px; }
+.wb-moons figcaption { display: flex; flex-direction: column; gap: 2px; }
+
+/* signature under a letter */
+.wb-signature { display: block; width: 180px; height: auto; margin: 14px 0 0 auto; }
+.wb-signature path { fill: none; stroke: #1B2536; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+
+@media (prefers-reduced-motion: reduce) { .wc-pulse { animation: none; } }

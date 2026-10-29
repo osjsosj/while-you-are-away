@@ -8,6 +8,7 @@ import { allItems } from '../utils/boxModel'
 import { formatLong } from '../utils/diary'
 import SignInModal from '../components/SignInModal'
 import FlowFrame from '../components/FlowFrame'
+import Constellation from '../components/Constellation'
 import { getPlan, planSlots } from '../utils/plan'
 import { normalizeFilm } from '../utils/film'
 import { isFilled } from '../utils/summary'
@@ -26,7 +27,7 @@ export default function Export() {
   const [needSignIn, setNeedSignIn] = useState(false)
   const [copied, setCopied] = useState(false)
   const [replies, setReplies] = useState([])
-  const [openedCount, setOpenedCount] = useState(0)
+  const [openedIds, setOpenedIds] = useState([])
 
   const labels = useMemo(() => Object.fromEntries(allItems(getDraft()).map((i) => [i.id, i.label])), [])
 
@@ -38,12 +39,12 @@ export default function Export() {
     if (!box) return setStage('ready')
     setLink(`${window.location.origin}/b/${box.share_token}`)
     setStage('live')
-    const [{ data: r }, { count }] = await Promise.all([
+    const [{ data: r }, { data: o }] = await Promise.all([
       supabase.from('box_replies').select('item_id, body, created_at').eq('box_user_id', user.id).order('created_at', { ascending: false }),
-      supabase.from('box_opens').select('item_id', { count: 'exact', head: true }).eq('box_user_id', user.id),
+      supabase.from('box_opens').select('item_id').eq('box_user_id', user.id).order('opened_at', { ascending: true }),
     ])
     setReplies(r || [])
-    setOpenedCount(count || 0)
+    setOpenedIds((o || []).map((x) => x.item_id))
   }, [])
 
   useEffect(() => {
@@ -148,7 +149,8 @@ export default function Export() {
 
             <section className="wh-replies" aria-labelledby="wh-replies-title">
               <h2 id="wh-replies-title">From {toName}</h2>
-              <p className="wh-note">{openedCount ? `${openedCount} ${openedCount === 1 ? 'letter' : 'letters'} opened so far.` : 'Nothing opened yet.'}</p>
+              {openedIds.length > 0 && <div className="wh-sky"><Constellation ids={openedIds} /></div>}
+              <p className="wh-note">{openedIds.length ? `${toName} has opened ${openedIds.length} ${openedIds.length === 1 ? 'letter' : 'letters'}. Each one is a star in their sky.` : 'Nothing opened yet.'}</p>
               {replies.length === 0 ? (
                 <p className="wh-empty">Their replies will appear here.</p>
               ) : (

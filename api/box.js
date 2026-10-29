@@ -77,7 +77,7 @@ async function view(req, res, box) {
 
   const [{ data: replies }, { data: opens }] = await Promise.all([
     db().from('box_replies').select('item_id, body, created_at').eq('box_user_id', box.userId).order('created_at', { ascending: true }),
-    db().from('box_opens').select('item_id').eq('box_user_id', box.userId),
+    db().from('box_opens').select('item_id').eq('box_user_id', box.userId).order('opened_at', { ascending: true }),
   ])
   return res.status(200).json({ ...data, today, replies: replies || [], opened: (opens || []).map((o) => o.item_id) })
 }

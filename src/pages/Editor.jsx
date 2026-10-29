@@ -7,6 +7,7 @@ import FlowFrame from '../components/FlowFrame'
 import MomentMedia from '../components/MomentMedia'
 import Companion from '../components/Companion'
 import FilmEditor from '../components/FilmEditor'
+import SignaturePad from '../components/SignaturePad'
 import { buildSummary, isFilled } from '../utils/summary'
 import '../styles/editor.css'
 import './diary.css'
@@ -87,6 +88,16 @@ export default function Editor() {
           title={name}
           closing={draft.generatedConfig?.welcomeMessage}
         />
+
+        <section className="we-section" aria-labelledby="we-sign">
+          <div className="we-section-head">
+            <div>
+              <h2 id="we-sign" className="wf-h2">Sign your letters</h2>
+              <p className="wf-note">Sign once with your finger or mouse. It goes under every letter, in your own hand.</p>
+            </div>
+          </div>
+          <SignaturePad value={draft.signature} onSave={(signature) => update({ signature })} name={p1.fromName} />
+        </section>
 
         {SECTIONS.map((sec) => (
           <Section

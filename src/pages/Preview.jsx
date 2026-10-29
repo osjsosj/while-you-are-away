@@ -4,7 +4,7 @@ import { getDraft } from '../utils/storage'
 import { recipientView, addDays } from '../utils/boxModel'
 import { useMediaUrl } from '../utils/media'
 import { daysBetween, formatLong, localISODate } from '../utils/diary'
-import { Header, Letters, LetterSheet, Seal, Story } from './Box'
+import { Header, Letters, LetterSheet, Seal, Story, OurSky } from './Box'
 import FilmPlayer from '../components/FilmPlayer'
 import { normalizeFilm } from '../utils/film'
 import { signedUrl } from '../utils/media'
@@ -83,7 +83,7 @@ export default function Preview() {
           <main className="wb-main">
             {tab === 'letters'
               ? items.length
-                ? <Letters items={items} openSet={opened} onOpen={(id) => { setOpenId(id); setOpened((s) => new Set(s).add(id)) }} />
+                ? <><OurSky ids={[...opened]} /><Letters items={items} openSet={opened} onOpen={(id) => { setOpenId(id); setOpened((s) => new Set(s).add(id)) }} /></>
                 : <p className="wb-note">Nothing written yet. Letters you write appear here on the day they open.</p>
               : <Story box={box} token="preview" today={day} onFilm={film ? playFilm : null} />}
             <p className="wb-note" style={{ marginTop: 32 }}>Letters you haven’t written yet don’t appear. Sealed ones show only their name and the day they open.</p>
@@ -115,7 +115,7 @@ function PreviewSheet({ item, box, onClose }) {
   }
   return (
     <div className="wb" style={{ minHeight: 0, padding: 0, ...(box.accent ? { '--light': box.accent } : {}) }}>
-      <LetterSheet item={resolved} replies={[]} toName={box.toName} fromName={box.fromName} onClose={onClose} onReply={async () => {}} preview />
+      <LetterSheet item={resolved} replies={[]} toName={box.toName} fromName={box.fromName} signature={box.signature} onClose={onClose} onReply={async () => {}} preview />
     </div>
   )
 }
