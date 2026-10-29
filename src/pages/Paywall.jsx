@@ -78,7 +78,7 @@ export default function Paywall() {
           <span style={{ fontFamily: 'var(--serif)', fontSize: 44, lineHeight: 1 }}>$24</span>
           <span className="wf-note">once</span>
         </p>
-        <p className="wf-note" style={{ marginBottom: 20 }}>No subscription. Full refund within 14 days, for any reason.</p>
+        <p className="wf-note" style={{ marginBottom: 20 }}>No subscription. Full refund within 14 days, for any reason. Have a code? Add it on the next page.</p>
         <label className="wf-label" htmlFor="p-email" style={{ color: 'var(--ink)' }}>Your email</label>
         <p className="wf-help" style={{ color: 'var(--ink-muted)' }}>For your receipt and a sign-in code, so you can keep writing from any device.</p>
         <input

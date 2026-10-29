@@ -11,7 +11,8 @@ export async function isPaid(sessionId) {
   if (paidCache.has(sessionId)) return true
   try {
     const session = await stripe.checkout.sessions.retrieve(sessionId)
-    const paid = session.payment_status === 'paid'
+    // 'no_payment_required' = a 100%-off promotion code (friends, testers) on a completed checkout
+    const paid = session.payment_status === 'paid' || (session.status === 'complete' && session.payment_status === 'no_payment_required')
     if (paid) paidCache.add(sessionId)
     return paid
   } catch {
