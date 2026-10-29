@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { getDraft, saveDraft, hydrateFromDB } from '../utils/storage'
 import { supabase, getUser } from '../utils/supabase'
 import { localISODate, promptFor, stampFor, daysBetween, formatLong, UNLOCK_OPTIONS, normalizeUnlock } from '../utils/diary'
+import MomentMedia, { MomentMediaView } from '../components/MomentMedia'
 import './diary.css'
 
 const newId = () =>
@@ -30,6 +31,9 @@ export default function Diary() {
 
   const [offset, setOffset] = useState(0)
   const [body, setBody] = useState('')
+  const [title, setTitle] = useState('')
+  const [media, setMedia] = useState({ photo: null, video: null, voice: null })
+  const [editTitle, setEditTitle] = useState('')
   const [justSaved, setJustSaved] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [editBody, setEditBody] = useState('')
@@ -56,12 +60,28 @@ export default function Diary() {
     setState(readState())
   }
 
+  const hasMedia = !!(media.photo || media.video || media.voice)
+  const canSave = !!body.trim() || hasMedia
+
   const saveEntry = () => {
-    const text = body.trim()
-    if (!text) return
-    const entry = { id: newId(), writtenOn: today, writtenAt: new Date().toISOString(), prompt, body: text }
+    if (!canSave) return
+    const now = new Date()
+    const entry = {
+      id: newId(),
+      writtenOn: today,
+      writtenAt: now.toISOString(),
+      writtenTime: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+      title: title.trim(),
+      prompt: body.trim() ? prompt : '',
+      body: body.trim(),
+      ...(media.photo ? { photo: media.photo } : {}),
+      ...(media.video ? { video: media.video } : {}),
+      ...(media.voice ? { voice: media.voice } : {}),
+    }
     persist({ diary: [...entries, entry] })
     setBody('')
+    setTitle('')
+    setMedia({ photo: null, video: null, voice: null })
     setOffset((o) => o + 1)
     setJustSaved(true)
     setTimeout(() => setJustSaved(false), 4000)
@@ -69,8 +89,9 @@ export default function Diary() {
 
   const saveEdit = (id) => {
     const text = editBody.trim()
-    if (!text) return
-    persist({ diary: entries.map((e) => (e.id === id ? { ...e, body: text, editedAt: new Date().toISOString() } : e)) })
+    const entry = entries.find((e) => e.id === id)
+    if (!text && !(entry?.photo || entry?.video || entry?.voice)) return
+    persist({ diary: entries.map((e) => (e.id === id ? { ...e, title: editTitle.trim(), body: text, editedAt: new Date().toISOString() } : e)) })
     setEditingId(null)
   }
 
@@ -101,7 +122,7 @@ export default function Diary() {
           <h1>The days before</h1>
           {hasDraft ? (
             <p>
-              A few lines on the days you can, for {toName}. Each entry keeps the day you wrote it.
+              Whenever something makes you think of {toName}, leave it here: a few lines, a photo, a voice note. Each one keeps the day and time you made it.
               {daysLeft !== null && daysLeft > 0 && <> <span className="wd-count">{daysLeft} {daysLeft === 1 ? 'day' : 'days'}</span> until you part.</>}
               {daysLeft === 0 && <> Today is the day you part.</>}
             </p>
@@ -131,6 +152,14 @@ export default function Diary() {
                 <button type="button" className="wd-text-btn" onClick={() => setOffset((o) => o + 1)}>
                   Another question
                 </button>
+                <label htmlFor="wd-title" className="wd-sr">Title (optional)</label>
+                <input
+                  id="wd-title"
+                  className="wd-title-input"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value.slice(0, 80))}
+                  placeholder="A title, if you like"
+                />
                 <label htmlFor="wd-body" className="wd-sr">Today's entry</label>
                 <textarea
                   id="wd-body"
@@ -140,8 +169,9 @@ export default function Diary() {
                   onChange={(e) => setBody(e.target.value)}
                   placeholder="Write as much or as little as you like. You don't have to answer the question."
                 />
+                <MomentMedia value={media} onChange={setMedia} />
                 <div className="wd-actions">
-                  <button type="button" className="wd-btn" onClick={saveEntry} disabled={!body.trim()}>
+                  <button type="button" className="wd-btn" onClick={saveEntry} disabled={!canSave}>
                     Save today's entry
                   </button>
                   <p className="wd-saved" role="status">{justSaved ? 'Saved. It carries today’s date.' : ''}</p>
@@ -175,12 +205,21 @@ export default function Diary() {
                       <span className="wd-dot" aria-hidden="true" />
                       <span>
                         {stampFor(e.writtenOn, partDate, 'you')}
-                        <span className="wd-date"> · {formatLong(e.writtenOn)}</span>
+                        <span className="wd-date"> · {formatLong(e.writtenOn)}{e.writtenTime ? `, ${e.writtenTime}` : ''}</span>
                       </span>
                     </p>
+                    {e.title && editingId !== e.id && <p className="wd-entry-title">{e.title}</p>}
                     {e.prompt && <p className="wd-entry-prompt">{e.prompt}</p>}
                     {editingId === e.id ? (
                       <>
+                        <label htmlFor={`wd-edit-title-${e.id}`} className="wd-sr">Edit title</label>
+                        <input
+                          id={`wd-edit-title-${e.id}`}
+                          className="wd-title-input wd-title-input--dark"
+                          value={editTitle}
+                          onChange={(ev) => setEditTitle(ev.target.value.slice(0, 80))}
+                          placeholder="Title (optional)"
+                        />
                         <label htmlFor={`wd-edit-${e.id}`} className="wd-sr">Edit entry</label>
                         <textarea
                           id={`wd-edit-${e.id}`}
@@ -196,9 +235,10 @@ export default function Diary() {
                       </>
                     ) : (
                       <>
-                        <p className="wd-entry-body">{e.body}</p>
+                        {e.body && <p className="wd-entry-body">{e.body}</p>}
+                        <MomentMediaView entry={e} />
                         <div className="wd-row-actions">
-                          <button type="button" className="wd-text-btn" onClick={() => { setEditingId(e.id); setEditBody(e.body) }}>Edit</button>
+                          <button type="button" className="wd-text-btn" onClick={() => { setEditingId(e.id); setEditBody(e.body || ''); setEditTitle(e.title || '') }}>Edit</button>
                           {confirmDelete === e.id ? (
                             <>
                               <button type="button" className="wd-text-btn wd-danger" onClick={() => removeEntry(e.id)}>Delete this entry</button>

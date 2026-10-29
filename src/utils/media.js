@@ -58,7 +58,7 @@ export async function compressImageBlob(file, maxEdge = 1600, quality = 0.85) {
 
 /** Upload a File/Blob; returns a media ref for the draft. Throws NeedSignInError when signed out. */
 export async function uploadMedia(fileOrBlob) {
-  if (!supabase) throw new Error('Storage is not configured')
+  if (!supabase) throw new Error('Photos and voice notes can’t be saved right now. Try again in a little while.')
   const user = await getUser()
   if (!user) throw new NeedSignInError()
   const blob = fileOrBlob.type?.startsWith('image/') ? await compressImageBlob(fileOrBlob) : fileOrBlob

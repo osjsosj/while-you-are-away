@@ -72,7 +72,7 @@ function buildEmail(row, today, prompt) {
   const cta = handover ? { href: `${site}/export`, label: 'Get the letter box' } : { href: `${site}/diary`, label: 'Write tonight’s entry' }
   const note = handover
     ? 'Download it and hand it over whenever you’re ready. This is the last evening email.'
-    : 'Skip any night you like. Nothing piles up, and they’ll never see the days you didn’t write.'
+    : 'A photo or a ten-second voice note counts too. Skip any night you like; they’ll never see the days you didn’t write.'
 
   const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#0B1430">

@@ -43,7 +43,7 @@ export function allItems(draft) {
         section: 'before',
         label: e.title || stampFor(e.writtenOn, start || '', 'I'),
         stamp: stampFor(e.writtenOn, start || '', 'I'),
-        date: formatLong(e.writtenOn),
+        date: formatLong(e.writtenOn) + (e.writtenTime ? `, ${e.writtenTime}` : ''),
         writtenOn: e.writtenOn,
         opensOn: unlock === 'mirror' && start ? addDays(start, before) : null,
         content: { letter: e.body || '', prompt: e.prompt || '', photo: e.photo || null, voice: e.voice || null, video: e.video || null },
