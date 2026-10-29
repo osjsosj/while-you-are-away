@@ -5,6 +5,7 @@
 import { stampFor, formatLong, daysBetween, normalizeUnlock } from './diary.js'
 import { buildPetConfig } from './htmlGenerator.js'
 import { getPlan, planSlots } from './plan.js'
+import { normalizeFilm } from './film.js'
 
 export function addDays(iso, n) {
   const [y, m, d] = iso.split('-').map(Number)
@@ -69,6 +70,11 @@ export function recipientView(draft, today) {
   // letters the sender never wrote stay hidden; sealed ones keep only their label and date
   const visible = items.filter((it) => (it.open ? !it.empty : true))
 
+  // the film opens with the first letters (the day they part); before that only its existence is known
+  const film = normalizeFilm(draft.film)
+  const start = isISO(phase1.startDate) ? phase1.startDate : null
+  const filmOpen = film.photos.length > 0 && (!start || start <= today)
+
   return {
     box: {
       appName: config.chosenName || 'Your letter box',
@@ -83,6 +89,7 @@ export function recipientView(draft, today) {
       timeline: (phase2.timeline || []).filter((t) => t && t.label).map((t) => ({ date: t.date || '', label: t.label, emoji: t.emoji || '' })),
     },
     items: visible,
+    film: filmOpen ? { photos: film.photos.map((p) => ({ id: p.id, caption: p.caption, photo: p.photo })), voice: film.voice } : null,
   }
 }
 

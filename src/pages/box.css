@@ -167,3 +167,9 @@ button.wb-row:hover:not(:disabled) { border-color: rgba(233, 236, 242, 0.3); tra
 @media (prefers-reduced-motion: reduce) {
   .wb *, .wb *::before, .wb *::after { animation: none !important; transition: none !important; }
 }
+
+/* "Watch our film again" */
+.wb-film { width: 100%; display: flex; align-items: center; gap: 16px; min-height: 72px; padding: 16px 18px; border-radius: 12px; border: 1px solid rgba(240, 179, 65, 0.4); background: linear-gradient(135deg, #0B1430, #18234A); color: var(--mist); text-align: left; cursor: pointer; }
+.wb-film:hover { border-color: var(--light); }
+.wb-film > span:last-child { display: flex; flex-direction: column; gap: 2px; }
+.wb-film-play { flex: none; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; padding-left: 2px; border-radius: 50%; background: var(--light); color: #101A33; }

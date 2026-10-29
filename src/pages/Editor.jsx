@@ -6,6 +6,7 @@ import { formatLong, localISODate } from '../utils/diary'
 import FlowFrame from '../components/FlowFrame'
 import MomentMedia from '../components/MomentMedia'
 import Companion from '../components/Companion'
+import FilmEditor from '../components/FilmEditor'
 import { buildSummary, isFilled } from '../utils/summary'
 import '../styles/editor.css'
 import './diary.css'
@@ -76,6 +77,16 @@ export default function Editor() {
           </span>
           <span className="wf-dot" aria-hidden="true" />
         </button>
+
+        <FilmEditor
+          film={draft.film}
+          onChange={(film) => update({ film })}
+          toName={p1.toName}
+          fromName={p1.fromName}
+          startDate={p1.startDate}
+          title={name}
+          closing={draft.generatedConfig?.welcomeMessage}
+        />
 
         {SECTIONS.map((sec) => (
           <Section

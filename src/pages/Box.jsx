@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom'
 import { localISODate, daysBetween, formatLong } from '../utils/diary'
 import Dog from '../components/pets/Dog'
 import Cat from '../components/pets/Cat'
+import FilmPlayer from '../components/FilmPlayer'
+import { filmFrom } from '../utils/film'
 import './box.css'
 
 /* The recipient's letter box, opened from the link the sender hands over. */
@@ -61,6 +63,8 @@ export default function Box() {
   const [openId, setOpenId] = useState(null)
   const [tab, setTab] = useState('letters')
   const [sealed, setSealed] = useState(() => !read(`wya_seen_${token}`))
+  const [playing, setPlaying] = useState(false)
+  const [filmSeen, setFilmSeen] = useState(() => !!read(`wya_film_${token}`))
 
   useEffect(() => {
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {})
@@ -77,8 +81,17 @@ export default function Box() {
   }
 
   const { box, items, replies = [], opened = [] } = data
+  const film = filmFrom(data.film)
   if (sealed) {
     return <Seal box={box} onOpen={() => { write(`wya_seen_${token}`, true); setSealed(false) }} />
+  }
+  // the film plays by itself once, the first time it's there (the day they part), and any time from "Our story"
+  if (film && (playing || !filmSeen)) {
+    return (
+      <div className="wb" style={box.accent ? { '--light': box.accent } : undefined}>
+        <FilmPlayer {...film} fromName={box.fromName} title={box.appName} closing={box.welcome} onDone={() => { write(`wya_film_${token}`, true); setFilmSeen(true); setPlaying(false) }} />
+      </div>
+    )
   }
 
   const openSet = new Set(opened)
@@ -100,7 +113,7 @@ export default function Box() {
       <main className="wb-main">
         {tab === 'letters'
           ? <Letters items={items} openSet={openSet} onOpen={(id) => { setOpenId(id); markOpened(id) }} />
-          : <Story box={box} token={token} />}
+          : <Story box={box} token={token} onFilm={film ? () => setPlaying(true) : null} />}
       </main>
       <InstallHint token={token} />
       {current && (
@@ -314,7 +327,7 @@ export function LetterSheet({ item, replies, toName, fromName, onClose, onReply,
   )
 }
 
-export function Story({ box, token, today: day }) {
+export function Story({ box, token, today: day, onFilm = null }) {
   const petKey = `wya_pet_${token}`
   const [pet, setPet] = useState(() => read(petKey) || { feedCount: 0, lastFed: null })
   const [now] = useState(() => Date.now())
@@ -328,6 +341,14 @@ export function Story({ box, token, today: day }) {
   const today = day || localISODate()
   return (
     <>
+      {onFilm && (
+        <section className="wb-section">
+          <button type="button" className="wb-film" onClick={onFilm}>
+            <span className="wb-film-play" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l9-5.5z" /></svg></span>
+            <span><span className="wb-row-title">Watch our film again</span><span className="wb-row-sub">The one that opened your letter box</span></span>
+          </button>
+        </section>
+      )}
       {box.pet && (
         <section className="wb-section wb-pet" aria-labelledby="wb-pet-name">
           <div className="wb-pet-art" aria-hidden="true">
@@ -355,7 +376,7 @@ export function Story({ box, token, today: day }) {
           </ol>
         </section>
       )}
-      {!box.pet && box.timeline.length === 0 && <p className="wb-note">Nothing here yet.</p>}
+      {!onFilm && !box.pet && box.timeline.length === 0 && <p className="wb-note">Nothing here yet.</p>}
     </>
   )
 }
@@ -384,3 +405,4 @@ const LockIcon = () => (
 const ChevronIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 3l5 5-5 5" /></svg>
 )
+

@@ -1,0 +1,109 @@
+/* The first-night film. Full screen, night colours, slow and quiet. */
+
+.wfm {
+  --mist: #E9ECF2;
+  --mist-soft: #C9D0DC;
+  --serif: 'Literata', Georgia, serif;
+  --sans: 'Schibsted Grotesk', system-ui, sans-serif;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 120%, #18234A 0%, #050A19 65%);
+  color: var(--mist);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+.wfm *, .wfm *::before, .wfm *::after { box-sizing: border-box; }
+.wfm :where(p, figure) { margin: 0; }
+
+.wfm-card {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 32px;
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 1400ms ease, visibility 0s linear 1400ms;
+}
+.wfm-card.is-on { opacity: 1; visibility: visible; transition: opacity 1400ms ease 300ms, visibility 0s; z-index: 3; }
+.wfm-quiet { font-size: 14px; letter-spacing: 0.04em; color: var(--mist-soft); }
+.wfm-title { max-width: 16em; font-family: var(--serif); font-size: clamp(30px, 6vw, 46px); line-height: 1.15; letter-spacing: -0.01em; color: #F4F1E6; text-wrap: balance; }
+.wfm-light { width: 12px; height: 12px; margin-top: 10px; border-radius: 50%; background: var(--light, #F0B341); box-shadow: 0 0 30px 6px var(--light, #F0B341); animation: wfmGlow 2.4s ease-in-out infinite; }
+@keyframes wfmGlow { 50% { opacity: 0.55; } }
+.wfm-closing { max-width: 22em; font-family: var(--serif); font-size: clamp(22px, 4.4vw, 30px); line-height: 1.4; color: #F4F1E6; text-wrap: balance; }
+.wfm-go { min-height: 52px; margin-top: 12px; padding: 14px 28px; border: none; border-radius: 999px; background: var(--light, #F0B341); color: #101A33; font: 600 16px var(--sans); cursor: pointer; transition: transform 200ms ease; }
+.wfm-go:hover { transform: translateY(-2px); }
+.wfm-again { min-height: 44px; border: none; background: none; color: var(--mist-soft); font: 15px var(--sans); text-decoration: underline; text-underline-offset: 5px; cursor: pointer; }
+
+.wfm-slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 20px 120px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 1400ms ease, visibility 0s linear 1400ms;
+}
+.wfm-slide.is-on { opacity: 1; visibility: visible; transition: opacity 1400ms ease, visibility 0s; z-index: 2; }
+.wfm-slide.is-prev { visibility: visible; z-index: 1; }
+.wfm-slide img {
+  max-width: min(100%, 900px);
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9), 0 0 120px rgba(240, 179, 65, 0.06);
+  transform: scale(1);
+}
+.wfm-slide.is-on img { animation: wfmDrift var(--dur, 6s) linear both; }
+@keyframes wfmDrift { from { transform: scale(1) translateY(0); } to { transform: scale(1.06) translateY(-1%); } }
+.wfm-slide figcaption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 64px;
+  padding: 0 24px;
+  text-align: center;
+  font-family: var(--serif);
+  font-size: clamp(18px, 3.4vw, 24px);
+  line-height: 1.4;
+  color: #F4F1E6;
+  text-shadow: 0 2px 18px rgba(5, 10, 25, 0.9);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 900ms ease 700ms, transform 900ms ease 700ms;
+}
+.wfm-slide.is-on figcaption { opacity: 1; transform: none; }
+
+.wfm-zone { position: absolute; top: 48px; bottom: 90px; z-index: 4; width: 30%; border: none; background: none; cursor: pointer; }
+.wfm-zone--prev { left: 0; }
+.wfm-zone--next { right: 0; width: 70%; }
+.wfm-zone:focus-visible { outline: 2px solid rgba(240, 179, 65, 0.6); outline-offset: -6px; }
+
+.wfm-bar { position: absolute; top: 18px; left: 20px; right: 20px; z-index: 5; display: flex; gap: 4px; }
+.wfm-bar span { flex: 1; height: 2px; border-radius: 2px; background: rgba(233, 236, 242, 0.22); position: relative; overflow: hidden; }
+.wfm-bar span.is-done { background: rgba(233, 236, 242, 0.8); }
+.wfm-bar span.is-now::after { content: ''; position: absolute; inset: 0; background: rgba(233, 236, 242, 0.8); transform-origin: left; animation: wfmFill var(--dur, 5s) linear both; animation-play-state: inherit; }
+@keyframes wfmFill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+.wfm-controls { position: absolute; right: 16px; bottom: 16px; left: 16px; z-index: 5; display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
+.wfm-ctl { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 8px 16px; border: 1px solid rgba(233, 236, 242, 0.3); border-radius: 999px; background: rgba(5, 10, 25, 0.5); color: var(--mist); font: 500 14px var(--sans); cursor: pointer; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.wfm-ctl:hover { border-color: var(--mist); }
+.wfm-ctl--sound { margin-right: auto; border-color: var(--light, #F0B341); color: #F4F1E6; }
+.wfm :focus-visible { outline: 2px solid var(--light, #F0B341); outline-offset: 3px; }
+
+@media (max-width: 600px) {
+  .wfm-slide { padding: 56px 12px 150px; }
+  .wfm-slide figcaption { bottom: 84px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wfm-slide.is-on img, .wfm-light { animation: none; }
+  .wfm-card, .wfm-slide, .wfm-slide figcaption { transition-duration: 1ms !important; transition-delay: 0s !important; }
+}

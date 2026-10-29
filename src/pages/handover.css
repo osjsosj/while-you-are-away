@@ -58,3 +58,15 @@
   .wh-print-hint { max-width: 3.4in; font-family: system-ui, sans-serif; font-size: 10pt; line-height: 1.5; color: #4E596B; }
   .wh-print-from { font-size: 12pt; }
 }
+
+/* inside the shared builder frame */
+.wh--in-flow { min-height: 0; background: none; }
+.wh--in-flow .wh-main { max-width: none; padding: 8px 0 0; }
+.wh-ready { margin: 0 0 28px; padding: 18px 20px; border-radius: 12px; border: 1px solid rgba(233, 236, 242, 0.14); background: rgba(233, 236, 242, 0.04); }
+.wh-ready ul { list-style: none; padding: 0; margin: 0 0 12px; display: flex; flex-direction: column; gap: 8px; }
+.wh-ready li { display: flex; align-items: center; gap: 12px; font-size: 15px; line-height: 1.4; color: var(--mist); }
+.wh-ready li::before { content: ''; flex: none; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--mist-muted); }
+.wh-ready li.is-done::before { background: var(--light); border-color: var(--light); box-shadow: 0 0 0 3px rgba(240, 179, 65, 0.18); }
+.wh-ready li.is-some::before { background: linear-gradient(90deg, var(--light) 50%, transparent 50%); border-color: var(--light); }
+.wh-ready li.is-none { color: var(--mist-soft); }
+.wh-inline-link { padding: 0; border: none; background: none; color: var(--mist); font-size: inherit; text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--light); cursor: pointer; }

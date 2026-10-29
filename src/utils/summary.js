@@ -3,6 +3,7 @@
  * Kept under the server's summary limit.
  */
 import { getPlan, planSlots, SECTION_INFO } from './plan'
+import { normalizeFilm } from './film'
 
 export const isFilled = (c) => !!(c && ((c.letter || '').trim() || c.photo || c.video || c.voice))
 
@@ -32,6 +33,11 @@ export function buildSummary(d) {
     lines.push(`- ${SECTION_INFO[s.section].title} · ${s.label}${s.hint ? ` (${s.hint})` : ''} · ${s.opensOn || 'any time'} · ${status}`)
   }
   if (emptyScheduled.length) lines.push(`- ${SECTION_INFO.scheduled.title}: ${emptyScheduled.length} still EMPTY (${emptyScheduled.slice(0, 3).join(', ')}${emptyScheduled.length > 3 ? '…' : ''})`)
+  const film = normalizeFilm(d.film)
+  lines.push('')
+  lines.push(film.photos.length
+    ? `First-night film (plays before any letter): ${film.photos.length} photos${film.voice ? ' with a voice note' : ', no voice note yet'}. Lines: ${film.photos.map((p) => p.caption || '(none)').join(' / ').slice(0, 400)}`
+    : 'First-night film (photos + a voice note that play the first time they open the box): not started.')
   const diary = Array.isArray(d.diary) ? d.diary : []
   if (diary.length) {
     lines.push('')

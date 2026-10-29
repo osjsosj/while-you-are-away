@@ -63,28 +63,16 @@ async function view(req, res, box) {
   const data = recipientView(box.draft, today)
 
   // sign every media file the recipient may see (6 hours; the page refreshes them on each visit)
-  const paths = []
-  for (const it of data.items) for (const f of ['photo', 'voice', 'video']) {
-    const v = it[f]
-    if (typeof v === 'string' && v.startsWith('media:')) {
-      const p = v.slice(6)
-      if (p.startsWith(`${box.userId}/`)) paths.push(p)
-      else delete it[f] // never sign files outside the sender's folder
-    }
+  const slots = [] // [object, field]
+  for (const it of data.items) for (const f of ['photo', 'voice', 'video']) slots.push([it, f])
+  if (data.film) {
+    for (const p of data.film.photos) slots.push([p, 'photo'])
+    slots.push([data.film, 'voice'])
   }
-  let signed = {}
-  if (paths.length) {
-    const { data: urls } = await db().storage.from('media').createSignedUrls([...new Set(paths)], 6 * 3600)
-    signed = Object.fromEntries((urls || []).filter((u) => u.signedUrl).map((u) => [u.path, u.signedUrl]))
-  }
-  for (const it of data.items) for (const f of ['photo', 'voice', 'video']) {
-    const v = it[f]
-    if (typeof v === 'string' && v.startsWith('media:')) {
-      const p = v.slice(6)
-      it[f] = signed[p] ? { url: signed[p], key: p } : undefined
-    } else if (typeof v === 'string' && v.startsWith('data:')) {
-      it[f] = { url: v, key: null } // legacy inline media
-    }
+  await signMedia(slots, box.userId)
+  if (data.film) {
+    data.film.photos = data.film.photos.filter((p) => p.photo)
+    if (!data.film.photos.length) data.film = null
   }
 
   const [{ data: replies }, { data: opens }] = await Promise.all([
@@ -114,4 +102,32 @@ async function act(req, res, box) {
     return res.status(200).json({ ok: true, reply: data })
   }
   return res.status(400).json({ error: 'invalid_action' })
+}
+
+/** Replace media refs with signed URLs, in place. Refs outside the sender's own folder are dropped. */
+async function signMedia(slots, userId) {
+  const paths = []
+  for (const [obj, f] of slots) {
+    const v = obj[f]
+    if (typeof v === 'string' && v.startsWith('media:')) {
+      const p = v.slice(6)
+      if (p.startsWith(`${userId}/`)) paths.push(p)
+      else delete obj[f]
+    }
+  }
+  let signed = {}
+  if (paths.length) {
+    const { data: urls } = await db().storage.from('media').createSignedUrls([...new Set(paths)], 6 * 3600)
+    signed = Object.fromEntries((urls || []).filter((u) => u.signedUrl).map((u) => [u.path, u.signedUrl]))
+  }
+  for (const [obj, f] of slots) {
+    const v = obj[f]
+    if (typeof v === 'string' && v.startsWith('media:')) {
+      const p = v.slice(6)
+      if (signed[p]) obj[f] = { url: signed[p], key: p }
+      else delete obj[f]
+    } else if (typeof v === 'string' && v.startsWith('data:')) {
+      obj[f] = { url: v, key: null } // legacy inline media
+    }
+  }
 }

@@ -5,6 +5,9 @@ import { recipientView, addDays } from '../utils/boxModel'
 import { useMediaUrl } from '../utils/media'
 import { daysBetween, formatLong, localISODate } from '../utils/diary'
 import { Header, Letters, LetterSheet, Seal, Story } from './Box'
+import FilmPlayer from '../components/FilmPlayer'
+import { normalizeFilm } from '../utils/film'
+import { signedUrl } from '../utils/media'
 import './box.css'
 import '../styles/flow.css'
 
@@ -26,7 +29,13 @@ export default function Preview() {
   const [openId, setOpenId] = useState(null)
   const [opened, setOpened] = useState(() => new Set())
 
-  const { box, items } = useMemo(() => recipientView(draft, day), [draft, day])
+  const { box, items, film } = useMemo(() => recipientView(draft, day), [draft, day])
+  const [playing, setPlaying] = useState(null)
+  const playFilm = async () => {
+    const f = normalizeFilm(film)
+    const photos = await Promise.all(f.photos.map(async (p) => ({ id: p.id, caption: p.caption, url: await signedUrl(p.photo) })))
+    setPlaying({ photos: photos.filter((p) => p.url), voiceUrl: f.voice ? await signedUrl(f.voice) : null })
+  }
   const current = items.find((i) => i.id === openId && i.open)
 
   const marks = [
@@ -63,7 +72,7 @@ export default function Preview() {
       </div>
 
       {sealed ? (
-        <Seal box={box} onOpen={() => setSealed(false)} />
+        <Seal box={box} onOpen={() => { setSealed(false); if (film) playFilm() }} />
       ) : (
         <div className="wb" style={box.accent ? { '--light': box.accent } : undefined}>
           <Header box={box} today={day} offline={false} />
@@ -76,13 +85,18 @@ export default function Preview() {
               ? items.length
                 ? <Letters items={items} openSet={opened} onOpen={(id) => { setOpenId(id); setOpened((s) => new Set(s).add(id)) }} />
                 : <p className="wb-note">Nothing written yet. Letters you write appear here on the day they open.</p>
-              : <Story box={box} token="preview" today={day} />}
+              : <Story box={box} token="preview" today={day} onFilm={film ? playFilm : null} />}
             <p className="wb-note" style={{ marginTop: 32 }}>Letters you haven’t written yet don’t appear. Sealed ones show only their name and the day they open.</p>
             <button type="button" className="wf-link" style={{ color: 'var(--mist-soft)' }} onClick={() => setSealed(true)}>See the opening again</button>
           </main>
         </div>
       )}
 
+      {playing && playing.photos.length > 0 && (
+        <div className="wb" style={{ minHeight: 0, padding: 0, ...(box.accent ? { '--light': box.accent } : {}) }}>
+          <FilmPlayer {...playing} fromName={box.fromName} title={box.appName} closing={box.welcome} onDone={() => setPlaying(null)} />
+        </div>
+      )}
       {current && <PreviewSheet item={current} box={box} onClose={() => setOpenId(null)} />}
     </div>
   )

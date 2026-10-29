@@ -7,6 +7,10 @@ import { migrateDraftMedia, NeedSignInError } from '../utils/media'
 import { allItems } from '../utils/boxModel'
 import { formatLong } from '../utils/diary'
 import SignInModal from '../components/SignInModal'
+import FlowFrame from '../components/FlowFrame'
+import { getPlan, planSlots } from '../utils/plan'
+import { normalizeFilm } from '../utils/film'
+import { isFilled } from '../utils/summary'
 import './handover.css'
 
 /* Hand it over: publish the letter box to a private link, share it, and read their replies. */
@@ -99,11 +103,9 @@ export default function Export() {
   }
 
   return (
-    <div className="wh">
-      <header className="wh-header">
-        <button type="button" className="wh-back" onClick={() => navigate('/editor')}>Back to your letters</button>
-      </header>
-      <main className="wh-main">
+    <FlowFrame right={<button type="button" className="wf-link" onClick={() => navigate('/editor')}>← Back to your letters</button>}>
+    <div className="wh wh--in-flow">
+      <div className="wh-main">
         <h1>Hand it over</h1>
 
         {stage === 'checking' && <p className="wh-lede" aria-busy="true">Checking your letter box…</p>}
@@ -118,6 +120,7 @@ export default function Export() {
               <li>Letters stay sealed until their day. They can’t peek ahead.</li>
               <li>Their replies come back to you, here.</li>
             </ul>
+            <Readiness draft={draft} onEdit={() => navigate('/editor')} />
             <button type="button" className="wh-btn" onClick={publish} disabled={stage === 'publishing'}>
               {stage === 'publishing' ? 'Making the link…' : 'Make their link'}
             </button>
@@ -140,6 +143,8 @@ export default function Export() {
                 <p className="wh-note">Anyone with this link can open the box, so share it only with {toName}.</p>
               </div>
             </div>
+
+            <Readiness draft={draft} onEdit={() => navigate('/editor')} live />
 
             <section className="wh-replies" aria-labelledby="wh-replies-title">
               <h2 id="wh-replies-title">From {toName}</h2>
@@ -171,7 +176,7 @@ export default function Export() {
         )}
 
         {error && <p className="wh-error" role="alert">{error}</p>}
-      </main>
+      </div>
 
       {needSignIn && (
         <SignInModal
@@ -181,5 +186,34 @@ export default function Export() {
         />
       )}
     </div>
+    </FlowFrame>
+  )
+}
+
+/** What's in the box right now, so nothing is handed over half-finished by accident. */
+function Readiness({ draft, onEdit, live = false }) {
+  const p1 = draft.phase1 || {}
+  const caps = draft.capsuleData || {}
+  const slots = planSlots(getPlan(draft), p1.startDate, p1.endDate)
+  const written = slots.filter((s) => isFilled(caps[s.id])).length
+  const tonight = slots.find((s) => s.section === 'tonight')
+  const film = normalizeFilm(draft.film)
+  const moments = (Array.isArray(draft.diary) ? draft.diary : []).length
+  const rows = [
+    [`${written} of ${slots.length} letters written`, written === slots.length ? 'done' : written ? 'some' : 'none'],
+    tonight && [isFilled(caps[tonight.id]) ? 'Tonight’s letter is ready' : 'Tonight’s letter isn’t written yet', isFilled(caps[tonight.id]) ? 'done' : 'none'],
+    [film.photos.length ? `First-night film: ${film.photos.length} ${film.photos.length === 1 ? 'photo' : 'photos'}${film.voice ? ' and your voice' : ''}` : 'No first-night film', film.photos.length ? 'done' : 'none'],
+    [moments ? `${moments} ${moments === 1 ? 'moment' : 'moments'} from the days before` : 'No moments from the days before yet', moments ? 'done' : 'none'],
+  ].filter(Boolean)
+  return (
+    <section className="wh-ready" aria-label="What’s in the letter box">
+      <ul>
+        {rows.map(([text, state]) => <li key={text} className={`is-${state}`}>{text}</li>)}
+      </ul>
+      <p className="wh-note">
+        {live ? 'You can keep writing after handing it over. New letters appear in their box on their day.' : 'Nothing has to be finished first. Letters you write later still arrive on their day.'}{' '}
+        <button type="button" className="wh-inline-link" onClick={onEdit}>Keep writing</button>
+      </p>
+    </section>
   )
 }
