@@ -1,0 +1,60 @@
+.wh {
+  --ink: #1B2536;
+  --paper: #F6F3EA;
+  --mist: #E9ECF2;
+  --mist-soft: #C9D0DC;
+  --mist-muted: #A9B3C6;
+  --light: #F0B341;
+  --serif: 'Literata', Georgia, serif;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #050A19 0%, #0B1430 420px, #101A33 100%);
+  color: var(--mist);
+  font-family: 'Schibsted Grotesk', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.wh *, .wh *::before, .wh *::after { box-sizing: border-box; }
+.wh :where(p, h1, h2, ul, ol) { margin: 0; }
+.wh button { font-family: inherit; }
+.wh :focus-visible { outline: 2px solid var(--light); outline-offset: 3px; }
+.wh-header { max-width: 640px; margin: 0 auto; padding: 20px 20px 0; }
+.wh-back { min-height: 44px; padding: 10px 16px; border-radius: 999px; border: 1.5px solid rgba(233, 236, 242, 0.5); background: transparent; color: var(--mist); font-size: 15px; cursor: pointer; }
+.wh-back:hover { background: rgba(233, 236, 242, 0.08); }
+.wh-main { max-width: 640px; margin: 0 auto; padding: 40px 20px 96px; }
+.wh-main h1 { margin-bottom: 14px; font-family: var(--serif); font-weight: 400; font-size: 42px; letter-spacing: -0.02em; color: #F4F1E6; }
+.wh-lede { margin-bottom: 20px; font-size: 18px; line-height: 1.6; color: var(--mist-soft); }
+.wh-points { margin-bottom: 28px; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 16px; line-height: 1.5; color: var(--mist-soft); }
+.wh-points li::marker { color: var(--light); }
+.wh-btn { min-height: 48px; padding: 12px 22px; border: none; border-radius: 999px; background: var(--light); color: #101A33; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 200ms ease, background-color 200ms ease, box-shadow 200ms ease; }
+.wh-btn:hover:not(:disabled) { transform: translateY(-1px); background: #F6C25E; box-shadow: 0 10px 26px -10px rgba(240, 179, 65, 0.55); }
+.wh-btn:disabled { opacity: 0.55; cursor: default; }
+.wh-btn--ghost { background: transparent; color: var(--mist); border: 1.5px solid rgba(233, 236, 242, 0.45); }
+.wh-btn--ghost:hover:not(:disabled) { background: rgba(233, 236, 242, 0.08); box-shadow: none; }
+.wh-card { display: flex; flex-wrap: wrap; gap: 24px; align-items: center; padding: 24px; border-radius: 14px; background: rgba(233, 236, 242, 0.05); border: 1px solid rgba(233, 236, 242, 0.14); }
+.wh-qr { width: 180px; height: 180px; border-radius: 10px; flex: none; }
+.wh-link-box { flex: 1 1 260px; min-width: 0; }
+.wh-label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; }
+.wh-link { width: 100%; min-height: 46px; padding: 10px 14px; border-radius: 8px; border: 1.5px solid rgba(233, 236, 242, 0.3); background: rgba(5, 10, 25, 0.5); color: var(--mist); font-size: 15px; font-family: ui-monospace, Menlo, monospace; }
+.wh-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.wh-note { font-size: 14px; line-height: 1.5; color: var(--mist-muted); }
+.wh-error { margin-top: 16px; font-size: 15px; color: #F2A99E; }
+.wh-replies { margin-top: 40px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.wh-replies h2 { font-family: var(--serif); font-weight: 400; font-size: 28px; color: #F4F1E6; }
+.wh-empty { font-size: 16px; color: var(--mist-muted); font-style: italic; }
+.wh-reply-list { list-style: none; padding: 0; width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.wh-reply-list li { padding: 16px; border-radius: 12px; background: var(--paper); color: var(--ink); }
+.wh-reply-to { margin-bottom: 6px; font-size: 13px; color: #5A6070; }
+.wh-reply-body { font-family: var(--serif); font-size: 17px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+.wh-print { display: none; }
+
+@media print {
+  @page { size: 5in 7in; margin: 0.4in; }
+  body * { visibility: hidden; }
+  .wh { background: #fff !important; }
+  .wh-print, .wh-print * { visibility: visible; }
+  .wh-print { display: flex; position: fixed; inset: 0; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; color: #1B2536; font-family: 'Literata', Georgia, serif; }
+  .wh-print-for { font-size: 14pt; color: #4E596B; }
+  .wh-print-title { font-size: 24pt; }
+  .wh-print img { width: 2.4in; height: 2.4in; }
+  .wh-print-hint { max-width: 3.4in; font-family: system-ui, sans-serif; font-size: 10pt; line-height: 1.5; color: #4E596B; }
+  .wh-print-from { font-size: 12pt; }
+}

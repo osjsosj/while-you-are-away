@@ -11,6 +11,7 @@ import Preview from './pages/Preview'
 import Export from './pages/Export'
 import AuthCallback from './pages/AuthCallback'
 import Diary from './pages/Diary'
+import Box from './pages/Box'
 
 export default function App() {
   useEffect(() => {
@@ -27,6 +28,7 @@ export default function App() {
         <Route path="/generate" element={<AIGenerate />} />
         <Route path="/editor" element={<Editor />} />
         <Route path="/diary" element={<Diary />} />
+        <Route path="/b/:token" element={<Box />} />
         <Route path="/preview" element={<Preview />} />
         <Route path="/export" element={<Export />} />
         <Route path="/auth/callback" element={<AuthCallback />} />

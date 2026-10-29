@@ -1,6 +1,8 @@
 import { useState, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { getDraft, saveDraft } from '../utils/storage'
+import { uploadMedia, NeedSignInError, useMediaUrl } from '../utils/media'
+import SignInModal from '../components/SignInModal'
 
 export default function Editor() {
   const navigate = useNavigate()
@@ -318,12 +320,31 @@ function CapsuleEditor({ capsule, data, onChange, onClose }) {
   const recRef = useRef(null)
   const intervalRef = useRef(null)
   const fileRef = useRef(null)
+  const [uploading, setUploading] = useState(null)
+  const [uploadError, setUploadError] = useState('')
+  const [pending, setPending] = useState(null) // upload waiting for sign-in
+  const photoUrl = useMediaUrl(data.photo)
+  const voiceUrl = useMediaUrl(data.voice)
+
+  // Photos and voice notes go to the account's storage; the draft keeps only a reference.
+  const store = async (field, blob) => {
+    setUploading(field)
+    setUploadError('')
+    try {
+      onChange(field, await uploadMedia(blob))
+    } catch (err) {
+      if (err instanceof NeedSignInError) setPending({ field, blob })
+      else setUploadError(err.message || 'Upload failed. Try again.')
+    } finally {
+      setUploading(null)
+    }
+  }
 
   const pickPhoto = async (e) => {
     const file = e.target.files[0]
+    e.target.value = ''
     if (!file) return
-    const compressed = await compressImage(file)
-    onChange('photo', compressed)
+    store('photo', file)
   }
 
   const startRec = async () => {
@@ -340,10 +361,8 @@ function CapsuleEditor({ capsule, data, onChange, onClose }) {
       }
       rec.onstop = () => {
         const blob = new Blob(chunks, { type: rec.mimeType || 'audio/webm' })
-        const reader = new FileReader()
-        reader.onload = () => onChange('voice', reader.result)
-        reader.readAsDataURL(blob)
         stream.getTracks().forEach((t) => t.stop())
+        store('voice', blob)
       }
       rec.start(100)
       recRef.current = rec
@@ -372,6 +391,17 @@ function CapsuleEditor({ capsule, data, onChange, onClose }) {
       style={{ background: 'rgba(26,16,8,0.6)', backdropFilter: 'blur(4px)' }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
+      {pending && (
+        <SignInModal
+          onClose={() => setPending(null)}
+          onDone={() => { const p = pending; setPending(null); store(p.field, p.blob) }}
+        />
+      )}
+      {(uploading || uploadError) && (
+        <div role="status" style={{ position: 'fixed', left: '50%', bottom: 24, transform: 'translateX(-50%)', zIndex: 70, padding: '10px 16px', borderRadius: 999, background: uploadError ? '#B1453A' : '#1B2536', color: '#fff', fontSize: 13 }}>
+          {uploadError || (uploading === 'photo' ? 'Saving photo…' : 'Saving voice note…')}
+        </div>
+      )}
       <div
         className="max-h-[92vh] overflow-y-auto max-w-lg mx-auto w-full"
         style={{
@@ -471,7 +501,7 @@ function CapsuleEditor({ capsule, data, onChange, onClose }) {
             >
               {data.photo ? (
                 <img
-                  src={data.photo}
+                  src={photoUrl || undefined}
                   alt=""
                   className="w-full h-auto block"
                   style={{ borderRadius: 16 }}
@@ -526,6 +556,7 @@ function CapsuleEditor({ capsule, data, onChange, onClose }) {
                 >
                   Voice message saved
                 </span>
+                {voiceUrl && <audio controls src={voiceUrl} style={{ height: 32, maxWidth: 160 }} />}
                 <button
                   type="button"
                   onClick={() => onChange('voice', null)}
@@ -607,29 +638,4 @@ function getUnlockDate(startDate, weekIndex, schedule) {
 function formatDate(date) {
   if (!date) return ''
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-}
-
-async function compressImage(file) {
-  return new Promise((res) => {
-    const img = new Image()
-    const url = URL.createObjectURL(file)
-    img.onload = () => {
-      const MAX = 900
-      let { width: w, height: h } = img
-      if (w > h && w > MAX) {
-        h = Math.round((h * MAX) / w)
-        w = MAX
-      } else if (h > MAX) {
-        w = Math.round((w * MAX) / h)
-        h = MAX
-      }
-      const c = document.createElement('canvas')
-      c.width = w
-      c.height = h
-      c.getContext('2d').drawImage(img, 0, 0, w, h)
-      res(c.toDataURL('image/jpeg', 0.68))
-      URL.revokeObjectURL(url)
-    }
-    img.src = url
-  })
 }

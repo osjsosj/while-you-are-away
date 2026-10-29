@@ -56,4 +56,5 @@ export async function saveDraftToDB(userId, draft) {
   )
 
   if (error) console.warn('saveDraftToDB', error.message)
+  return error || null
 }

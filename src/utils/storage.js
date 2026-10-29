@@ -20,7 +20,13 @@ function localGet() {
 }
 
 function localSet(data) {
-  localStorage.setItem(LOCAL_KEY, JSON.stringify(data))
+  try {
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(data))
+  } catch (err) {
+    // Old drafts kept photos inside localStorage and can hit the ~5 MB limit.
+    // The account copy (syncToDB) still saves; media now goes to storage instead.
+    console.warn('local draft not saved:', err?.name)
+  }
 }
 
 // ── Public API ───────────────────────────────────────────────
@@ -80,4 +86,15 @@ async function syncToDB(data) {
     const withTimestamp = { ...data, _savedAt: Date.now() }
     await saveDraftToDB(user.id, withTimestamp)
   }, 1500)
+}
+
+/** Save the draft to the account right now (before publishing), instead of waiting for the debounce. */
+export async function flushDraft() {
+  if (!supabase) return false
+  clearTimeout(syncTimer)
+  const user = await getUser()
+  if (!user) return false
+  const error = await saveDraftToDB(user.id, { ...localGet(), _savedAt: Date.now() })
+  if (error) throw new Error(error.message || 'Couldn’t save to your account')
+  return true
 }

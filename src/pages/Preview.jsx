@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDraft } from '../utils/storage'
+import { useMediaUrl } from '../utils/media'
 
 export default function Preview() {
   const navigate = useNavigate()
@@ -406,11 +407,11 @@ export default function Preview() {
                     className="rounded-2xl overflow-hidden mb-5"
                     style={{ border: `1px solid ${accent}` }}
                   >
-                    <img src={openData.photo} alt="" className="w-full h-auto" />
+                    <MediaImg value={openData.photo} className="w-full h-auto" />
                   </div>
                 )}
                 {openData.voice && (
-                  <audio controls src={openData.voice} className="w-full mb-4" />
+                  <MediaAudio value={openData.voice} className="w-full mb-4" />
                 )}
                 <button
                   type="button"
@@ -455,4 +456,14 @@ export default function Preview() {
       </div>
     </div>
   )
+}
+
+function MediaImg({ value, className }) {
+  const url = useMediaUrl(value)
+  return url ? <img src={url} alt="" className={className} /> : null
+}
+
+function MediaAudio({ value, className }) {
+  const url = useMediaUrl(value)
+  return url ? <audio controls src={url} className={className} /> : null
 }

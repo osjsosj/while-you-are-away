@@ -267,7 +267,7 @@ ${getClientScript()}
 </html>`
 }
 
-function buildPetConfig(phase2) {
+export function buildPetConfig(phase2) {
   const { petAnimal, petName, petDescription } = phase2 || {}
   if (!petAnimal || ['none','no'].includes((petAnimal||'').toLowerCase())) return null
 
