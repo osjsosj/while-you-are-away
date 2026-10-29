@@ -1,268 +1,121 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDraft, saveDraft } from '../utils/storage'
 import { generateLetterboxConfig, PaymentRequiredError } from '../utils/aiService'
+import FlowFrame from '../components/FlowFrame'
+import { ACCENTS } from '../utils/text'
 
-function LoadingScreen() {
-  const [dotStep, setDotStep] = useState(0)
-  const lines = [
-    'Reading everything you shared...',
-    'Choosing colors that feel like you...',
-    'Writing a welcome message...',
-    'Putting it all together...',
-  ]
-  useEffect(() => {
-    const t = setInterval(() => setDotStep(s => (s + 1) % lines.length), 1800)
-    return () => clearInterval(t)
-  }, [])
+/* Name the letter box, write the line they see first, pick the colour of its light. */
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-8" style={{ background: '#FBF4E8' }}>
-      <div className="mb-8" style={{ animation: 'float 3s ease-in-out infinite' }}>
-        <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
-          <circle cx="40" cy="40" r="38" stroke="#E8D5B5" strokeWidth="1.5" />
-          <circle cx="40" cy="40" r="38" stroke="#C8706E" strokeWidth="1.5"
-            strokeDasharray="239" strokeDashoffset="60"
-            style={{ animation: 'spin 3s linear infinite', transformOrigin: '40px 40px' }} />
-          <text x="40" y="46" textAnchor="middle"
-            style={{ fontFamily: 'Playfair Display', fontStyle: 'italic', fontSize: 22, fill: '#C8706E' }}>
-            W
-          </text>
-        </svg>
-      </div>
-      <h2 className="font-display italic text-2xl text-ink mb-3 text-center" style={{ letterSpacing: '-0.02em' }}>
-        Creating something<br />just for you
-      </h2>
-      <p
-        className="font-sans text-sm text-text-muted text-center transition-all duration-500"
-        style={{ fontWeight: 300, minHeight: 20 }}
-        key={dotStep}
-      >
-        {lines[dotStep]}
-      </p>
-      <style>{`@keyframes spin { from { stroke-dashoffset: 239; } to { stroke-dashoffset: 0; } }`}</style>
-    </div>
-  )
+function fallbackNames(d) {
+  const to = d.phase1?.toName || 'you'
+  return [d.phase2?.appName, `For ${to}`, `While you’re away, ${to}`].filter(Boolean).slice(0, 3)
 }
 
 export default function AIGenerate() {
   const navigate = useNavigate()
   const draft = getDraft()
-  const [status, setStatus] = useState('loading')
-  const [config, setConfig] = useState(null)
-  const [selectedName, setSelectedName] = useState(0)
-  const [editingName, setEditingName] = useState(false)
-  const [customName, setCustomName] = useState('')
+  const existing = draft.generatedConfig
+  const [loading, setLoading] = useState(!existing)
+  const [names, setNames] = useState(existing?.appNames || [])
+  const [chosen, setChosen] = useState(existing?.chosenName || '')
+  const [custom, setCustom] = useState('')
+  const [welcome, setWelcome] = useState(existing?.welcomeMessage || '')
+  const [accent, setAccent] = useState(draft.accent || ACCENTS[0].hex)
 
-  useEffect(() => { generate() }, [])
-
-  const generate = async () => {
-    setStatus('loading')
-    const allData = { ...draft.phase1, ...draft.phase2 }
-    let result
-    try {
-      result = await generateLetterboxConfig(allData)
-    } catch (err) {
-      if (err instanceof PaymentRequiredError) return navigate('/paywall')
-      result = null
+  useEffect(() => {
+    if (existing) return
+    let live = true
+    const d = getDraft()
+    const p1 = d.phase1 || {}
+    const p2 = d.phase2 || {}
+    const data = {
+      from: p1.fromName, to: p1.toName, relationship: p1.relationship, situation: p1.situation,
+      relationshipWord: p2.relationshipWord, nicknames: p2.nicknames, symbols: p2.symbols, special: p2.special, appName: p2.appName,
     }
-    if (!result) { setStatus('error'); return }
-    setConfig(result)
-    setCustomName(result.appNames?.[0] || '')
-    setStatus('done')
-  }
+    generateLetterboxConfig(data)
+      .then((res) => {
+        if (!live) return
+        const list = [p2.appName, ...(res?.appNames || [])].filter((n, i, a) => n && a.indexOf(n) === i).slice(0, 4)
+        const finalList = list.length ? list : fallbackNames(d)
+        setNames(finalList)
+        setChosen(finalList[0])
+        setWelcome(res?.welcomeMessage || `${p1.toName || 'Love'}, this is for while I’m away.`)
+      })
+      .catch((err) => {
+        if (err instanceof PaymentRequiredError) return navigate('/paywall')
+        const list = fallbackNames(d)
+        setNames(list)
+        setChosen(list[0])
+        setWelcome(`${p1.toName || 'Love'}, this is for while I’m away.`)
+      })
+      .finally(() => live && setLoading(false))
+    return () => { live = false }
+  }, [existing, navigate])
 
-  const handleConfirm = () => {
-    const finalName = editingName
-      ? customName
-      : config.appNames?.[selectedName] || customName
-    saveDraft({ generatedConfig: { ...config, chosenName: finalName } })
+  const finalName = (custom.trim() || chosen || '').slice(0, 60)
+
+  const next = () => {
+    if (!finalName) return
+    saveDraft({
+      generatedConfig: { ...(getDraft().generatedConfig || {}), appNames: names, chosenName: finalName, welcomeMessage: welcome.trim().slice(0, 160) },
+      accent,
+    })
     navigate('/editor')
   }
 
-  if (status === 'loading') return <LoadingScreen />
+  if (loading) {
+    return (
+      <FlowFrame step={2} narrow>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, paddingTop: 80, textAlign: 'center' }}>
+          <div className="wf-spinner" role="status" aria-label="Working" />
+          <p className="wf-lede">Reading everything you shared, and finding a name for it…</p>
+        </div>
+      </FlowFrame>
+    )
+  }
 
-  if (status === 'error') return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-5 px-8" style={{ background: '#FBF4E8' }}>
-      <div className="wax-seal" style={{ width: 48, height: 48, fontSize: 20 }}>!</div>
-      <p className="font-display italic text-xl text-ink text-center">Something went wrong</p>
-      <p className="font-sans text-sm text-text-muted text-center" style={{ fontWeight: 300 }}>
-        Let's try again — your info is still saved.
-      </p>
-      <button type="button" onClick={generate} className="btn-primary px-8 py-3 rounded-2xl text-sm">
-        Try again
-      </button>
-    </div>
-  )
-
-  const { appNames = [], theme = {}, welcomeMessage = '', situationLabels = [] } = config
-  const primary = theme.primary || '#C8706E'
-  const secondary = theme.secondary || '#FBF4E8'
-  const accent = theme.accent || '#EFC5C4'
-  const chosenNameDisplay = editingName ? customName : (appNames[selectedName] || 'Your Letter Box')
-
+  const to = draft.phase1?.toName || 'them'
   return (
-    <div className="min-h-screen max-w-lg mx-auto px-5 py-8" style={{ background: '#FBF4E8' }}>
+    <FlowFrame step={2} narrow>
+      <h1 className="wf-h1">Give it a name.</h1>
+      <p className="wf-lede">This is the first thing {to} sees. Pick one, or write your own.</p>
 
-      {/* Header */}
-      <div className="text-center mb-7 animate-fade-up">
-        <p className="font-sans text-xs mb-3 uppercase tracking-widest" style={{ fontSize: 10, color: '#9B8070' }}>
-          Here's what we made
-        </p>
-        <h1 className="font-display italic text-3xl text-ink" style={{ letterSpacing: '-0.02em' }}>
-          Your letter box
-        </h1>
+      <fieldset className="wf-field" style={{ border: 'none', padding: 0 }}>
+        <legend className="wf-label">Name</legend>
+        <div className="wf-pills" role="radiogroup" aria-label="Suggested names">
+          {names.map((n) => (
+            <button key={n} type="button" role="radio" className="wf-pill" aria-checked={!custom.trim() && chosen === n} onClick={() => { setChosen(n); setCustom('') }}>{n}</button>
+          ))}
+        </div>
+        <label className="wf-label" htmlFor="g-custom" style={{ marginTop: 14 }}>Or your own</label>
+        <input id="g-custom" className="wf-input" value={custom} onChange={(e) => setCustom(e.target.value)} placeholder="Something only you would call it" maxLength={60} />
+      </fieldset>
+
+      <div className="wf-field">
+        <label className="wf-label" htmlFor="g-welcome">The first line they read</label>
+        <textarea id="g-welcome" className="wf-input" rows={2} value={welcome} onChange={(e) => setWelcome(e.target.value)} maxLength={160} style={{ resize: 'vertical', lineHeight: 1.5 }} />
       </div>
 
-      {/* Preview card */}
-      <div
-        className="rounded-2xl overflow-hidden mb-6 animate-fade-up delay-100"
-        style={{ boxShadow: '0 4px 24px rgba(45,31,20,0.1)', border: '1px solid rgba(232,213,181,0.5)' }}
-      >
-        {/* Header band - uses AI-generated primary color */}
-        <div className="px-6 pt-6 pb-5" style={{ background: primary }}>
-          <p className="font-sans text-xs mb-2" style={{ color: 'rgba(255,255,255,0.65)', letterSpacing: '0.08em' }}>
-            From {draft.phase1?.fromName} · To {draft.phase1?.toName}
-          </p>
-          {editingName ? (
-            <input
-              value={customName}
-              onChange={(e) => setCustomName(e.target.value)}
-              className="font-display italic text-xl text-white w-full focus:outline-none"
-              style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 8, padding: '4px 8px', border: 'none' }}
-            />
-          ) : (
-            <h2 className="font-display italic text-2xl text-white mb-1" style={{ letterSpacing: '-0.01em' }}>
-              {chosenNameDisplay}
-            </h2>
-          )}
-          <p className="font-sans text-sm" style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 300 }}>
-            {welcomeMessage}
-          </p>
-        </div>
-
-        {/* Situation tags - uses AI secondary color */}
-        <div className="px-5 py-4" style={{ background: secondary }}>
-          <div className="flex gap-2 flex-wrap">
-            {situationLabels.slice(0, 3).map((s, i) => (
-              <span
-                key={i}
-                className="font-sans text-xs px-3 py-1.5 rounded-full"
-                style={{
-                  border: `1px solid ${accent}`,
-                  color: primary,
-                  background: 'rgba(255,255,255,0.7)',
-                }}
-              >
-                {s.emoji} {s.label}
-              </span>
-            ))}
-            {situationLabels.length > 3 && (
-              <span
-                className="font-sans text-xs px-3 py-1.5 rounded-full"
-                style={{ border: '1px solid #E8D5B5', color: '#9B8070', background: 'rgba(255,255,255,0.7)' }}
-              >
-                +{situationLabels.length - 3} more
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Name selection */}
-      <div className="mb-6 animate-fade-up delay-200">
-        <p className="font-sans text-xs uppercase tracking-widest mb-3" style={{ fontSize: 10, color: '#9B8070' }}>
-          Choose a name
-        </p>
-        <div className="space-y-2">
-          {appNames.map((name, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => { setSelectedName(i); setEditingName(false) }}
-              className="w-full text-left px-4 py-3.5 rounded-2xl font-sans text-sm transition-all"
-              style={{
-                background: !editingName && selectedName === i ? 'rgba(200,112,110,0.06)' : '#FFFDF9',
-                border: `1px solid ${!editingName && selectedName === i ? '#C8706E' : '#E8D5B5'}`,
-                color: !editingName && selectedName === i ? '#C8706E' : '#2D1F14',
-                fontWeight: !editingName && selectedName === i ? 500 : 400,
-              }}
-            >
-              {name}
-              {!editingName && selectedName === i && (
-                <span className="ml-2 font-sans text-xs" style={{ color: '#C8706E' }}>✓</span>
-              )}
+      <fieldset className="wf-field" style={{ border: 'none', padding: 0 }}>
+        <legend className="wf-label">The colour of its light</legend>
+        <div className="wf-swatches" role="radiogroup" aria-label="Accent colour">
+          {ACCENTS.map((a) => (
+            <button key={a.id} type="button" role="radio" aria-checked={accent === a.hex} className="wf-swatch" onClick={() => setAccent(a.hex)}>
+              <span style={{ background: a.hex, color: a.hex }} />{a.name}
             </button>
           ))}
-          <button
-            type="button"
-            onClick={() => { setEditingName(true); setCustomName('') }}
-            className="w-full text-left px-4 py-3.5 rounded-2xl font-sans text-sm transition-all"
-            style={{
-              background: editingName ? 'rgba(200,112,110,0.06)' : '#FFFDF9',
-              border: `1px solid ${editingName ? '#C8706E' : '#E8D5B5'}`,
-              color: editingName ? '#C8706E' : '#9B8070',
-            }}
-          >
-            Write my own name...
-          </button>
         </div>
-        {editingName && (
-          <input
-            value={customName}
-            onChange={(e) => setCustomName(e.target.value)}
-            placeholder="Type your letter box name..."
-            autoFocus
-            className="mt-2 w-full font-sans text-sm focus:outline-none"
-            style={{
-              background: '#FFFDF9', border: '1px solid #C8706E',
-              borderRadius: 16, padding: '12px 16px', color: '#2D1F14',
-            }}
-          />
-        )}
+      </fieldset>
+
+      <div className="wf-card" aria-label="Preview" style={{ margin: '8px 0 28px', background: 'linear-gradient(180deg,#050A19,#0B1430)', textAlign: 'center', padding: '32px 20px' }}>
+        <p className="wf-note">Letters from {draft.phase1?.fromName || 'you'}</p>
+        <p style={{ margin: '6px 0 8px', fontFamily: 'var(--serif)', fontSize: 30, color: '#F4F1E6' }}>{finalName || 'Your letter box'}</p>
+        <p style={{ color: 'var(--mist-soft)', fontSize: 15 }}>{welcome}</p>
+        <span aria-hidden="true" style={{ display: 'inline-block', marginTop: 18, width: 44, height: 44, borderRadius: '50%', background: accent, boxShadow: `0 0 40px ${accent}` }} />
       </div>
 
-      {/* Situation letters list */}
-      {situationLabels.length > 0 && (
-        <div className="mb-7 animate-fade-up delay-300">
-          <p className="font-sans text-xs uppercase tracking-widest mb-3" style={{ fontSize: 10, color: '#9B8070' }}>
-            Moment letters ({situationLabels.length})
-          </p>
-          <div
-            className="rounded-2xl overflow-hidden"
-            style={{ background: '#FFFDF9', border: '1px solid #E8D5B5' }}
-          >
-            {situationLabels.map((s, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 px-4 py-3.5"
-                style={{ borderBottom: i < situationLabels.length - 1 ? '1px solid #F5E8D0' : 'none' }}
-              >
-                <span className="text-xl flex-shrink-0">{s.emoji}</span>
-                <div>
-                  <p className="font-sans text-sm font-medium" style={{ color: '#1A1008' }}>{s.label}</p>
-                  {s.hint && <p className="font-sans text-xs" style={{ color: '#9B8070', fontWeight: 300 }}>{s.hint}</p>}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Actions */}
-      <div className="animate-fade-up delay-400">
-        <button type="button" onClick={handleConfirm} className="btn-primary w-full py-4 rounded-2xl text-sm font-sans mb-2">
-          Looks great — write letters →
-        </button>
-        <button
-          type="button"
-          onClick={generate}
-          className="w-full py-3 font-sans text-sm text-text-muted"
-          style={{ fontWeight: 300 }}
-        >
-          Regenerate ↺
-        </button>
-      </div>
-    </div>
+      <button type="button" className="wf-btn wf-btn--block" onClick={next} disabled={!finalName}>Start writing</button>
+    </FlowFrame>
   )
 }

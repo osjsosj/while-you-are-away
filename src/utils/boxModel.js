@@ -4,6 +4,7 @@
  */
 import { stampFor, formatLong, daysBetween, normalizeUnlock } from './diary.js'
 import { buildPetConfig } from './htmlGenerator.js'
+import { getPlan, planSlots } from './plan.js'
 
 export function addDays(iso, n) {
   const [y, m, d] = iso.split('-').map(Number)
@@ -16,22 +17,14 @@ const isISO = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s)
 export function allItems(draft) {
   const phase1 = draft.phase1 || {}
   const phase2 = draft.phase2 || {}
-  const config = draft.generatedConfig || {}
   const caps = draft.capsuleData || {}
   const start = isISO(phase1.startDate) ? phase1.startDate : null
   const items = []
 
-  const weekly = Number(phase1.regularCount) || 0
-  for (let i = 0; i < weekly; i++) {
-    const step = phase1.unlockSchedule === 'Every day' ? i : phase1.unlockSchedule === 'Every two weeks' ? (i + 1) * 14 : (i + 1) * 7
-    const label = phase1.unlockSchedule === 'Every day' ? `Day ${i + 1}` : phase1.unlockSchedule === 'Every two weeks' ? `Letter ${i + 1}` : `Week ${i + 1}`
-    items.push({ id: `w${i}`, section: 'scheduled', label, opensOn: start ? addDays(start, step) : null, content: caps[`w${i}`] || {} })
+  const end = isISO(phase1.endDate) ? phase1.endDate : null
+  for (const slot of planSlots(getPlan(draft), start, end)) {
+    items.push({ ...slot, hint: slot.hint || '', content: caps[slot.id] || {} })
   }
-
-  ;(phase2.situationLabels || config.situationLabels || []).forEach((s, i) => {
-    const id = s.id || `s${i}`
-    items.push({ id, section: 'anytime', label: s.label || 'Open when…', hint: s.hint || '', emoji: s.emoji || '', opensOn: null, content: caps[id] || {} })
-  })
 
   const unlock = normalizeUnlock(draft.diaryUnlock || phase2.diaryUnlock)
   ;(Array.isArray(draft.diary) ? draft.diary : [])
@@ -73,8 +66,8 @@ export function recipientView(draft, today) {
     out.empty = !out.letter && !MEDIA_FIELDS.some((f) => out[f])
     return out
   })
-  // hide letters the sender never wrote, unless they are still sealed (keeps the countdown honest)
-  const visible = items.filter((it) => !it.open || !it.empty || it.section === 'scheduled')
+  // letters the sender never wrote stay hidden; sealed ones keep only their label and date
+  const visible = items.filter((it) => (it.open ? !it.empty : true))
 
   return {
     box: {
@@ -85,6 +78,7 @@ export function recipientView(draft, today) {
       partDate: isISO(phase1.startDate) ? phase1.startDate : null,
       returnDate: isISO(phase1.endDate) ? phase1.endDate : null,
       theme: config.theme || null,
+      accent: typeof draft.accent === 'string' && /^#[0-9a-f]{6}$/i.test(draft.accent) ? draft.accent : null,
       pet: buildPetConfig(phase2),
       timeline: (phase2.timeline || []).filter((t) => t && t.label).map((t) => ({ date: t.date || '', label: t.label, emoji: t.emoji || '' })),
     },

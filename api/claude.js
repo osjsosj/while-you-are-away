@@ -1,132 +1,126 @@
-import Stripe from 'stripe'
+import { isPaid, db } from './_lib/server.js'
 
 /**
- * /api/claude — Claude API 서버 프록시
- *
- * - API 키는 서버에만 있음 (ANTHROPIC_API_KEY, VITE_ 접두사 없음)
- * - 결제 완료된 Stripe 세션 ID가 있어야만 호출됨
- * - 모델·프롬프트·토큰 한도는 서버가 고정 → 클라이언트가 임의로 바꿀 수 없음
+ * /api/claude — the only way the app talks to Claude.
+ *  - the API key, models, prompts and token limits live here, never in the browser
+ *  - every call needs a paid Stripe checkout session
+ *  kinds: 'interview' (planning conversation), 'theme' (names + welcome line), 'companion' (help while writing)
  */
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
 const MODELS = {
   interview: 'claude-haiku-5-5',
+  companion: 'claude-haiku-5-5',
   theme: 'claude-sonnet-5-5',
 }
 
-const MAX_MESSAGES = 60 // 인터뷰 대화 최대 길이
-const MAX_CONTENT_CHARS = 4000 // 메시지 1개 최대 글자 수
-const MAX_PAYLOAD_CHARS = 20000 // 테마 생성용 데이터 최대 크기
+const MAX_MESSAGES = 80
+const MAX_CONTENT_CHARS = 4000
+const MAX_PAYLOAD_CHARS = 20000
+const MAX_SUMMARY_CHARS = 9000
+const COMPANION_CAP = 300 // companion messages per letter box
 
-// ── 결제 검증 ────────────────────────────────────────────────
+const str = (v, n = 200) => (typeof v === 'string' || typeof v === 'number' ? String(v).slice(0, n) : '')
 
-const paidCache = new Map() // 같은 인스턴스 안에서 Stripe 재조회 줄이기
+// ── prompts ──────────────────────────────────────────────────
 
-async function isPaid(sessionId) {
-  if (typeof sessionId !== 'string' || !sessionId.startsWith('cs_')) return false
-  if (paidCache.get(sessionId)) return true
-  try {
-    const session = await stripe.checkout.sessions.retrieve(sessionId)
-    const paid = session.payment_status === 'paid'
-    if (paid) paidCache.set(sessionId, true)
-    return paid
-  } catch {
-    return false
-  }
-}
-
-// ── 프롬프트 (서버 고정) ───────────────────────────────────────
-
-const str = (v) => (typeof v === 'string' || typeof v === 'number' ? String(v).slice(0, 200) : '')
-
-const INTERVIEW_SYSTEM = (p) => `
-You are a warm, empathetic letter box curator helping someone create a deeply personal gift for the person they love.
-
-Your job is to have a natural, caring conversation to collect the remaining information needed to build their custom letter box.
-
-## Information already collected
-- Situation: ${str(p.situation)}
-- Writing to (relationship): ${str(p.relationship)}
-- Sender name: ${str(p.fromName)}
-- Recipient name: ${str(p.toName)}
-- Departure date: ${str(p.startDate)}
-- Return date: ${str(p.endDate)}
-- No-contact period: ${str(p.blackout)}
-- Letter unlock schedule: ${str(p.unlockSchedule)}
-- Number of scheduled letters (auto-calculated): ${str(p.regularCount)}
-
-## Information still needed
-1. One word or phrase that defines this relationship (e.g. "soulmates", "my person")
-2. Nicknames for each other
-3. Things that remind them of each other (colors, seasons, animals, food, songs, etc.)
-4. Something only the two of them share (a habit, inside joke, special place, object)
-5. Timeline of special moments together (date + what happened)
-6. Situation-based letter labels (e.g. "when you miss me", "when you're lonely")
-7. Whether they want a pet companion feature, and if so — what animal and name
-8. What stats they'd like to track (visit count, replies, pet feeds, etc.)
-9. A name for the letter box
-10. How their "days before" diary entries should open for the recipient (see "Preference questions")
-
-## Conversation rules
-- Always acknowledge and respond warmly to what they shared before asking the next question
-- Ask only ONE question at a time
-- If something can be logically inferred, just confirm it naturally (e.g. "So that's 10 weeks — should we do 10 letters, one per week?")
-- If an answer is vague or very short, gently ask one follow-up
-- Keep the tone warm and personal, like a friend helping plan something meaningful
-- Stay on the task of building this letter box; politely steer back if asked about unrelated things
-- Write in plain conversational text. You may use **bold** for the one question you are asking, but no headings, bullet lists, or other markdown
-- In your final message, before the data block, tell them warmly that the best letters are made of small everyday moments: whenever something makes them think of the other person (a note, a photo, a short video, a voice memo, even "on the way to buy your gift"), they can drop it into their "days before" page any time, and the more they leave, the more of them will be in the letter box
-- Once ALL information is collected, wrap up warmly and include the data block below
+const SHARED_RULES = `
+## How you talk
+- Warm, plain and personal, like a friend who is good at this. Short messages: usually 2 to 5 sentences.
+- Acknowledge what they shared before you ask anything. Ask only ONE question at a time.
+- Plain conversational text. You may put the one question you are asking in **bold**. No headings or bullet lists.
+- Never write their letters for them. You help them find what to say; the words must be theirs.
+- Stay on the task of this letter box; steer back gently if they ask about other things.
 
 ## Preference questions
-When something is a choice the sender should make, never decide for them:
+When something is the sender's choice, never decide for them:
 1. Explain the options in one or two plain sentences each.
-2. Let them answer in their own words; they don't have to pick an option by name.
-3. Restate how you understood their answer, in plain words, and ask them to confirm.
-4. Only move on after they confirm. If they say no, ask what they'd change.
+2. Let them answer in their own words.
+3. Restate how you understood them and ask them to confirm.
+4. Move on only after they confirm. If they want something you didn't offer, find a way to do it.
+`
 
-Diary entries (item 10). Before they part, the sender keeps a short diary; every entry is stamped with the day it was written. Offer these options:
-- "mirror": an entry written N days before parting opens N days after parting, so each day apart something from "that day before" arrives. Days they didn't write are skipped quietly.
-- "all": every entry is available from the day they hand it over, like a book to read at their own pace.
-If what they want doesn't fit either, pick the closer one, say plainly what will happen, and confirm. Tell them they can change it later on their diary page.
+const INTERVIEW_SYSTEM = (p, today) => `
+You are the planning guide for "While You're Away", a service that helps someone prepare a goodbye: before they part from someone they love, they fill a letter box that the other person opens, one letter at a time, while they are apart.
 
+Today is ${str(today)}.
+
+## Already known
+- Sender: ${str(p.fromName)}
+- Writing to: ${str(p.toName)} (${str(p.relationship) || 'relationship not given'})
+- The day they part: ${str(p.startDate) || 'not given'}
+- The day they meet again: ${str(p.endDate) || 'no set date'}
+- Situation in their words: ${str(p.situation, 300) || 'not given'}
+
+## Your job, in this order
+1. Understand the goodbye. Ask what is happening (basic training, deployment, studying abroad, a move, a wedding, a new job...), how often they will be able to talk while apart (not at all, sometimes, every day), and anything that makes this goodbye particular.
+2. Propose the shape of their letter box, in plain words, fitted to the situation, then confirm it. The parts:
+   - "Read this tonight": one letter that opens the day they part. Suggest it for almost everyone.
+   - Letters on a rhythm: every day, every week, or every two weeks. Valuable when they can't talk (basic training, deployment); usually unnecessary when they talk daily, so suggest leaving it off then but offer it. Suggest a count that fits the time apart.
+   - "Things I never said": 3 to 5 topics fitted to them (for example: the first time I saw you, what I've never thanked you for, something I'm sorry for, what I'm proud of you for).
+   - "Open when…": 3 to 6 moments they can open any time (when you can't sleep, when you miss me, on a hard day...).
+   - Special days: ask whether a birthday, anniversary, holiday or milestone (a graduation, a family day) falls while they are apart, and get the dates.
+   - "The day we meet again": one sealed letter for the end, only if there is a date.
+   They can add or remove anything, now or later in the editor. Their wish always wins.
+3. Gather what makes it theirs, one question at a time: what they call each other, things that remind them of each other, something only the two of them share, a few moments from their story with dates, whether they want a small pet companion in the box (animal + name), and a name for the letter box.
+4. Their "days before" diary: entries written before parting are stamped with the day. Offer the two options and confirm (see Preference questions):
+   - "mirror": an entry written N days before parting opens N days after parting. Days without an entry are skipped quietly.
+   - "all": every entry is there from the day they hand it over.
+5. Close warmly. Tell them the best letters are made of small everyday moments: whenever something makes them think of the other person (a few lines, a photo, a short video, a voice memo, "on the way to buy your gift"), they can drop it into their "days before" page any time, and you will be there in the editor to help them write.
+${SHARED_RULES}
 ## When complete
-At the very end of your final message, include:
+Only after they confirmed the plan, end your final message with this block (valid JSON, dates as YYYY-MM-DD):
 <COMPLETE>
 {
+  "situation": "one short line",
+  "contact": "none | sometimes | daily",
   "relationshipWord": "",
   "nicknames": "",
   "symbols": "",
   "special": "",
   "timeline": [{ "date": "YYYY-MM-DD", "label": "", "emoji": "" }],
-  "situationLabels": [{ "id": "s0", "label": "", "emoji": "", "hint": "" }],
   "petName": "",
   "petAnimal": "",
-  "stats": [],
   "appName": "",
-  "diaryUnlock": "mirror or all"
+  "diaryUnlock": "mirror or all",
+  "plan": {
+    "tonight": true,
+    "last": true,
+    "scheduled": { "enabled": true, "schedule": "daily | weekly | biweekly", "count": 10 },
+    "neverSaid": [{ "label": "", "hint": "" }],
+    "anytime": [{ "label": "", "hint": "" }],
+    "occasions": [{ "label": "", "date": "YYYY-MM-DD" }]
+  }
 }
 </COMPLETE>
 `
 
-const THEME_PROMPT = (allData) => `Based on the information below, generate a letter box theme as JSON only. No other text.
+const COMPANION_SYSTEM = (summary, today) => `
+You are the writing companion inside "While You're Away". The sender is filling a letter box for someone they are about to part from. You sit beside them while they write.
+
+Today is ${str(today)}.
+
+## Their letter box right now
+${summary}
+
+## What you do
+- Help them find what to say: ask questions that bring back specific memories, details, words they actually use.
+- Connect what they already collected: suggest which moment, photo or voice note would fit which letter ("your note from the gift shop would be lovely in 'When you miss me'").
+- Notice empty letters and offer a gentle question to start one. Never list everything that is empty at once; pick one.
+- If they want a letter that isn't there, tell them they can add it with "Add a letter" in that section.
+- You may suggest a first sentence only if they ask, and keep it short; make clear they should change it to their own words.
+${SHARED_RULES}`
+
+const THEME_PROMPT = (allData) => `Based on the information below about a letter box someone is preparing for a person they love, suggest names and a welcome line. Answer with JSON only, no other text.
 
 Data: ${allData}
 
 Output format:
 {
-  "appNames": ["option1", "option2", "option3"],
-  "theme": {
-    "primary": "#hex",
-    "secondary": "#hex",
-    "accent": "#hex",
-    "mood": "one word"
-  },
-  "welcomeMessage": "one-line message shown on the home screen"
+  "appNames": ["three short names for the letter box, personal to them"],
+  "welcomeMessage": "one line the recipient sees when they open it, in the sender's voice"
 }`
 
-// ── 입력 정리 ────────────────────────────────────────────────
+// ── input checks ─────────────────────────────────────────────
 
 function cleanMessages(messages) {
   if (!Array.isArray(messages) || messages.length === 0 || messages.length > MAX_MESSAGES) return null
@@ -140,37 +134,46 @@ function cleanMessages(messages) {
   return out
 }
 
-// ── 핸들러 ──────────────────────────────────────────────────
+const isoToday = (d) => (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : new Date().toISOString().slice(0, 10))
+
+/** Count companion messages per paid session; returns false once the cap is reached. Fails open if the table is missing. */
+async function withinCompanionCap(sessionId) {
+  try {
+    const { data, error } = await db().from('ai_usage').select('messages').eq('session_id', sessionId).maybeSingle()
+    if (error) throw error
+    const used = data?.messages || 0
+    if (used >= COMPANION_CAP) return false
+    await db().from('ai_usage').upsert({ session_id: sessionId, messages: used + 1, updated_at: new Date().toISOString() }, { onConflict: 'session_id' })
+    return true
+  } catch (err) {
+    console.warn('ai_usage unavailable:', err?.message || err)
+    return true
+  }
+}
+
+// ── handler ──────────────────────────────────────────────────
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { kind, sessionId, messages, phase1, allData } = req.body || {}
-
-  if (!(await isPaid(sessionId))) {
-    return res.status(402).json({ error: 'payment_required' })
-  }
+  const { kind, sessionId, messages, phase1, allData, summary, today } = req.body || {}
+  if (!(await isPaid(sessionId))) return res.status(402).json({ error: 'payment_required' })
 
   let body
   if (kind === 'interview') {
     const clean = cleanMessages(messages)
     if (!clean) return res.status(400).json({ error: 'invalid_messages' })
-    body = {
-      model: MODELS.interview,
-      max_tokens: 1000,
-      system: INTERVIEW_SYSTEM(phase1 || {}),
-      messages: clean,
-    }
+    body = { model: MODELS.interview, max_tokens: 2000, system: INTERVIEW_SYSTEM(phase1 || {}, isoToday(today)), messages: clean }
+  } else if (kind === 'companion') {
+    const clean = cleanMessages(messages)
+    if (!clean) return res.status(400).json({ error: 'invalid_messages' })
+    if (!(await withinCompanionCap(sessionId))) return res.status(429).json({ error: 'cap_reached' })
+    const sum = typeof summary === 'string' ? summary.slice(0, MAX_SUMMARY_CHARS) : ''
+    body = { model: MODELS.companion, max_tokens: 700, system: COMPANION_SYSTEM(sum, isoToday(today)), messages: clean }
   } else if (kind === 'theme') {
     const data = JSON.stringify(allData ?? {})
     if (data.length > MAX_PAYLOAD_CHARS) return res.status(413).json({ error: 'too_large' })
-    body = {
-      model: MODELS.theme,
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: THEME_PROMPT(data) }],
-    }
+    body = { model: MODELS.theme, max_tokens: 600, messages: [{ role: 'user', content: THEME_PROMPT(data) }] }
   } else {
     return res.status(400).json({ error: 'invalid_kind' })
   }
@@ -178,11 +181,7 @@ export default async function handler(req, res) {
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify(body),
     })
     const data = await r.json()

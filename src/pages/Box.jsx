@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { localISODate, daysBetween, formatLong } from '../utils/diary'
 import Dog from '../components/pets/Dog'
@@ -91,7 +91,7 @@ export default function Box() {
   }
 
   return (
-    <div className="wb">
+    <div className="wb" style={box.accent ? { '--light': box.accent } : undefined}>
       <Header box={box} today={data.today || localISODate()} offline={status === 'offline'} />
       <div className="wb-tabs" role="tablist" aria-label="Sections">
         <button type="button" role="tab" aria-selected={tab === 'letters'} className="wb-tab" onClick={() => setTab('letters')}>Letters</button>
@@ -131,7 +131,7 @@ function Message({ title, body }) {
   )
 }
 
-function Seal({ box, onOpen }) {
+export function Seal({ box, onOpen }) {
   return (
     <div className="wb wb-center wb-seal-screen">
       <div className="wb-seal-card">
@@ -147,7 +147,7 @@ function Seal({ box, onOpen }) {
   )
 }
 
-function Header({ box, today, offline }) {
+export function Header({ box, today, offline }) {
   let line = ''
   if (box.partDate && today < box.partDate) {
     const n = daysBetween(today, box.partDate)
@@ -169,77 +169,69 @@ function Header({ box, today, offline }) {
   )
 }
 
-function Letters({ items, openSet, onOpen }) {
-  const groups = useMemo(() => {
-    const before = items.filter((i) => i.section === 'before')
-    const scheduled = items.filter((i) => i.section === 'scheduled')
-    const anytime = items.filter((i) => i.section === 'anytime' && i.open)
-    const fresh = items.filter((i) => i.open && !i.empty && !openSet.has(i.id) && i.section !== 'anytime')
-    const freshIds = new Set(fresh.map((i) => i.id))
-    return { before, scheduled, anytime, fresh, freshIds }
-  }, [items, openSet])
+const ORDER = ['tonight', 'before', 'scheduled', 'never', 'anytime', 'occasions', 'last']
+const TIMED = new Set(['tonight', 'scheduled', 'occasions', 'last'])
+const QUIET = new Set(['anytime', 'never']) // open any time, never flagged as "new"
 
-  const nextLocked = groups.scheduled.find((i) => !i.open)
-  const lockedCount = groups.scheduled.filter((i) => !i.open).length
-  // letters shown under "New for you" aren't repeated in their own section
-  const openScheduled = groups.scheduled.filter((i) => i.open && !groups.freshIds.has(i.id))
-  const openBefore = groups.before.filter((i) => i.open && !groups.freshIds.has(i.id))
-  const beforeWaiting = groups.before.filter((i) => !i.open).length
+export function Letters({ items, openSet, onOpen }) {
+  const fresh = items.filter((i) => i.open && !i.empty && !openSet.has(i.id) && !QUIET.has(i.section))
+  const freshIds = new Set(fresh.map((i) => i.id))
 
   return (
     <>
-      {groups.fresh.length > 0 && (
+      {fresh.length > 0 && (
         <section className="wb-section" aria-labelledby="wb-new">
           <h2 id="wb-new">New for you</h2>
           <div className="wb-list">
-            {groups.fresh.map((i) => <Row key={i.id} item={i} isNew onOpen={onOpen} />)}
+            {fresh.map((i) => <Row key={i.id} item={i} isNew onOpen={onOpen} />)}
           </div>
         </section>
       )}
-
-      {(openBefore.length > 0 || beforeWaiting > 0) && (
-        <section className="wb-section" aria-labelledby="wb-before">
-          <h2 id="wb-before">Written before I left</h2>
-          <div className="wb-list">
-            {[...openBefore].reverse().map((i) => <Row key={i.id} item={i} isNew={!openSet.has(i.id)} onOpen={onOpen} />)}
-          </div>
-          {beforeWaiting > 0 && <p className="wb-note">{groups.before.length > beforeWaiting ? 'More are on their way.' : 'The first one arrives soon.'}</p>}
-        </section>
-      )}
-
-      {(openScheduled.length > 0 || nextLocked) && (
-        <section className="wb-section" aria-labelledby="wb-scheduled">
-          <h2 id="wb-scheduled">Letters while we’re apart</h2>
-          <div className="wb-list">
-            {[...openScheduled].reverse().map((i) => <Row key={i.id} item={i} isNew={!openSet.has(i.id) && !i.empty} onOpen={onOpen} />)}
-            {nextLocked && (
-              <div className="wb-row wb-row--locked">
-                <div>
-                  <p className="wb-row-title">{nextLocked.label}</p>
-                  <p className="wb-row-sub">Opens {formatLong(nextLocked.opensOn)}</p>
+      {ORDER.map((sec) => {
+        const all = items.filter((i) => i.section === sec)
+        if (!all.length) return null
+        const open = all.filter((i) => i.open && !freshIds.has(i.id))
+        const locked = all.filter((i) => !i.open)
+        const next = TIMED.has(sec) ? locked[0] : null
+        if (!open.length && !next && !(sec === 'before' && locked.length)) return null
+        const shown = sec === 'before' || sec === 'scheduled' ? [...open].reverse() : open
+        return (
+          <section key={sec} className="wb-section" aria-labelledby={`wb-${sec}`}>
+            <h2 id={`wb-${sec}`}>{SECTION_TITLES[sec]}</h2>
+            <div className="wb-list">
+              {shown.map((i) => <Row key={i.id} item={i} isNew={!openSet.has(i.id) && !QUIET.has(i.section)} onOpen={onOpen} />)}
+              {next && (
+                <div className="wb-row wb-row--locked">
+                  <div>
+                    <p className="wb-row-title">{next.label}</p>
+                    <p className="wb-row-sub">{sec === 'last' ? `Sealed until ${formatLong(next.opensOn)}` : `Opens ${formatLong(next.opensOn)}`}</p>
+                  </div>
+                  <LockIcon />
                 </div>
-                <LockIcon />
-              </div>
-            )}
-          </div>
-          {lockedCount > 1 && <p className="wb-note">{lockedCount - 1} more after that.</p>}
-        </section>
-      )}
-
-      {groups.anytime.length > 0 && (
-        <section className="wb-section" aria-labelledby="wb-anytime">
-          <h2 id="wb-anytime">Open when…</h2>
-          <div className="wb-list">
-            {groups.anytime.map((i) => <Row key={i.id} item={i} isNew={false} onOpen={onOpen} />)}
-          </div>
-        </section>
-      )}
+              )}
+            </div>
+            {sec === 'scheduled' && locked.length > 1 && <p className="wb-note">{locked.length - 1} more after that.</p>}
+            {sec === 'occasions' && locked.length > 1 && <p className="wb-note">{locked.length - 1} more special {locked.length - 1 === 1 ? 'day' : 'days'} to come.</p>}
+            {sec === 'before' && locked.length > 0 && <p className="wb-note">{all.length > locked.length ? 'More are on their way.' : 'The first one arrives soon.'}</p>}
+          </section>
+        )
+      })}
     </>
   )
 }
 
+const SECTION_TITLES = {
+  tonight: 'Tonight',
+  before: 'Written before I left',
+  scheduled: 'Letters while we’re apart',
+  never: 'Things I never said',
+  anytime: 'Open when…',
+  occasions: 'Special days',
+  last: 'The day we meet again',
+}
+
 function Row({ item, isNew, onOpen }) {
-  const sub = item.section === 'before' ? item.stamp : item.section === 'anytime' ? item.hint || 'Whenever you need it' : item.empty ? 'Nothing here yet' : item.opensOn ? `Arrived ${formatLong(item.opensOn)}` : ''
+  const sub = item.section === 'before' ? item.stamp : item.section === 'anytime' ? item.hint || 'Whenever you need it' : item.section === 'never' ? item.hint || '' : item.opensOn ? `Arrived ${formatLong(item.opensOn)}` : ''
   const title = item.section === 'before' && item.label === item.stamp ? (item.letter || '').split('\n')[0].slice(0, 80) || item.label : item.label
   return (
     <button type="button" className={`wb-row${isNew ? ' wb-row--new' : ''}`} onClick={() => onOpen(item.id)} disabled={item.empty}>
@@ -252,7 +244,7 @@ function Row({ item, isNew, onOpen }) {
   )
 }
 
-function LetterSheet({ item, replies, toName, fromName, onClose, onReply }) {
+export function LetterSheet({ item, replies, toName, fromName, onClose, onReply, preview = false }) {
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -285,7 +277,7 @@ function LetterSheet({ item, replies, toName, fromName, onClose, onReply }) {
         <button type="button" className="wb-close" onClick={onClose} aria-label="Close letter">
           <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 3l10 10M13 3L3 13" /></svg>
         </button>
-        <p className="wb-sheet-meta"><span className="wb-dot" aria-hidden="true" />{item.section === 'before' ? `${item.stamp} · ${item.date}` : item.opensOn ? formatLong(item.opensOn) : 'Open when…'}</p>
+        <p className="wb-sheet-meta"><span className="wb-dot" aria-hidden="true" />{item.section === 'before' ? `${item.stamp} · ${item.date}` : item.opensOn ? formatLong(item.opensOn) : SECTION_TITLES[item.section] || ''}</p>
         <h2 id="wb-sheet-title">{item.label}</h2>
         {item.prompt && <p className="wb-prompt">{item.prompt}</p>}
         {item.letter && <div className="wb-letter">{item.letter}</div>}
@@ -299,6 +291,9 @@ function LetterSheet({ item, replies, toName, fromName, onClose, onReply }) {
         )}
         {fromName && item.letter && <p className="wb-sign">— {fromName}</p>}
 
+        {preview ? (
+          <p className="wb-quiet wb-small" style={{ marginTop: 28 }}>Here, {toName || 'they'} can write back to you. Replies arrive on your hand-over page.</p>
+        ) : (
         <section className="wb-replies" aria-labelledby="wb-replies-title">
           <h3 id="wb-replies-title">Write back</h3>
           {replies.map((r, i) => (
@@ -313,12 +308,13 @@ function LetterSheet({ item, replies, toName, fromName, onClose, onReply }) {
           {error && <p className="wb-error" role="alert">{error}</p>}
           {!error && toName && <p className="wb-quiet wb-small">{fromName || 'They'} will see your reply.</p>}
         </section>
+        )}
       </article>
     </div>
   )
 }
 
-function Story({ box, token }) {
+export function Story({ box, token, today: day }) {
   const petKey = `wya_pet_${token}`
   const [pet, setPet] = useState(() => read(petKey) || { feedCount: 0, lastFed: null })
   const [now] = useState(() => Date.now())
@@ -329,7 +325,7 @@ function Story({ box, token }) {
     setPet(next)
     write(petKey, next)
   }
-  const today = localISODate()
+  const today = day || localISODate()
   return (
     <>
       {box.pet && (

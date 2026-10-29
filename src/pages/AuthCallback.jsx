@@ -1,346 +1,191 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../utils/supabase'
-import { hydrateFromDB, saveDraft } from '../utils/storage'
+import { hydrateFromDB, saveDraft, getDraft } from '../utils/storage'
+import { CenterPage, Mark } from '../components/FlowFrame'
+
+/* After checkout (or a sign-in link): remember the payment, sign in with an emailed code, continue. */
+
+function nextPath(isPayment) {
+  if (isPayment) return '/ai-interview'
+  const d = getDraft()
+  if (d.generatedConfig?.chosenName) return '/editor'
+  if (d.phase2Done) return '/generate'
+  if (d.phase1Done) return '/ai-interview'
+  return '/'
+}
+
+function friendlyAuthError(err) {
+  const msg = (err?.message || '').toLowerCase()
+  if (err?.status === 429 || msg.includes('rate limit') || msg.includes('security purposes')) return 'Too many codes just now. Wait a minute and try again, or continue without saving.'
+  if (msg.includes('invalid') && msg.includes('email')) return 'That email address looks invalid.'
+  return 'We couldn’t send the code. You can continue without saving and sign in later.'
+}
 
 export default function AuthCallback() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const isPaymentSuccess = searchParams.get('payment') === 'success'
-  const stripeSessionId = searchParams.get('session_id')
-
-  // Stripe에서 돌아온 직후 결제 세션 ID 저장 — /api/claude가 이걸로 결제 여부를 확인함
-  if (stripeSessionId && getDraftValue('paymentSessionId') !== stripeSessionId) {
-    saveDraft({ paymentSessionId: stripeSessionId })
-  }
+  const [params] = useSearchParams()
+  const isPayment = params.get('payment') === 'success'
+  const stripeSessionId = params.get('session_id')
 
   const [phase, setPhase] = useState('checking') // checking | needEmail | sending | success | error
-  const [email, setEmail] = useState('')
-  const [sending, setSending] = useState(false)
-  const [error, setError] = useState(null)
+  const [email, setEmail] = useState(() => getDraft().email || '')
   const [code, setCode] = useState('')
-  const [verifying, setVerifying] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (stripeSessionId && getDraft().paymentSessionId !== stripeSessionId) saveDraft({ paymentSessionId: stripeSessionId })
+  }, [stripeSessionId])
 
   useEffect(() => {
     if (!supabase) {
-      navigate(isPaymentSuccess ? '/ai-interview' : '/')
-      return
+      navigate(nextPath(isPayment))
+      return undefined
     }
-
     let done = false
 
-    const onSession = async (session) => {
+    const finish = async () => {
       if (done) return
-      if (session) {
-        done = true
-        await hydrateFromDB()
-        saveDraft({}) // 로그인 직후 이 기기의 작성 내용을 DB에 올림 → 다른 기기에서 이어하기
-        setPhase('success')
-        setTimeout(() => {
-          if (isPaymentSuccess) navigate('/ai-interview')
-          else {
-            const draft = JSON.parse(localStorage.getItem('lbs_draft') || '{}')
-            if (draft.phase2Done) navigate('/generate')
-            else if (draft.phase1Done) navigate('/ai-interview')
-            else navigate('/')
-          }
-        }, 800)
-      } else if (!done) {
-        done = true
-        if (isPaymentSuccess) {
-          const savedEmail = getDraftValue('email')
-          if (savedEmail) autoSend(savedEmail)
-          else setPhase('needEmail')
-        } else setPhase('error')
-      }
+      done = true
+      await hydrateFromDB()
+      saveDraft({})
+      setPhase('success')
+      setTimeout(() => navigate(nextPath(isPayment)), 900)
     }
 
-    // 결제할 때 입력한 이메일로 로그인 링크 자동 발송
-    const autoSend = async (addr) => {
-      setEmail(addr)
-      setError(null)
+    const sendCode = async (addr) => {
       setPhase('sending')
-      const { error: err } = await supabase.auth.signInWithOtp({
-        email: addr,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-          shouldCreateUser: true,
-        },
-      })
+      const { error: err } = await supabase.auth.signInWithOtp({ email: addr, options: { shouldCreateUser: true } })
       if (err) {
-        console.error('signInWithOtp:', err)
         setError(friendlyAuthError(err))
         setPhase('needEmail')
       }
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session) onSession(session)
-      },
-    )
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) onSession(session)
-      else if (!done) {
-        // 해시 처리 대기 — onAuthStateChange가 세션을 넘겨줄 수 있음
-        setTimeout(() => {
-          if (!done) {
-            supabase.auth.getSession().then(({ data: { session: s2 } }) => {
-              if (!s2 && !done) onSession(null)
-            })
-          }
-        }, 500)
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [isPaymentSuccess, navigate])
-
-  const verifyCode = async () => {
-    const token = code.replace(/\D/g, '')
-    if (token.length < 6) {
-      setError('Please enter the code from your email.')
-      return
+    const noSession = () => {
+      if (done) return
+      done = true
+      if (!isPayment) return setPhase('error')
+      const saved = getDraft().email
+      if (saved) sendCode(saved)
+      else setPhase('needEmail')
     }
-    setVerifying(true)
-    setError(null)
-    const { data, error: err } = await supabase.auth.verifyOtp({
-      email: email.trim(),
-      token,
-      type: 'email',
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => { if (session) finish() })
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) finish()
+      else setTimeout(() => supabase.auth.getSession().then(({ data: { session: s } }) => (s ? finish() : noSession())), 500)
     })
+    return () => subscription.unsubscribe()
+  }, [isPayment, navigate])
+
+  const send = async () => {
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) return setError('Enter a valid email address.')
+    setBusy(true)
+    setError('')
+    const { error: err } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true } })
+    setBusy(false)
+    if (err) return setError(friendlyAuthError(err))
+    saveDraft({ email: email.trim() })
+    setCode('')
+    setPhase('sending')
+  }
+
+  const verify = async () => {
+    const token = code.replace(/\D/g, '')
+    if (token.length < 6) return setError('Enter the code from your email.')
+    setBusy(true)
+    setError('')
+    const { data, error: err } = await supabase.auth.verifyOtp({ email: email.trim(), token, type: 'email' })
     if (err || !data?.session) {
-      console.error('verifyOtp:', err)
-      setError('That code didn\'t work. Check the newest email, or send a new code.')
-      setVerifying(false)
-      return
+      setBusy(false)
+      return setError('That code didn’t work. Check the newest email, or send a new code.')
     }
     await hydrateFromDB()
     saveDraft({})
     setPhase('success')
-    setTimeout(() => navigate(isPaymentSuccess ? '/ai-interview' : '/'), 800)
+    setTimeout(() => navigate(nextPath(isPayment)), 900)
   }
 
-  const sendMagicLink = async () => {
-    if (!email.trim() || !email.includes('@')) {
-      setError('Please enter a valid email address.')
-      return
-    }
-    setSending(true)
-    setError(null)
-
-    const redirectTo = `${window.location.origin}/auth/callback${isPaymentSuccess ? '?payment=success' : ''}`
-
-    const { error: err } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: {
-        emailRedirectTo: redirectTo,
-        shouldCreateUser: true,
-      },
-    })
-
-    if (err) {
-      console.error('signInWithOtp:', err)
-      setError(friendlyAuthError(err))
-      setSending(false)
-    } else {
-      setError(null)
-      setCode('')
-      setPhase('sending')
-    }
-  }
+  const skip = (
+    <button type="button" className="wf-link" onClick={() => navigate(nextPath(isPayment))}>
+      Continue without signing in
+    </button>
+  )
 
   if (phase === 'checking') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ background: '#FBF4E8' }}>
-        <div style={{
-          width: 52, height: 52, borderRadius: '50%',
-          background: '#C8706E', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: 'Playfair Display, serif', fontStyle: 'italic', fontSize: 22, color: 'white',
-          animation: 'pulse 1.5s ease-in-out infinite',
-          boxShadow: '0 4px 16px rgba(200,112,110,0.3)',
-        }}>W</div>
-        <p className="font-display italic text-xl text-ink">Signing you in...</p>
-        <p className="font-sans text-sm text-text-muted" style={{ fontWeight: 300 }}>Just a moment</p>
-      </div>
+      <CenterPage>
+        <div className="wf-spinner" role="status" aria-label="Checking" />
+        <p className="wf-lede">{isPayment ? 'Confirming your payment…' : 'Signing you in…'}</p>
+      </CenterPage>
     )
   }
 
   if (phase === 'success') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ background: '#FBF4E8' }}>
-        <div style={{
-          width: 52, height: 52, borderRadius: '50%',
-          background: '#7B9E5A', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 22, color: 'white',
-          boxShadow: '0 4px 16px rgba(123,158,90,0.3)',
-        }}>✓</div>
-        <p className="font-display italic text-xl text-ink">Signed in!</p>
-        <p className="font-sans text-sm text-text-muted" style={{ fontWeight: 300 }}>Taking you there...</p>
-      </div>
+      <CenterPage>
+        <Mark size={48} />
+        <h1 className="wf-h1">{isPayment ? 'You’re all set.' : 'Signed in.'}</h1>
+        <p className="wf-lede">{isPayment ? 'Let’s plan the letter box together.' : 'Taking you back to your letter box.'}</p>
+      </CenterPage>
     )
   }
 
-  if (phase === 'needEmail') {
+  if (phase === 'error') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-6 max-w-sm mx-auto" style={{ background: '#FBF4E8' }}>
-        <div style={{
-          width: 52, height: 52, borderRadius: '50%',
-          background: '#C8706E', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: 'Playfair Display, serif', fontStyle: 'italic', fontSize: 22, color: 'white',
-          marginBottom: 20, boxShadow: '0 4px 16px rgba(200,112,110,0.3)',
-        }}>W</div>
-
-        <h1 className="font-display italic text-2xl text-ink text-center mb-2" style={{ letterSpacing: '-0.02em' }}>
-          Payment confirmed!
-        </h1>
-        <p className="font-sans text-sm text-text-muted text-center mb-8" style={{ fontWeight: 300, lineHeight: 1.7 }}>
-          Enter your email to get a sign-in link —<br />
-          this saves your progress across devices.
-        </p>
-
-        <div className="w-full mb-3">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && sendMagicLink()}
-            placeholder="your@email.com"
-            autoFocus
-            className="w-full font-sans text-sm focus:outline-none"
-            style={{
-              background: '#FFFDF9',
-              border: `1px solid ${error ? '#C8706E' : '#E8D5B5'}`,
-              borderRadius: 16, padding: '13px 16px', color: '#1A1008',
-            }}
-          />
-          {error && (
-            <p className="font-sans mt-1.5" style={{ fontSize: 11, color: '#C8706E' }}>{error}</p>
-          )}
-        </div>
-
-        <button
-          type="button"
-          onClick={sendMagicLink}
-          disabled={sending}
-          className="btn-primary w-full py-4 rounded-2xl font-sans text-sm mb-4"
-          style={{ opacity: sending ? 0.7 : 1 }}
-        >
-          {sending ? 'Sending...' : 'Send my sign-in link →'}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => navigate('/ai-interview')}
-          className="font-sans text-sm text-text-muted"
-          style={{ fontWeight: 300 }}
-        >
-          Skip for now — continue without saving
-        </button>
-      </div>
+      <CenterPage>
+        <h1 className="wf-h1">That link has expired.</h1>
+        <p className="wf-lede">Sign in again with your email and we’ll send a fresh code.</p>
+        <button type="button" className="wf-btn" onClick={() => setPhase('needEmail')}>Send me a code</button>
+        <button type="button" className="wf-link" onClick={() => navigate('/')}>Back to the start</button>
+      </CenterPage>
     )
   }
 
   if (phase === 'sending') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center" style={{ background: '#FBF4E8' }}>
-        <div style={{ fontSize: 48, marginBottom: 20 }}>📬</div>
-        <h2 className="font-display italic text-2xl text-ink mb-3" style={{ letterSpacing: '-0.02em' }}>
-          Check your email
-        </h2>
-        <p className="font-sans text-sm text-text-muted mb-6" style={{ fontWeight: 300, lineHeight: 1.7 }}>
-          We sent a sign-in code to<br />
-          <strong style={{ color: '#2D1F14', fontWeight: 500 }}>{email}</strong>
+      <CenterPage>
+        <Mark size={48} />
+        <h1 className="wf-h1">{isPayment ? 'Payment confirmed.' : 'Check your email.'}</h1>
+        <p className="wf-lede">
+          We sent a sign-in code to <strong style={{ color: 'var(--mist)', fontWeight: 600 }}>{email}</strong>. Signing in keeps your letters safe and lets you write from any device.
         </p>
-
-        <div className="w-full max-w-xs mb-3">
+        <div style={{ width: '100%', textAlign: 'left' }}>
+          <label className="wf-label" htmlFor="ac-code">Code</label>
           <input
-            type="text"
+            id="ac-code"
+            className="wf-input"
             inputMode="numeric"
             autoComplete="one-time-code"
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 10))}
-            onKeyDown={(e) => e.key === 'Enter' && verifyCode()}
-            placeholder="Enter code"
+            onKeyDown={(e) => e.key === 'Enter' && verify()}
+            style={{ fontSize: 22, letterSpacing: '0.3em', textAlign: 'center' }}
             autoFocus
-            className="w-full font-sans text-center focus:outline-none"
-            style={{
-              background: '#FFFDF9',
-              border: `1px solid ${error ? '#C8706E' : '#E8D5B5'}`,
-              borderRadius: 16, padding: '13px 16px', color: '#1A1008',
-              fontSize: 22, letterSpacing: '0.3em',
-            }}
           />
-          {error && (
-            <p className="font-sans mt-1.5" style={{ fontSize: 11, color: '#C8706E' }}>{error}</p>
-          )}
+          {error && <p className="wf-error" role="alert">{error}</p>}
         </div>
-        <button
-          type="button"
-          onClick={verifyCode}
-          disabled={verifying}
-          className="btn-primary w-full max-w-xs py-4 rounded-2xl font-sans text-sm mb-6"
-          style={{ opacity: verifying ? 0.7 : 1 }}
-        >
-          {verifying ? 'Checking...' : 'Sign in →'}
-        </button>
-
-        <div
-          className="rounded-2xl p-5 w-full max-w-xs text-left"
-          style={{ background: '#FFFDF9', border: '1px solid #E8D5B5' }}
-        >
-          <p className="font-sans text-xs mb-3" style={{ color: '#9B8070', fontWeight: 300 }}>
-            Can&apos;t find it? Check your spam folder, or:
-          </p>
-          <button
-            type="button"
-            onClick={() => { setError(null); setCode(''); setPhase('needEmail') }}
-            className="font-sans text-xs font-medium"
-            style={{ color: '#C8706E' }}
-          >
-            Try a different email →
-          </button>
-        </div>
-        <button
-          type="button"
-          onClick={() => navigate('/ai-interview')}
-          className="font-sans text-sm text-text-muted mt-6"
-          style={{ fontWeight: 300 }}
-        >
-          Continue without signing in
-        </button>
-      </div>
+        <button type="button" className="wf-btn wf-btn--block" onClick={verify} disabled={busy}>{busy ? 'Checking…' : 'Sign in'}</button>
+        <p className="wf-note">Can’t find it? Check spam, or <button type="button" className="wf-link" style={{ minHeight: 0, padding: 0 }} onClick={() => { setError(''); setPhase('needEmail') }}>use a different email</button>.</p>
+        {skip}
+      </CenterPage>
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-5 px-6 text-center" style={{ background: '#FBF4E8' }}>
-      <div className="wax-seal" style={{ width: 48, height: 48, fontSize: 20 }}>!</div>
-      <p className="font-display italic text-xl text-ink">Something went wrong</p>
-      <p className="font-sans text-sm text-text-muted" style={{ fontWeight: 300 }}>
-        This link may have expired.
-      </p>
-      <button type="button" onClick={() => navigate('/')} className="btn-primary px-8 py-3 rounded-2xl text-sm font-sans">
-        Back to home
-      </button>
-    </div>
+    <CenterPage>
+      <Mark size={48} />
+      <h1 className="wf-h1">{isPayment ? 'Payment confirmed.' : 'Sign in'}</h1>
+      <p className="wf-lede">Enter your email for a sign-in code. It keeps your letters safe and lets you write from any device.</p>
+      <div style={{ width: '100%', textAlign: 'left' }}>
+        <label className="wf-label" htmlFor="ac-email">Email</label>
+        <input id="ac-email" type="email" className="wf-input" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && send()} autoFocus />
+        {error && <p className="wf-error" role="alert">{error}</p>}
+      </div>
+      <button type="button" className="wf-btn wf-btn--block" onClick={send} disabled={busy}>{busy ? 'Sending…' : 'Send my code'}</button>
+      {isPayment && skip}
+    </CenterPage>
   )
-}
-
-function getDraftValue(key) {
-  try {
-    return JSON.parse(localStorage.getItem('lbs_draft') || '{}')[key]
-  } catch {
-    return undefined
-  }
-}
-
-function friendlyAuthError(err) {
-  const msg = (err?.message || '').toLowerCase()
-  if (err?.status === 429 || msg.includes('rate limit') || msg.includes('security purposes')) {
-    return 'Too many emails sent just now. Please wait a minute and try again — or continue without saving.'
-  }
-  if (msg.includes('invalid') && msg.includes('email')) return 'That email address looks invalid.'
-  return `Couldn't send the email (${err?.message || 'unknown error'}). You can continue without saving.`
 }

@@ -4,11 +4,16 @@ import { createClient } from '@supabase/supabase-js'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
+const paidCache = new Set() // per warm instance: skip re-asking Stripe about a session we already saw paid
+
 export async function isPaid(sessionId) {
   if (typeof sessionId !== 'string' || !sessionId.startsWith('cs_')) return false
+  if (paidCache.has(sessionId)) return true
   try {
     const session = await stripe.checkout.sessions.retrieve(sessionId)
-    return session.payment_status === 'paid'
+    const paid = session.payment_status === 'paid'
+    if (paid) paidCache.add(sessionId)
+    return paid
   } catch {
     return false
   }

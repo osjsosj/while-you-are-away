@@ -1,246 +1,156 @@
-import { useState, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDraft, saveDraft } from '../utils/storage'
-import { runAIInterview, PaymentRequiredError } from '../utils/aiService'
+import { runAIInterview, extractComplete, PaymentRequiredError } from '../utils/aiService'
+import { normalizePlan, SCHEDULES, SECTION_INFO } from '../utils/plan'
+import { normalizeUnlock, formatLong } from '../utils/diary'
+import FlowFrame from '../components/FlowFrame'
+import { renderInline } from '../utils/text'
+
+/* Step 3: plan the letter box together. The conversation is saved, so a reload never loses it. */
 
 export default function AIInterview() {
   const navigate = useNavigate()
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState(() => getDraft().interviewChat || [])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [done, setDone] = useState(false)
-  const bottomRef = useRef(null)
-  const inputRef = useRef(null)
+  const [failed, setFailed] = useState(false)
+  const [plan, setPlan] = useState(() => (getDraft().phase2Done && getDraft().plan ? normalizePlan(getDraft().plan) : null))
+  const bottom = useRef(null)
+  const box = useRef(null)
 
-  useEffect(() => { startInterview() }, [])
+  const persist = (msgs) => {
+    setMessages(msgs)
+    saveDraft({ interviewChat: msgs })
+  }
+
+  const ask = useCallback(async (msgs) => {
+    setLoading(true)
+    setFailed(false)
+    try {
+      const reply = await runAIInterview(msgs, getDraft().phase1 || {})
+      const done = extractComplete(reply)
+      const shown = done ? done.rest || 'That’s everything. Here’s your letter box.' : reply
+      const next = [...msgs, { role: 'assistant', content: shown }]
+      persist(next)
+      if (done) {
+        const d = done.data || {}
+        const p = normalizePlan(d.plan || {})
+        const prev = getDraft()
+        saveDraft({
+          phase1: { ...prev.phase1, situation: typeof d.situation === 'string' ? d.situation.slice(0, 200) : prev.phase1?.situation || '' },
+          phase2: { ...d, situationLabels: p.anytime },
+          phase2Done: true,
+          plan: p,
+          contact: ['none', 'sometimes', 'daily'].includes(d.contact) ? d.contact : 'sometimes',
+          diaryUnlock: normalizeUnlock(d.diaryUnlock),
+        })
+        setPlan(p)
+      }
+    } catch (err) {
+      if (err instanceof PaymentRequiredError) return navigate('/paywall')
+      setFailed(true)
+    } finally {
+      setLoading(false)
+    }
+  }, [navigate])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, loading])
-
-  const startInterview = async () => {
-    setLoading(true)
-    const phase1 = getDraft().phase1 || {}
-    let firstMessage
-    try {
-      firstMessage = await runAIInterview([], phase1, true)
-    } catch (err) {
-      if (err instanceof PaymentRequiredError) return navigate('/paywall')
-      throw err
+    if (messages.length === 0) {
+      // first visit: the guide opens the conversation
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      ask([])
     }
-    setMessages([{ role: 'assistant', content: firstMessage }])
-    setLoading(false)
-    setTimeout(() => inputRef.current?.focus(), 100)
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-  const handleSend = async () => {
-    if (!input.trim() || loading) return
-    const userMsg = input.trim()
+  useEffect(() => {
+    bottom.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+  }, [messages, loading, plan])
+
+  const send = () => {
+    const text = input.trim()
+    if (!text || loading) return
     setInput('')
-    const newMessages = [...messages, { role: 'user', content: userMsg }]
-    setMessages(newMessages)
-    setLoading(true)
-
-    const phase1 = getDraft().phase1 || {}
-    let response
-    try {
-      response = await runAIInterview(newMessages, phase1, false)
-    } catch (err) {
-      if (err instanceof PaymentRequiredError) return navigate('/paywall')
-      throw err
-    }
-
-    if (response.includes('<COMPLETE>')) {
-      try {
-        const json = response.match(/<COMPLETE>([\s\S]*?)<\/COMPLETE>/)?.[1]
-        if (json) {
-          const parsed = JSON.parse(json)
-          parsed.diaryUnlock = parsed.diaryUnlock === 'all' ? 'all' : 'mirror'
-          saveDraft({ phase2: parsed, phase2Done: true, diaryUnlock: parsed.diaryUnlock })
-          const cleanResponse = response.replace(/<COMPLETE>[\s\S]*?<\/COMPLETE>/, '').trim()
-          setMessages([...newMessages, {
-            role: 'assistant',
-            content: cleanResponse || "We're all set! Let's build your letter box 💌",
-          }])
-          setDone(true)
-          setLoading(false)
-          return
-        }
-      } catch (e) { console.error(e) }
-    }
-
-    setMessages([...newMessages, { role: 'assistant', content: response }])
-    setLoading(false)
-    setTimeout(() => inputRef.current?.focus(), 100)
+    const next = [...messages, { role: 'user', content: text }]
+    persist(next)
+    ask(next)
+    box.current?.focus()
   }
 
-  const progress = Math.min(90, 50 + messages.filter((m) => m.role === 'user').length * 5)
-  const draft = getDraft()
-  const toName = draft.phase1?.toName || 'them'
+  const retry = () => {
+    const last = messages[messages.length - 1]
+    if (!last || last.role === 'user') ask(messages)
+  }
 
   return (
-    <div className="min-h-screen flex flex-col max-w-lg mx-auto" style={{ background: '#FBF4E8' }}>
+    <FlowFrame step={2}>
+      <h1 className="wf-h1">Let’s plan it together.</h1>
+      <p className="wf-lede">Tell me about your goodbye. I’ll suggest a letter box that fits it, and you decide what stays.</p>
 
-      {/* Header */}
-      <div
-        className="sticky top-0 z-10 px-5 pt-4 pb-3"
-        style={{ background: 'rgba(251,244,232,0.97)', backdropFilter: 'blur(8px)', borderBottom: '1px solid #E8D5B5' }}
-      >
-        <div className="flex items-center justify-between mb-2">
-          <span className="font-display italic text-sm text-text-mid">
-            Tell me about {toName}
-          </span>
-          <div className="flex items-center gap-1.5">
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#C8706E', animation: 'pulse 2s infinite' }} />
-            <span className="font-sans text-xs" style={{ color: '#C8706E', fontWeight: 400 }}>AI</span>
-          </div>
-        </div>
-        <div className="h-0.5 rounded-full" style={{ background: '#E8D5B5' }}>
-          <div
-            className="h-full rounded-full transition-all duration-700"
-            style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #C8706E, #E8A0A0)' }}
-          />
-        </div>
-      </div>
-
-      {/* Messages */}
-      <div className="flex-1 px-4 py-6 space-y-5 overflow-y-auto pb-36">
+      <div className="wf-chat" aria-live="polite">
         {messages.map((m, i) => (
-          <div
-            key={i}
-            className={`flex items-end gap-3 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            style={{ animation: 'fadeUp 0.3s ease both' }}
-          >
-            {m.role === 'assistant' && (
-              <div
-                className="flex-shrink-0 flex items-center justify-center font-display italic text-white"
-                style={{
-                  width: 32, height: 32, borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #C8706E, #9E4E4C)',
-                  fontSize: 13, flexShrink: 0,
-                  boxShadow: '0 2px 8px rgba(200,112,110,0.35)',
-                }}
-              >
-                W
-              </div>
-            )}
-            <div
-              className="max-w-[78%] font-sans text-sm leading-relaxed whitespace-pre-wrap"
-              style={{
-                padding: '12px 16px',
-                borderRadius: m.role === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                ...(m.role === 'user'
-                  ? { background: '#C8706E', color: 'white' }
-                  : { background: '#FFFDF9', color: '#2D1F14', border: '1px solid #E8D5B5', boxShadow: '0 1px 6px rgba(45,31,20,0.05)' }
-                ),
-              }}
-            >
-              {renderInline(m.content)}
-            </div>
+          <div key={i} className={`wf-msg ${m.role === 'assistant' ? 'wf-msg--ai' : 'wf-msg--me'}`}>
+            {m.role === 'assistant' ? renderInline(m.content) : m.content}
           </div>
         ))}
-
-        {/* Typing indicator */}
         {loading && (
-          <div className="flex items-end gap-3 justify-start" style={{ animation: 'fadeUp 0.3s ease both' }}>
-            <div
-              className="flex-shrink-0 flex items-center justify-center font-display italic text-white"
-              style={{
-                width: 32, height: 32, borderRadius: '50%',
-                background: 'linear-gradient(135deg, #C8706E, #9E4E4C)',
-                fontSize: 13, boxShadow: '0 2px 8px rgba(200,112,110,0.35)',
-              }}
-            >
-              W
-            </div>
-            <div
-              style={{
-                background: '#FFFDF9', border: '1px solid #E8D5B5',
-                borderRadius: '18px 18px 18px 4px',
-                padding: '14px 18px',
-                boxShadow: '0 1px 6px rgba(45,31,20,0.05)',
-              }}
-            >
-              <div className="flex gap-1.5 items-center">
-                {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    style={{
-                      width: 6, height: 6, borderRadius: '50%',
-                      background: '#D4BC95',
-                      animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite`,
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
+          <div className="wf-typing" aria-label="Writing">
+            <span /><span /><span />
           </div>
         )}
-
-        <div ref={bottomRef} />
+        {failed && (
+          <div className="wf-card" role="alert" style={{ alignSelf: 'stretch' }}>
+            <p style={{ marginBottom: 12 }}>The conversation didn’t go through. Nothing you wrote is lost.</p>
+            <button type="button" className="wf-btn wf-btn--small" onClick={retry}>Try again</button>
+          </div>
+        )}
+        {plan && !loading && <PlanSummary plan={plan} onContinue={() => navigate('/generate')} />}
+        <div ref={bottom} />
       </div>
 
-      {/* Input area */}
-      <div
-        className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto px-5 py-4"
-        style={{ background: 'rgba(251,244,232,0.98)', backdropFilter: 'blur(8px)', borderTop: '1px solid #E8D5B5' }}
-      >
-        {done ? (
-          <button
-            type="button"
-            onClick={() => navigate('/generate')}
-            className="btn-primary w-full py-4 rounded-2xl text-sm font-sans"
-          >
-            Build my letter box →
+      <div className="wf-composer">
+        <div className="wf-composer-inner">
+          <label htmlFor="ai-input" className="wf-sr">Your message</label>
+          <textarea
+            id="ai-input"
+            ref={box}
+            rows={1}
+            value={input}
+            placeholder={plan ? 'Want to change something? Just say so.' : 'Write your answer…'}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
+          />
+          <button type="button" className="wf-send" onClick={send} disabled={!input.trim() || loading} aria-label="Send">
+            <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 10h11M11 5l5 5-5 5" /></svg>
           </button>
-        ) : (
-          <div className="flex gap-2 items-center">
-            <input
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-              placeholder="Write your answer..."
-              disabled={loading}
-              className="flex-1 font-sans text-sm focus:outline-none"
-              style={{
-                background: '#FFFDF9',
-                border: '1px solid #E8D5B5',
-                borderRadius: 20,
-                padding: '12px 18px',
-                color: '#2D1F14',
-                opacity: loading ? 0.6 : 1,
-              }}
-            />
-            <button
-              type="button"
-              onClick={handleSend}
-              disabled={loading || !input.trim()}
-              className="flex items-center justify-center transition-all"
-              style={{
-                width: 44, height: 44, borderRadius: '50%',
-                background: input.trim() && !loading ? '#C8706E' : '#E8D5B5',
-                color: 'white', fontSize: 18,
-                border: 'none', cursor: input.trim() && !loading ? 'pointer' : 'default',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              →
-            </button>
-          </div>
-        )}
+        </div>
       </div>
-    </div>
+    </FlowFrame>
   )
 }
 
-/** **굵게** 표시만 지원 — 나머지 텍스트는 그대로 (HTML 주입 없음) */
-function renderInline(text) {
-  return String(text)
-    .split(/(\*\*[^*]+\*\*)/g)
-    .map((part, i) =>
-      part.startsWith('**') && part.endsWith('**') && part.length > 4
-        ? <strong key={i} style={{ fontWeight: 600 }}>{part.slice(2, -2)}</strong>
-        : part,
-    )
+function PlanSummary({ plan, onContinue }) {
+  const rows = []
+  if (plan.tonight) rows.push([SECTION_INFO.tonight.title, 'One letter for the night you part'])
+  if (plan.scheduled.enabled) rows.push([SECTION_INFO.scheduled.title, `${plan.scheduled.count} letters, ${SCHEDULES[plan.scheduled.schedule].label.toLowerCase()}`])
+  if (plan.neverSaid.length) rows.push([SECTION_INFO.never.title, plan.neverSaid.map((n) => n.label).join(' · ')])
+  if (plan.anytime.length) rows.push([SECTION_INFO.anytime.title, plan.anytime.map((n) => n.label).join(' · ')])
+  if (plan.occasions.length) rows.push([SECTION_INFO.occasions.title, plan.occasions.map((o) => `${o.label} (${formatLong(o.date)})`).join(' · ')])
+  if (plan.last) rows.push([SECTION_INFO.last.title, 'Sealed until you meet again'])
+  return (
+    <div className="wf-paper" style={{ alignSelf: 'stretch', animation: 'wfIn 400ms ease both' }}>
+      <h2 style={{ margin: '0 0 6px', fontFamily: 'var(--serif)', fontWeight: 500, fontSize: 22 }}>Your letter box</h2>
+      <p className="wf-note" style={{ marginBottom: 14 }}>You can add, remove or rename any of these later while you write.</p>
+      <dl style={{ margin: 0 }}>
+        {rows.map(([t, d]) => (
+          <div key={t} style={{ padding: '10px 0', borderTop: '1px solid var(--paper-line)' }}>
+            <dt style={{ fontWeight: 600, fontSize: 15 }}>{t}</dt>
+            <dd style={{ margin: '2px 0 0', fontSize: 15, lineHeight: 1.5, color: 'var(--ink-soft)' }}>{d}</dd>
+          </div>
+        ))}
+      </dl>
+      <button type="button" className="wf-btn wf-btn--ink wf-btn--block" style={{ marginTop: 16 }} onClick={onContinue}>Looks good, let’s name it</button>
+    </div>
+  )
 }

@@ -1,641 +1,322 @@
-import { useState, useRef } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useCallback, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getDraft, saveDraft } from '../utils/storage'
-import { uploadMedia, NeedSignInError, useMediaUrl } from '../utils/media'
-import SignInModal from '../components/SignInModal'
+import { getPlan, normalizePlan, planSlots, SCHEDULES, SECTION_INFO, suggestedCount } from '../utils/plan'
+import { formatLong, localISODate } from '../utils/diary'
+import FlowFrame from '../components/FlowFrame'
+import MomentMedia from '../components/MomentMedia'
+import Companion from '../components/Companion'
+import { buildSummary, isFilled } from '../utils/summary'
+import '../styles/editor.css'
+import './diary.css'
+
+/* Step 4: write. The letter box is laid out the way it will open, section by section. */
+
+const SECTIONS = ['tonight', 'scheduled', 'never', 'anytime', 'occasions', 'last']
+const ADDABLE = { never: 'neverSaid', anytime: 'anytime', occasions: 'occasions' }
+const ADD_PLACEHOLDER = {
+  never: 'The night we first met',
+  anytime: 'Open when you can’t sleep',
+  occasions: 'Your birthday',
+}
 
 export default function Editor() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const paymentSuccess = searchParams.get('payment') === 'success'
-  const draft = getDraft()
-  const phase1 = draft.phase1 || {}
-  const phase2 = draft.phase2 || {}
-  const config = draft.generatedConfig || {}
+  const [draft, setDraft] = useState(() => getDraft())
+  const [openId, setOpenId] = useState(null)
+  const [companionOpen, setCompanionOpen] = useState(false)
+  const [seed, setSeed] = useState('')
 
-  const weeklyCapsules = Array.from(
-    { length: Number(phase1.regularCount) || 10 },
-    (_, i) => ({
-      id: `w${i}`,
-      type: 'weekly',
-      label: `Week ${i + 1}`,
-      emoji: '📅',
-      unlockDate: getUnlockDate(phase1.startDate, i, phase1.unlockSchedule),
-    }),
-  )
-
-  const situationCapsules = (
-    phase2.situationLabels ||
-    config.situationLabels ||
-    []
-  ).map((s, i) => ({
-    id: s.id || `s${i}`,
-    type: 'situation',
-    label: s.label,
-    emoji: s.emoji || '💛',
-    hint: s.hint,
-  }))
-
-  const allCapsules = [...weeklyCapsules, ...situationCapsules]
-
-  const [capsuleData, setCapsuleData] = useState(() => draft.capsuleData || {})
-  const [activeId, setActiveId] = useState(null)
-  const [tab, setTab] = useState('weekly')
-
-  const activeCapsule = allCapsules.find((c) => c.id === activeId)
-  const activeData = activeId ? capsuleData[activeId] || {} : {}
-
-  const updateCapsule = (id, field, value) => {
-    const next = {
-      ...capsuleData,
-      [id]: { ...(capsuleData[id] || {}), [field]: value },
-    }
-    setCapsuleData(next)
-    saveDraft({ capsuleData: next })
+  const update = (patch) => {
+    saveDraft(patch)
+    setDraft(getDraft())
   }
 
-  const filledCount = allCapsules.filter((c) => {
-    const d = capsuleData[c.id] || {}
-    return d.letter || d.photo || d.voice
-  }).length
+  const p1 = draft.phase1 || {}
+  const plan = useMemo(() => getPlan(draft), [draft])
+  const caps = draft.capsuleData || {}
+  const slots = useMemo(() => planSlots(plan, p1.startDate, p1.endDate), [plan, p1.startDate, p1.endDate])
+  const filled = slots.filter((s) => isFilled(caps[s.id])).length
+  const diary = Array.isArray(draft.diary) ? draft.diary : []
+  const name = draft.generatedConfig?.chosenName || draft.phase2?.appName || 'Your letter box'
 
-  const progress = Math.round((filledCount / allCapsules.length) * 100)
-  const displayCapsules = tab === 'weekly' ? weeklyCapsules : situationCapsules
+  const setPlan = (next) => update({ plan: normalizePlan(next) })
+  const setCap = (id, patch) => update({ capsuleData: { ...(getDraft().capsuleData || {}), [id]: { ...(getDraft().capsuleData?.[id] || {}), ...patch } } })
+
+  const summary = useCallback(() => buildSummary(getDraft()), [])
+  const askAbout = (slot) => {
+    setSeed(`Can you help me with “${slot.label}”? `)
+    setCompanionOpen(true)
+  }
+
+  const current = openId ? slots.find((s) => s.id === openId) : null
+  const right = (
+    <div className="we-top-actions">
+      <button type="button" className="wf-btn wf-btn--ghost wf-btn--small" onClick={() => navigate('/preview')}>Preview</button>
+      <button type="button" className="wf-btn wf-btn--small" onClick={() => navigate('/export')}>Hand it over</button>
+    </div>
+  )
 
   return (
-    <div
-      className="min-h-screen max-w-lg mx-auto flex flex-col"
-      style={{ background: '#FBF4E8' }}
-    >
-      <div
-        className="sticky top-0 z-10 px-5 pt-4 pb-3"
-        style={{
-          background: 'rgba(251,244,232,0.97)',
-          backdropFilter: 'blur(8px)',
-          borderBottom: '1px solid #E8D5B5',
-        }}
-      >
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <span className="font-display italic text-sm text-text-mid">
-              Your letters
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-text-muted font-sans font-light">
-              {filledCount}/{allCapsules.length}
-            </span>
-            <span
-              className="font-sans text-xs font-medium"
-              style={{ color: progress === 100 ? '#7B9E5A' : '#C8706E' }}
-            >
-              {progress}%
-            </span>
-          </div>
+    <FlowFrame right={right}>
+      <div className={`we${companionOpen ? ' we--with-companion' : ''}`}>
+        <p className="wf-note">For {p1.toName || 'them'}{p1.startDate ? ` · you part ${formatLong(p1.startDate)}` : ''}</p>
+        <h1 className="wf-h1" style={{ marginTop: 6 }}>{name}</h1>
+        <div className="we-progress" aria-label={`${filled} of ${slots.length} letters written`}>
+          <div className="we-progress-bar"><span style={{ width: `${slots.length ? (filled / slots.length) * 100 : 0}%` }} /></div>
+          <p className="wf-note">{filled} of {slots.length} letters written. Write in any order; nothing has to be finished today.</p>
         </div>
 
-        <div className="h-1 rounded-full mb-3" style={{ background: '#E8D5B5' }}>
-          <div
-            className="h-full rounded-full transition-all duration-700"
-            style={{
-              width: `${progress}%`,
-              background:
-                progress === 100
-                  ? 'linear-gradient(90deg, #7B9E5A, #9EC475)'
-                  : 'linear-gradient(90deg, #C8706E, #E8A0A0)',
-            }}
-          />
-        </div>
-
-        <div className="flex gap-2">
-          {[
-            { key: 'weekly', label: 'Weekly', count: weeklyCapsules.length },
-            { key: 'situation', label: 'Moments', count: situationCapsules.length },
-          ].map(({ key, label, count }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setTab(key)}
-              className="flex-1 py-2 rounded-xl font-sans text-xs transition-all"
-              style={{
-                background: tab === key ? '#C8706E' : 'transparent',
-                color: tab === key ? 'white' : '#9B8070',
-                border: tab === key ? '1px solid #C8706E' : '1px solid #E8D5B5',
-                fontWeight: tab === key ? 500 : 400,
-              }}
-            >
-              {label} <span style={{ opacity: 0.7 }}>({count})</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {paymentSuccess && (
-        <div
-          className="mx-4 mt-4 px-4 py-3 rounded-2xl text-center font-sans text-xs"
-          style={{
-            background: '#EDF6E5',
-            border: '1px solid #C4DFB0',
-            color: '#4A7A30',
-          }}
-        >
-          Payment successful — now fill in your letters ✓
-        </div>
-      )}
-
-      <div className="px-4 pt-4">
-        <button
-          type="button"
-          onClick={() => navigate('/diary')}
-          className="w-full text-left transition-all"
-          style={{
-            background: 'linear-gradient(135deg, #0B1430 0%, #18234A 100%)',
-            borderRadius: 16,
-            padding: '16px 18px',
-            color: '#E9ECF2',
-            boxShadow: '0 10px 28px -14px rgba(11,20,48,0.7)',
-          }}
-        >
-          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-            <span>
-              <span style={{ display: 'block', fontFamily: 'Literata, Georgia, serif', fontSize: 18 }}>The days before</span>
-              <span style={{ display: 'block', fontSize: 13, color: '#B9C2D3', marginTop: 2 }}>
-                {(draft.diary || []).length
-                  ? `${(draft.diary || []).length} ${(draft.diary || []).length === 1 ? 'entry' : 'entries'} so far · write today's`
-                  : 'A few lines each day before you part'}
-              </span>
+        <button type="button" className="we-diary" onClick={() => navigate('/diary')}>
+          <span>
+            <span className="we-diary-title">{SECTION_INFO.before.title}</span>
+            <span className="we-diary-sub">
+              {diary.length ? `${diary.length} ${diary.length === 1 ? 'moment' : 'moments'} so far · add today’s` : 'Collect small moments before you part: a note, a photo, ten seconds of your voice.'}
             </span>
-            <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: '50%', background: '#F0B341', boxShadow: '0 0 0 4px rgba(240,179,65,0.18)', flex: 'none' }} />
           </span>
+          <span className="wf-dot" aria-hidden="true" />
         </button>
+
+        {SECTIONS.map((sec) => (
+          <Section
+            key={sec}
+            sec={sec}
+            plan={plan}
+            slots={slots.filter((s) => s.section === sec)}
+            caps={caps}
+            p1={p1}
+            onOpen={setOpenId}
+            onPlan={setPlan}
+          />
+        ))}
+
+        <MissingSections plan={plan} p1={p1} onPlan={setPlan} />
+
+        <div className="we-footer">
+          <button type="button" className="wf-btn wf-btn--ghost" onClick={() => navigate('/preview')}>See it as {p1.toName || 'they'} will</button>
+          <button type="button" className="wf-btn" onClick={() => navigate('/export')}>Hand it over</button>
+        </div>
       </div>
 
-      <div className="flex-1 px-4 py-4 space-y-2.5 pb-36">
-        {displayCapsules.map((cap, idx) => {
-          const data = capsuleData[cap.id] || {}
-          const filled = data.letter || data.photo || data.voice
-          const isActive = activeId === cap.id
-          const dotCount = [data.letter, data.photo, data.voice].filter(Boolean).length
+      {!companionOpen && (
+        <button type="button" className="we-companion-fab" onClick={() => setCompanionOpen(true)}>
+          <span className="wf-dot" aria-hidden="true" /> Need help with the words?
+        </button>
+      )}
+      <Companion open={companionOpen} onClose={() => setCompanionOpen(false)} summary={summary} seed={seed} onSeedUsed={() => setSeed('')} />
 
+      {current && (
+        <LetterSheet
+          key={current.id}
+          slot={current}
+          content={caps[current.id] || {}}
+          plan={plan}
+          toName={p1.toName}
+          onChange={(patch) => setCap(current.id, patch)}
+          onPlan={setPlan}
+          onAsk={() => { setOpenId(null); askAbout(current) }}
+          onClose={() => setOpenId(null)}
+        />
+      )}
+    </FlowFrame>
+  )
+}
+
+function Section({ sec, plan, slots, caps, p1, onOpen, onPlan }) {
+  const info = SECTION_INFO[sec]
+  const listKey = ADDABLE[sec]
+  const [adding, setAdding] = useState(false)
+  if (sec === 'tonight' && !plan.tonight) return null
+  if (sec === 'last' && (!plan.last || !p1.endDate)) return null
+  if (sec === 'scheduled' && !plan.scheduled.enabled) return null
+  if (listKey && !slots.length && !adding) return null
+
+  const removeSection = () => {
+    if (sec === 'tonight') onPlan({ ...plan, tonight: false })
+    if (sec === 'last') onPlan({ ...plan, last: false })
+    if (sec === 'scheduled') onPlan({ ...plan, scheduled: { ...plan.scheduled, enabled: false } })
+  }
+
+  return (
+    <section className="we-section" aria-labelledby={`we-${sec}`}>
+      <div className="we-section-head">
+        <div>
+          <h2 id={`we-${sec}`} className="wf-h2">{info.title}</h2>
+          <p className="wf-note">{info.blurb}</p>
+        </div>
+        {(sec === 'tonight' || sec === 'last' || sec === 'scheduled') && (
+          <button type="button" className="wf-link we-small-link" onClick={removeSection}>Remove</button>
+        )}
+      </div>
+
+      {sec === 'scheduled' && <ScheduleSettings plan={plan} p1={p1} caps={caps} onPlan={onPlan} />}
+
+      <div className="we-list">
+        {slots.map((s) => {
+          const c = caps[s.id]
+          const done = isFilled(c)
+          const sub = s.opensOn ? (sec === 'last' ? `Sealed until ${formatLong(s.opensOn)}` : `Opens ${formatLong(s.opensOn)}`) : s.hint || (sec === 'anytime' ? 'They can open this any time' : '')
           return (
-            <button
-              key={cap.id}
-              type="button"
-              onClick={() => setActiveId(cap.id)}
-              className="w-full text-left rounded-2xl transition-all"
-              style={{
-                background: '#FFFDF9',
-                border: `1px solid ${isActive ? '#C8706E' : filled ? '#EFC5C4' : '#E8D5B5'}`,
-                padding: '14px 16px',
-                boxShadow: isActive
-                  ? '0 0 0 3px rgba(200,112,110,0.15)'
-                  : filled
-                    ? '0 2px 12px rgba(200,112,110,0.08)'
-                    : '0 1px 4px rgba(45,31,20,0.04)',
-                animation: `fadeUp 0.3s ease ${idx * 0.04}s both`,
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex-shrink-0 flex items-center justify-center font-sans text-xs font-medium"
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 10,
-                    background: filled ? '#FAF0EF' : '#F5E8D0',
-                    color: filled ? '#C8706E' : '#9B8070',
-                  }}
-                >
-                  {cap.type === 'weekly' ? (
-                    <span
-                      style={{
-                        fontFamily: 'Playfair Display',
-                        fontStyle: 'italic',
-                        fontSize: 13,
-                      }}
-                    >
-                      {parseInt(cap.id.slice(1), 10) + 1}
-                    </span>
-                  ) : (
-                    <span style={{ fontSize: 16 }}>{cap.emoji}</span>
-                  )}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span
-                      className="font-sans text-sm"
-                      style={{ color: '#1A1008', fontWeight: filled ? 500 : 400 }}
-                    >
-                      {cap.label}
-                    </span>
-                    {filled && (
-                      <span className="font-sans text-xs" style={{ color: '#C8706E' }}>
-                        ✓
-                      </span>
-                    )}
-                  </div>
-                  {cap.unlockDate && (
-                    <div
-                      className="font-sans text-xs font-light"
-                      style={{ color: '#9B8070' }}
-                    >
-                      Unlocks {formatDate(cap.unlockDate)}
-                    </div>
-                  )}
-                  {cap.hint && (
-                    <div
-                      className="font-sans text-xs italic font-light"
-                      style={{ color: '#9B8070' }}
-                    >
-                      {cap.hint}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-1 items-end">
-                  <div className="flex gap-1">
-                    {['letter', 'photo', 'voice'].map((field) => (
-                      <div
-                        key={field}
-                        style={{
-                          width: 6,
-                          height: 6,
-                          borderRadius: '50%',
-                          background: data[field] ? '#C8706E' : '#E8D5B5',
-                          transition: 'background 0.2s',
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <span
-                    className="font-sans font-light"
-                    style={{ fontSize: 9, color: '#9B8070' }}
-                  >
-                    {dotCount === 0 ? 'empty' : `${dotCount}/3`}
-                  </span>
-                </div>
-              </div>
+            <button key={s.id} type="button" className={`we-row${done ? ' is-done' : ''}`} onClick={() => onOpen(s.id)}>
+              <span className="we-row-text">
+                <span className="we-row-title">{s.label}</span>
+                {sub && <span className="we-row-sub">{sub}</span>}
+                {done && c.letter && <span className="we-row-excerpt">{c.letter.trim().replace(/\s+/g, ' ').slice(0, 90)}</span>}
+              </span>
+              <span className="we-row-state">
+                {done ? <MediaMarks c={c} /> : <span className="we-write">Write</span>}
+              </span>
             </button>
           )
         })}
       </div>
 
-      <div
-        className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto px-5 py-4"
-        style={{
-          background: 'rgba(251,244,232,0.98)',
-          backdropFilter: 'blur(8px)',
-          borderTop: '1px solid #E8D5B5',
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => navigate('/preview')}
-          className="btn-primary w-full py-4 rounded-2xl text-sm font-sans"
-        >
-          {filledCount === 0
-            ? 'Skip to preview →'
-            : filledCount === allCapsules.length
-              ? 'All done — preview →'
-              : `Preview with ${filledCount} letter${filledCount > 1 ? 's' : ''} →`}
-        </button>
-      </div>
+      {listKey && (adding
+        ? <AddForm sec={sec} p1={p1} onCancel={() => setAdding(false)} onAdd={(item) => { onPlan({ ...plan, [listKey]: [...plan[listKey], { ...item, id: `${listKey === 'neverSaid' ? 'n' : listKey === 'anytime' ? 's' : 'o'}${Date.now().toString(36)}` }] }); setAdding(false) }} />
+        : <button type="button" className="we-add" onClick={() => setAdding(true)}>+ Add a letter</button>)}
+    </section>
+  )
+}
 
-      {activeId && (
-        <CapsuleEditor
-          capsule={activeCapsule}
-          data={activeData}
-          onChange={(field, value) => updateCapsule(activeId, field, value)}
-          onClose={() => setActiveId(null)}
-        />
-      )}
+function MediaMarks({ c }) {
+  const marks = [c.letter?.trim() && 'Letter', c.photo && 'Photo', c.video && 'Video', c.voice && 'Voice'].filter(Boolean)
+  return <span className="we-marks" aria-label={`Written: ${marks.join(', ')}`}>{marks.map((m) => <span key={m}>{m}</span>)}</span>
+}
+
+function ScheduleSettings({ plan, p1, caps, onPlan }) {
+  const { schedule, count } = plan.scheduled
+  const suggestion = suggestedCount(schedule, p1.startDate, p1.endDate)
+  const writtenBeyond = Object.keys(caps).filter((k) => /^w\d+$/.test(k) && Number(k.slice(1)) >= count && isFilled(caps[k])).length
+  const set = (patch) => onPlan({ ...plan, scheduled: { ...plan.scheduled, ...patch } })
+  return (
+    <div className="we-settings">
+      <div className="wf-pills" role="radiogroup" aria-label="How often">
+        {Object.entries(SCHEDULES).map(([k, v]) => (
+          <button key={k} type="button" role="radio" aria-checked={schedule === k} className="wf-pill" onClick={() => set({ schedule: k, count: p1.endDate ? suggestedCount(k, p1.startDate, p1.endDate) : count })}>{v.label}</button>
+        ))}
+      </div>
+      <div className="we-count">
+        <label htmlFor="we-count">Letters</label>
+        <button type="button" className="we-step" aria-label="One fewer" onClick={() => set({ count: Math.max(1, count - 1) })}>−</button>
+        <input id="we-count" className="wf-input" inputMode="numeric" value={count} onChange={(e) => set({ count: Math.max(1, Math.min(120, Number(e.target.value.replace(/\D/g, '')) || 1)) })} />
+        <button type="button" className="we-step" aria-label="One more" onClick={() => set({ count: Math.min(120, count + 1) })}>+</button>
+        {p1.endDate && count !== suggestion && (
+          <button type="button" className="wf-link we-small-link" onClick={() => set({ count: suggestion })}>{suggestion} would last until you meet again</button>
+        )}
+      </div>
+      {writtenBeyond > 0 && <p className="wf-note">{writtenBeyond} written {writtenBeyond === 1 ? 'letter is' : 'letters are'} past this count. They’re kept, and come back if you add more.</p>}
     </div>
   )
 }
 
-function CapsuleEditor({ capsule, data, onChange, onClose }) {
-  const [recording, setRecording] = useState(false)
-  const [recSecs, setRecSecs] = useState(0)
-  const recRef = useRef(null)
-  const intervalRef = useRef(null)
-  const fileRef = useRef(null)
-  const [uploading, setUploading] = useState(null)
-  const [uploadError, setUploadError] = useState('')
-  const [pending, setPending] = useState(null) // upload waiting for sign-in
-  const photoUrl = useMediaUrl(data.photo)
-  const voiceUrl = useMediaUrl(data.voice)
+function AddForm({ sec, p1, onAdd, onCancel }) {
+  const [label, setLabel] = useState('')
+  const [date, setDate] = useState('')
+  const needDate = sec === 'occasions'
+  const ok = label.trim() && (!needDate || /^\d{4}-\d{2}-\d{2}$/.test(date))
+  return (
+    <form className="we-addform" onSubmit={(e) => { e.preventDefault(); if (ok) onAdd({ label: label.trim(), ...(needDate ? { date } : {}) }) }}>
+      <div className="wf-row">
+        <div>
+          <label className="wf-label" htmlFor={`we-add-${sec}`}>{sec === 'anytime' ? 'Open when…' : sec === 'occasions' ? 'Which day?' : 'What is it about?'}</label>
+          <input id={`we-add-${sec}`} className="wf-input" value={label} onChange={(e) => setLabel(e.target.value)} placeholder={ADD_PLACEHOLDER[sec]} maxLength={80} autoFocus />
+        </div>
+        {needDate && (
+          <div>
+            <label className="wf-label" htmlFor="we-add-date">Date</label>
+            <input id="we-add-date" type="date" className="wf-input" min={p1.startDate || localISODate()} value={date} onChange={(e) => setDate(e.target.value)} />
+          </div>
+        )}
+      </div>
+      <div className="we-addform-actions">
+        <button type="submit" className="wf-btn wf-btn--small" disabled={!ok}>Add</button>
+        <button type="button" className="wf-link" onClick={onCancel}>Cancel</button>
+      </div>
+    </form>
+  )
+}
 
-  // Photos and voice notes go to the account's storage; the draft keeps only a reference.
-  const store = async (field, blob) => {
-    setUploading(field)
-    setUploadError('')
-    try {
-      onChange(field, await uploadMedia(blob))
-    } catch (err) {
-      if (err instanceof NeedSignInError) setPending({ field, blob })
-      else setUploadError(err.message || 'Upload failed. Try again.')
-    } finally {
-      setUploading(null)
-    }
+function MissingSections({ plan, p1, onPlan }) {
+  const opts = []
+  if (!plan.tonight) opts.push(['Tonight', () => onPlan({ ...plan, tonight: true })])
+  if (!plan.scheduled.enabled) opts.push(['While we’re apart', () => onPlan({ ...plan, scheduled: { enabled: true, schedule: plan.scheduled.schedule, count: plan.scheduled.count || suggestedCount(plan.scheduled.schedule, p1.startDate, p1.endDate) } })])
+  if (!plan.neverSaid.length) opts.push(['Things I never said', () => onPlan({ ...plan, neverSaid: [{ id: `n${Date.now().toString(36)}`, label: 'Something I never told you' }] })])
+  if (!plan.anytime.length) opts.push(['Open when…', () => onPlan({ ...plan, anytime: [{ id: `s${Date.now().toString(36)}`, label: 'Open when you miss me' }] })])
+  if (!plan.last && p1.endDate) opts.push(['The day we meet again', () => onPlan({ ...plan, last: true })])
+  if (!opts.length) return null
+  return (
+    <section className="we-section we-missing" aria-labelledby="we-more">
+      <h2 id="we-more" className="wf-h2">Add a section</h2>
+      <p className="wf-note" style={{ marginBottom: 12 }}>Anything you set aside while planning is still here.</p>
+      <div className="wf-pills">
+        {opts.map(([label, fn]) => <button key={label} type="button" className="wf-pill" onClick={fn}>+ {label}</button>)}
+      </div>
+    </section>
+  )
+}
+
+function LetterSheet({ slot, content, plan, toName, onChange, onPlan, onAsk, onClose }) {
+  const listKey = ADDABLE[slot.section]
+  const item = listKey ? plan[listKey].find((x) => x.id === slot.id) : null
+  const [letter, setLetter] = useState(content.letter || '')
+  const [title, setTitle] = useState(item?.label || '')
+
+  const saveLetter = (v) => {
+    setLetter(v)
+    onChange({ letter: v })
   }
-
-  const pickPhoto = async (e) => {
-    const file = e.target.files[0]
-    e.target.value = ''
-    if (!file) return
-    store('photo', file)
+  const editItem = (patch) => onPlan({ ...plan, [listKey]: plan[listKey].map((x) => (x.id === slot.id ? { ...x, ...patch } : x)) })
+  const close = () => {
+    if (item && title.trim() && title.trim() !== item.label) editItem({ label: title.trim() })
+    onClose()
   }
-
-  const startRec = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const chunks = []
-      const mime =
-        ['audio/webm', 'audio/mp4', 'audio/ogg'].find((t) =>
-          MediaRecorder.isTypeSupported(t),
-        ) || ''
-      const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined)
-      rec.ondataavailable = (ev) => {
-        if (ev.data.size > 0) chunks.push(ev.data)
-      }
-      rec.onstop = () => {
-        const blob = new Blob(chunks, { type: rec.mimeType || 'audio/webm' })
-        stream.getTracks().forEach((t) => t.stop())
-        store('voice', blob)
-      }
-      rec.start(100)
-      recRef.current = rec
-      setRecording(true)
-      setRecSecs(0)
-      intervalRef.current = setInterval(() => setRecSecs((s) => s + 1), 1000)
-    } catch {
-      alert(
-        'Microphone access denied. Please allow microphone in browser settings.',
-      )
-    }
+  const removeItem = () => {
+    onPlan({ ...plan, [listKey]: plan[listKey].filter((x) => x.id !== slot.id) })
+    onClose()
   }
-
-  const stopRec = () => {
-    recRef.current?.stop()
-    clearInterval(intervalRef.current)
-    setRecording(false)
-  }
-
-  const fmtTime = (s) =>
-    `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex flex-col justify-end"
-      style={{ background: 'rgba(26,16,8,0.6)', backdropFilter: 'blur(4px)' }}
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      {pending && (
-        <SignInModal
-          onClose={() => setPending(null)}
-          onDone={() => { const p = pending; setPending(null); store(p.field, p.blob) }}
+    <div className="we-sheet-wrap" role="dialog" aria-modal="true" aria-labelledby="we-sheet-title" onClick={(e) => e.target === e.currentTarget && close()} onKeyDown={(e) => e.key === 'Escape' && close()}>
+      <article className="we-sheet">
+        <button type="button" className="we-icon-btn we-sheet-close" onClick={close} aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 3l10 10M13 3L3 13" /></svg>
+        </button>
+        <p className="we-sheet-meta">
+          {SECTION_INFO[slot.section]?.title}
+          {slot.opensOn ? ` · ${slot.section === 'last' ? 'sealed until' : 'opens'} ${formatLong(slot.opensOn)}` : slot.section === 'anytime' ? ' · they can open it any time' : ''}
+        </p>
+        {item ? (
+          <>
+            <label htmlFor="we-sheet-title" className="wf-sr">Title</label>
+            <input id="we-sheet-title" className="we-title-input" value={title} maxLength={80} onChange={(e) => setTitle(e.target.value)} onBlur={() => (title.trim() ? editItem({ label: title.trim() }) : setTitle(item.label))} />
+            {slot.section === 'occasions' && (
+              <label className="we-date">Opens on <input type="date" value={item.date || ''} onChange={(e) => e.target.value && editItem({ date: e.target.value })} /></label>
+            )}
+          </>
+        ) : (
+          <h2 id="we-sheet-title" className="we-sheet-h">{slot.label}</h2>
+        )}
+        {slot.hint && <p className="we-hint">{slot.hint}</p>}
+
+        <label htmlFor="we-letter" className="wf-sr">Your letter</label>
+        <textarea
+          id="we-letter"
+          className="we-letter"
+          value={letter}
+          onChange={(e) => saveLetter(e.target.value)}
+          placeholder={`Dear ${toName || 'you'},`}
+          rows={10}
+          autoFocus={!letter}
         />
-      )}
-      {(uploading || uploadError) && (
-        <div role="status" style={{ position: 'fixed', left: '50%', bottom: 24, transform: 'translateX(-50%)', zIndex: 70, padding: '10px 16px', borderRadius: 999, background: uploadError ? '#B1453A' : '#1B2536', color: '#fff', fontSize: 13 }}>
-          {uploadError || (uploading === 'photo' ? 'Saving photo…' : 'Saving voice note…')}
+        <MomentMedia value={{ photo: content.photo || null, video: content.video || null, voice: content.voice || null }} onChange={(v) => onChange(v)} />
+
+        <div className="we-sheet-actions">
+          <button type="button" className="wf-btn wf-btn--ink" onClick={close}>Done</button>
+          <button type="button" className="we-ask" onClick={onAsk}><span className="wf-dot" aria-hidden="true" /> Help me with this one</button>
+          {item && <button type="button" className="we-remove" onClick={removeItem}>Remove this letter</button>}
         </div>
-      )}
-      <div
-        className="max-h-[92vh] overflow-y-auto max-w-lg mx-auto w-full"
-        style={{
-          background: '#FFFDF9',
-          borderRadius: '28px 28px 0 0',
-          boxShadow: '0 -8px 40px rgba(45,31,20,0.15)',
-        }}
-      >
-        <div className="flex justify-center pt-3 pb-2">
-          <div
-            style={{ width: 36, height: 4, background: '#E8D5B5', borderRadius: 2 }}
-          />
-        </div>
-
-        <div className="px-6 pb-10">
-          <div
-            className="flex items-center gap-4 mb-7 pb-5"
-            style={{ borderBottom: '1px solid #F5E8D0' }}
-          >
-            <div
-              className="flex items-center justify-center text-2xl flex-shrink-0"
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: 16,
-                background: '#FAF0EF',
-                border: '1px solid #EFC5C4',
-              }}
-            >
-              {capsule.emoji}
-            </div>
-            <div>
-              <h2
-                className="font-display italic text-xl text-ink mb-0.5"
-                style={{ letterSpacing: '-0.01em' }}
-              >
-                {capsule.label}
-              </h2>
-              {capsule.hint && (
-                <p className="font-sans text-xs font-light" style={{ color: '#9B8070' }}>
-                  {capsule.hint}
-                </p>
-              )}
-              {capsule.unlockDate && (
-                <p className="font-sans text-xs font-light" style={{ color: '#9B8070' }}>
-                  Unlocks {formatDate(capsule.unlockDate)}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <label
-              className="font-sans uppercase tracking-widest block mb-3"
-              style={{ fontSize: 10, color: '#9B8070', letterSpacing: '0.12em' }}
-            >
-              Letter
-            </label>
-            <textarea
-              value={data.letter || ''}
-              onChange={(e) => onChange('letter', e.target.value)}
-              placeholder="Write your letter here..."
-              rows={6}
-              className="w-full focus:outline-none resize-none font-display"
-              style={{
-                background: '#FBF4E8',
-                border: '1px solid #E8D5B5',
-                borderRadius: 16,
-                padding: '14px 16px',
-                fontSize: 14,
-                lineHeight: 1.8,
-                color: '#1A1008',
-                fontStyle: data.letter ? 'normal' : 'italic',
-              }}
-            />
-          </div>
-
-          <div className="mb-6">
-            <label
-              className="font-sans uppercase tracking-widest block mb-3"
-              style={{ fontSize: 10, color: '#9B8070', letterSpacing: '0.12em' }}
-            >
-              Photo
-            </label>
-            <div
-              onClick={() => fileRef.current?.click()}
-              className="cursor-pointer transition-all overflow-hidden"
-              style={{
-                border: `1.5px dashed ${data.photo ? '#EFC5C4' : '#D4BC95'}`,
-                borderRadius: 16,
-                minHeight: data.photo ? 'auto' : 88,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: data.photo ? 'transparent' : '#FBF4E8',
-              }}
-            >
-              {data.photo ? (
-                <img
-                  src={photoUrl || undefined}
-                  alt=""
-                  className="w-full h-auto block"
-                  style={{ borderRadius: 16 }}
-                />
-              ) : (
-                <div className="text-center py-6">
-                  <div className="font-sans text-2xl mb-1" style={{ opacity: 0.4 }}>
-                    +
-                  </div>
-                  <p className="font-sans text-xs font-light" style={{ color: '#9B8070' }}>
-                    Tap to add a photo
-                  </p>
-                </div>
-              )}
-            </div>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={pickPhoto}
-            />
-            {data.photo && (
-              <button
-                type="button"
-                onClick={() => onChange('photo', null)}
-                className="mt-2 font-sans text-xs font-light"
-                style={{ color: '#9B8070' }}
-              >
-                Remove photo ✕
-              </button>
-            )}
-          </div>
-
-          <div className="mb-7">
-            <label
-              className="font-sans uppercase tracking-widest block mb-3"
-              style={{ fontSize: 10, color: '#9B8070', letterSpacing: '0.12em' }}
-            >
-              Voice message
-            </label>
-
-            {data.voice && !recording && (
-              <div
-                className="flex items-center gap-3 mb-3 px-4 py-3 rounded-xl"
-                style={{ background: '#F5E8D0', border: '1px solid #E8D5B5' }}
-              >
-                <span className="text-base">🎙️</span>
-                <span
-                  className="font-sans text-xs flex-1"
-                  style={{ color: '#6B5040', fontWeight: 400 }}
-                >
-                  Voice message saved
-                </span>
-                {voiceUrl && <audio controls src={voiceUrl} style={{ height: 32, maxWidth: 160 }} />}
-                <button
-                  type="button"
-                  onClick={() => onChange('voice', null)}
-                  className="font-sans text-xs font-light"
-                  style={{ color: '#9B8070' }}
-                >
-                  Remove
-                </button>
-              </div>
-            )}
-
-            <div
-              className="flex items-center gap-4 px-4 py-4 rounded-xl"
-              style={{ background: '#FBF4E8', border: '1px solid #E8D5B5' }}
-            >
-              <button
-                type="button"
-                onClick={recording ? stopRec : startRec}
-                className="flex-shrink-0 flex items-center justify-center transition-all"
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: '50%',
-                  background: recording ? '#C8706E' : '#FFFDF9',
-                  border: `2px solid ${recording ? '#C8706E' : '#E8D5B5'}`,
-                  fontSize: 18,
-                  animation: recording ? 'pulse 1.5s ease-in-out infinite' : 'none',
-                }}
-              >
-                {recording ? '⏹' : '🎙️'}
-              </button>
-              <div>
-                <div
-                  className="font-display italic text-xl mb-0.5"
-                  style={{
-                    color: recording ? '#C8706E' : '#2D1F14',
-                    letterSpacing: '-0.01em',
-                  }}
-                >
-                  {recording ? fmtTime(recSecs) : data.voice ? 'Recorded' : '0:00'}
-                </div>
-                <div className="font-sans text-xs font-light" style={{ color: '#9B8070' }}>
-                  {recording
-                    ? 'Tap to stop'
-                    : data.voice
-                      ? 'Tap to re-record'
-                      : 'Tap to record'}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="btn-primary w-full py-4 rounded-2xl text-sm font-sans"
-          >
-            Save & close ✓
-          </button>
-        </div>
-      </div>
+        <p className="we-saved" aria-live="polite">Saved as you type.</p>
+      </article>
     </div>
   )
-}
-
-function getUnlockDate(startDate, weekIndex, schedule) {
-  if (!startDate) return null
-  const d = new Date(startDate)
-  const days =
-    schedule === 'Every day'
-      ? weekIndex
-      : schedule === 'Every two weeks'
-        ? (weekIndex + 1) * 14
-        : (weekIndex + 1) * 7
-  d.setDate(d.getDate() + days)
-  return d
-}
-
-function formatDate(date) {
-  if (!date) return ''
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
