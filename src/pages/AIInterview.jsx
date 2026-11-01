@@ -59,7 +59,9 @@ export default function AIInterview() {
     setLoading(true)
     setFailed(false)
     try {
-      const raw = await runAIInterview(msgs.map((m) => ({ role: m.role, content: m.content })), getDraft().phase1 || {})
+      const last = msgs[msgs.length - 1]
+      const seePhoto = last?.media?.kind === 'photo' ? [last.media.ref] : []
+      const raw = await runAIInterview(msgs.map((m) => ({ role: m.role, content: m.content })), getDraft().phase1 || {}, seePhoto)
       const g = extractGathered(raw)
       if (g.gathered !== null) { setGathered(g.gathered); saveDraft({ interviewGathered: g.gathered }) }
       const done = extractComplete(g.text)

@@ -52,3 +52,4 @@
   .gn-art { width: 48px; height: 44px; }
 }
 .gn-seal { width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #F6C25E, #E09A26); box-shadow: 0 0 14px rgba(240, 179, 65, 0.6), inset 0 0 0 4px rgba(120, 72, 8, 0.25); }
+.gn-duo { display: flex; align-items: center; } .gn-duo .dc-motif + .dc-motif { margin-left: -6px; translate: 0 6px; }

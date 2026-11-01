@@ -3,6 +3,7 @@
  * The key and prompts live on the server; a paid Stripe session id authorizes the call.
  */
 import { getDraft } from './storage'
+import { supabase } from './supabase'
 import { localISODate } from './diary'
 
 export class PaymentRequiredError extends Error {
@@ -25,9 +26,15 @@ async function callClaude(payload) {
   if (!sessionId) throw new PaymentRequiredError()
   let res
   try {
+    // the sign-in token lets the server show Claude the sender's own photos
+    let auth = {}
+    try {
+      const token = supabase ? (await supabase.auth.getSession()).data?.session?.access_token : null
+      if (token) auth = { Authorization: `Bearer ${token}` }
+    } catch { /* not signed in */ }
     res = await fetch('/api/claude', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...auth },
       body: JSON.stringify({ ...payload, sessionId, today: localISODate() }),
     })
   } catch {
@@ -46,8 +53,8 @@ const opener = (phase1) => ({
 })
 
 /** Planning conversation. `messages` is what's on screen (starts with the assistant). */
-export function runAIInterview(messages, phase1) {
-  return callClaude({ kind: 'interview', messages: [opener(phase1), ...messages], phase1 })
+export function runAIInterview(messages, phase1, images = []) {
+  return callClaude({ kind: 'interview', messages: [opener(phase1), ...messages], phase1, images })
 }
 
 /** Writing companion in the editor. `summary` describes the letter box as it stands. */
@@ -56,9 +63,9 @@ export function askCompanion(messages, summary) {
   return callClaude({ kind: 'companion', messages: [first, ...messages], summary })
 }
 
-export async function generateLetterboxConfig(allData) {
+export async function generateLetterboxConfig(allData, images = []) {
   try {
-    const text = await callClaude({ kind: 'theme', allData })
+    const text = await callClaude({ kind: 'theme', allData, images })
     const t = text.replace(/```json|```/g, '')
     return JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1))
   } catch (err) {

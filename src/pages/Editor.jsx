@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useDeferredValue, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDraft, saveDraft } from '../utils/storage'
 import { getPlan, normalizePlan, planSlots, SCHEDULES, SECTION_INFO, suggestedCount } from '../utils/plan'
@@ -12,7 +12,7 @@ import { Motif, StyleSwatch } from '../components/Decor'
 import SignInModal from '../components/SignInModal'
 import { uploadMedia, NeedSignInError, useMediaUrl } from '../utils/media'
 import { useRecorder, fmtSeconds } from '../utils/useRecorder'
-import { STYLES, MOTIFS, TICKETS } from '../utils/decor'
+import { STYLES, TICKETS, stickerId, stickerLabel, stickersFor } from '../utils/decor'
 import { buildSummary, isFilled } from '../utils/summary'
 import '../styles/editor.css'
 import './diary.css'
@@ -302,6 +302,13 @@ function LetterSheet({ slot, content, plan, toName, onChange, onPlan, onAsk, onC
   const [note, setNote] = useState(content.note || '')
   const [noteOpen, setNoteOpen] = useState(!!content.note)
 
+  const typed = useDeferredValue(`${letter} ${note}`)
+  const stuck = useMemo(() => {
+    const dc = getDraft().decor
+    if (!dc || dc.style === 'quiet' || dc.off?.letterStickers) return []
+    return stickersFor(typed, 2, (dc.motifs || []).map((m) => m.id))
+  }, [typed])
+
   const saveLetter = (v) => {
     setLetter(v)
     onChange({ letter: v })
@@ -366,7 +373,10 @@ function LetterSheet({ slot, content, plan, toName, onChange, onPlan, onAsk, onC
           <button type="button" className="we-ask" onClick={onAsk}><span className="wf-dot" aria-hidden="true" /> Help me with this one</button>
           {item && <button type="button" className="we-remove" onClick={removeItem}>Remove this letter</button>}
         </div>
-        <p className="we-saved" aria-live="polite">Saved as you type.</p>
+        <p className="we-saved" aria-live="polite">
+          {stuck.length > 0 && <span className="we-stuck">{stuck.map((id) => <Motif key={id} id={id} size={22} label={stickerLabel(id)} />)} from your words, stuck on this letter.</span>}
+          Saved as you type.
+        </p>
       </article>
     </div>
   )
@@ -376,7 +386,7 @@ function DecorStrip({ decor, onEdit }) {
   if (!decor || !STYLES[decor.style]) return null
   const off = decor.off || {}
   const bits = [
-    ...(decor.motifs || []).filter((m) => !off[`motif:${m.id}`] && MOTIFS[m.id]).map((m) => MOTIFS[m.id].label.toLowerCase()),
+    ...(decor.motifs || []).filter((m) => !off[`motif:${m.id}`] && stickerId(m.id)).map((m) => stickerLabel(m.id).toLowerCase()),
     decor.postmark && !off.postmark && `${decor.postmark.place} postmark`,
     decor.ticket && !off.ticket && TICKETS[decor.ticket.kind] && TICKETS[decor.ticket.kind].label.toLowerCase(),
   ].filter(Boolean)

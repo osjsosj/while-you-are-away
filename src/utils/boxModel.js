@@ -7,7 +7,7 @@ import { buildPetConfig } from './htmlGenerator.js'
 import { getPlan, planSlots } from './plan.js'
 import { normalizeFilm } from './film.js'
 import { cleanSignature } from './sky.js'
-import { normalizeDecor, activeDecor } from './decor.js'
+import { normalizeDecor, activeDecor, stickersFor } from './decor.js'
 
 export function addDays(iso, n) {
   const [y, m, d] = iso.split('-').map(Number)
@@ -58,6 +58,7 @@ export function recipientView(draft, today) {
   const phase1 = draft.phase1 || {}
   const phase2 = draft.phase2 || {}
   const config = draft.generatedConfig || {}
+  const decor = activeDecor(normalizeDecor(draft.decor || { style: 'night' }, ticketLetterIds(draft)))
   const items = allItems(draft).map((it) => {
     const open = !it.opensOn || it.opensOn <= today
     const base = { id: it.id, section: it.section, label: it.label, hint: it.hint || '', emoji: it.emoji || '', opensOn: it.opensOn, open }
@@ -67,6 +68,11 @@ export function recipientView(draft, today) {
     const out = { ...base, letter: c.letter || '', prompt: c.prompt || '', note: typeof c.note === 'string' ? c.note.slice(0, 240) : '' }
     for (const f of MEDIA_FIELDS) if (c[f]) out[f] = c[f]
     out.empty = !out.letter && !MEDIA_FIELDS.some((f) => out[f])
+    // a sticker or two picked from what this letter actually says (never invented: words must appear in it)
+    if (decor.letterStickers && decor.style !== 'quiet' && out.letter) {
+      const s = stickersFor(`${out.letter} ${out.note}`, 2, decor.motifs.map((m) => m.id))
+      if (s.length) out.stickers = s
+    }
     return out
   })
   // letters the sender never wrote stay hidden; sealed ones keep only their label and date
@@ -89,7 +95,7 @@ export function recipientView(draft, today) {
       accent: typeof draft.accent === 'string' && /^#[0-9a-f]{6}$/i.test(draft.accent) ? draft.accent : null,
       pet: buildPetConfig(phase2),
       signature: cleanSignature(draft.signature),
-      decor: activeDecor(normalizeDecor(draft.decor || { style: 'night' }, ticketLetterIds(draft))),
+      decor,
       sealVoice: typeof draft.sealVoice === 'string' && /^(media:|data:)/.test(draft.sealVoice) && !(draft.decor && draft.decor.off && draft.decor.off.sealVoice) ? draft.sealVoice : null,
       timeline: (phase2.timeline || []).filter((t) => t && t.label).map((t) => ({ date: t.date || '', label: t.label, emoji: t.emoji || '' })),
     },

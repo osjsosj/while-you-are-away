@@ -317,7 +317,7 @@ export default function Landing() {
               </div>
             )}
             <div className="wya-why-copy">
-              <h2 id="wya-why-title" className="wya-eyebrow">Why I made this</h2>
+              <h2 id="wya-why-title" className="wya-why-h">Why I made this</h2>
               <p className="wya-why-roles">I'm a soldier. A student far from home. A son. Someone's partner. Someone's best friend.</p>
               <div className="wya-why-body">
                 <p>

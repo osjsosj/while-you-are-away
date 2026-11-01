@@ -23,8 +23,11 @@
   height: 100vh;
   height: 100dvh;
   overflow-y: auto;
-  scroll-snap-type: y mandatory;
+  /* proximity, not mandatory: a scene taller than the screen scrolls through instead of being cut off */
+  scroll-snap-type: y proximity;
   scroll-behavior: smooth;
+  scrollbar-color: rgba(233, 236, 242, 0.22) transparent;
+  caret-color: var(--light);
   background: var(--night-0);
   color: var(--ink);
   font-family: var(--sans);
@@ -35,6 +38,7 @@
 .wya :where(p, h1, h2, h3, ol) { margin: 0; }
 .wya button { font-family: inherit; }
 .wya :focus-visible { outline: 2px solid var(--light); outline-offset: 3px; }
+.wya ::selection { background: rgba(240, 179, 65, 0.32); color: #FFF8E8; }
 
 /* ---------- layout ---------- */
 .wya-scene {
@@ -342,8 +346,8 @@
 .wya-why-photo { flex: 0 1 280px; min-width: 0; }
 .wya-why-photo img { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 8px; }
 .wya-why-copy { flex: 1 1 520px; min-width: 0; max-width: 680px; }
-.wya-eyebrow { margin-bottom: 20px; font-size: 15px; font-weight: 500; color: var(--light); }
-.wya-why-roles { margin-bottom: 24px; font-family: var(--serif); font-size: 28px; line-height: 1.38; letter-spacing: -0.01em; color: #F4F1E6; }
+.wya-why-h { margin-bottom: 18px; font-family: var(--serif); font-size: 40px; font-weight: 400; line-height: 1.15; letter-spacing: -0.01em; color: #F4F1E6; text-wrap: balance; }
+.wya-why-roles { margin-bottom: 24px; font-family: var(--serif); font-size: 22px; line-height: 1.38; letter-spacing: -0.01em; color: #F4F1E6; }
 .wya-why-body { display: flex; flex-direction: column; gap: 14px; font-size: 17px; line-height: 1.7; color: #CDD3DE; }
 .wya-sign { margin-top: 28px; font-family: var(--serif); font-size: 18px; color: #F4F1E6; }
 
@@ -419,8 +423,8 @@
   z-index: 20;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 18px 8px 8px;
+  gap: 8px;
+  padding: 5px 12px 5px 5px;
   border-radius: 999px;
   background: rgba(8, 14, 32, 0.78);
   -webkit-backdrop-filter: blur(14px);
@@ -431,9 +435,8 @@
 }
 .wya-dial svg { display: block; flex: none; }
 .wya-dial-hand { transition: transform 300ms ease; }
-.wya-dial-text { display: flex; flex-direction: column; gap: 1px; min-width: 92px; }
-.wya-dial-time { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.wya-dial-label { font-size: 12px; color: var(--mist-muted); }
+.wya-dial-text { display: flex; min-width: 62px; }
+.wya-dial-time { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 /* ---------- responsive ---------- */
 @media (max-width: 900px), (max-height: 760px) {

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDraft, saveDraft } from '../utils/storage'
 import { generateLetterboxConfig, PaymentRequiredError } from '../utils/aiService'
-import { STYLES, STYLE_IDS, MOTIFS, MOTIF_IDS, TICKETS, normalizeDecor, fallbackDecor, activeDecor } from '../utils/decor'
+import { STYLES, STYLE_IDS, TICKETS, normalizeDecor, fallbackDecor, activeDecor, stickerLabel } from '../utils/decor'
 import { getPlan } from '../utils/plan'
 import { ticketLetterIds } from '../utils/boxModel'
 import { formatLong } from '../utils/diary'
@@ -46,7 +46,6 @@ function designInput(d) {
     },
     letters,
     theirWords: theirWords(d),
-    library: { motifs: MOTIF_IDS.map((id) => ({ id, label: MOTIFS[id].label, words: MOTIFS[id].words.filter((w) => /^[a-z ]+$/.test(w)).join(', ') })), tickets: Object.keys(TICKETS), styles: STYLE_IDS },
   }
 }
 
@@ -86,7 +85,7 @@ export default function AIGenerate() {
       setDecor(plan)
       setRecommended(plan.style)
     }
-    generateLetterboxConfig(designInput(d))
+    generateLetterboxConfig(designInput(d), (d.film?.photos || []).map((x) => x.photo).filter(Boolean).slice(0, 4))
       .then(apply)
       .catch((err) => {
         if (err instanceof PaymentRequiredError) return navigate('/paywall')
@@ -129,12 +128,13 @@ export default function AIGenerate() {
   }
 
   const touches = [
-    ...decor.motifs.map((m, i) => ({ key: `motif:${m.id}`, art: <Motif id={m.id} size={44} />, title: MOTIFS[m.id].label, why: m.why || 'From what you shared.', what: i === 0 ? 'On the stamp, and in the corner of each letter.' : 'Tucked into the corner of each letter.' })),
+    ...decor.motifs.map((m, i) => ({ key: `motif:${m.id}`, art: <Motif id={m.id} size={44} />, title: stickerLabel(m.id), why: m.why || 'From what you shared.', what: i === 0 ? 'On the stamp, and in the corner of each letter.' : 'Tucked into the corner of each letter.' })),
     decor.postmark && { key: 'postmark', art: <span className="gn-pm"><Postmark place={decor.postmark.place} date={decor.postmark.date} size={56} /></span>, title: `Postmarked ${decor.postmark.place}`, why: decor.postmark.why || (decor.postmark.date ? `${formatLong(decor.postmark.date)}.` : ''), what: 'Stamped on the first letter, like real mail.' },
     decor.ticket && ticketLetter && { key: 'ticket', art: <span className="gn-tk">{TICKETS[decor.ticket.kind].label.split(' ')[0]}</span>, title: `“${ticketLetter.label}” becomes a ${TICKETS[decor.ticket.kind].label.toLowerCase()}`, why: decor.ticket.why || '', what: decor.ticket.line ? `“${decor.ticket.line}”` : '' },
-    decor.song && { key: 'song', art: <Motif id="music" size={44} />, title: `Our song: ${decor.song.title}`, why: decor.song.why || 'You told us about it.', what: `A card in “Our story” that plays it for ${to}.` },
+    decor.song && { key: 'song', art: <Motif id="musical-notes" size={44} />, title: `Our song: ${decor.song.title}`, why: decor.song.why || 'You told us about it.', what: `A card in “Our story” that plays it for ${to}.` },
     draft.sealVoice && { key: 'sealVoice', art: <span className="gn-seal" />, title: 'Your voice on the seal', why: 'The voice note you recorded.', what: `${to} hears it when they tap to open the box.` },
-    plan.occasions.length > 0 && { key: 'celebrate', art: <Motif id="cake" size={44} />, title: 'A little celebration on special days', why: plan.occasions.map((o) => o.label).slice(0, 2).join(', '), what: 'Those letters open with a small burst of confetti.' },
+    plan.occasions.length > 0 && { key: 'celebrate', art: <Motif id="birthday-cake" size={44} />, title: 'A little celebration on special days', why: plan.occasions.map((o) => o.label).slice(0, 2).join(', '), what: 'Those letters open with a small burst of confetti.' },
+    decor.style !== 'quiet' && { key: 'letterStickers', art: <span className="gn-duo"><Motif id="hot-beverage" size={30} tilt={-8} /><Motif id="tangerine" size={26} tilt={10} /></span>, title: 'A sticker for what each letter says', why: 'Write about coffee, rain or the bus, and that letter gets its own sticker.', what: 'Picked from your words after you write. Nothing is added that you didn’t mention.' },
     decor.style !== 'quiet' && { key: 'tape', art: <span className="gn-tape" />, title: 'Photos taped in', why: 'Any photo you add sits on the page like a print.', what: '' },
   ].filter(Boolean)
 

@@ -1,4 +1,5 @@
 import { isPaid, db } from './_lib/server.js'
+import { STICKERS, STICKER_IDS } from '../src/utils/stickers.js'
 
 /**
  * /api/claude — the only way the app talks to Claude.
@@ -78,8 +79,14 @@ Today is ${str(today)}.
    - "all": every entry is there from the day they hand it over.
 5. Close warmly. Tell them the best letters are made of small everyday moments: whenever something makes them think of the other person (a few lines, a photo, a short video, a voice memo, "on the way to buy your gift"), they can drop it into their "days before" page any time, and you will be there in the editor to help them write.
 ${SHARED_RULES}
+## Fit the relationship
+A partner, a parent, a child and a friend need different questions. For a parent or child, ask about family habits, food, sayings, the house; for a friend, about inside jokes, places, how they met. Never assume romance unless they said partner.
+
+## Keep it light
+Each reply under about 70 words. One question. If they seem stuck, offer two or three tiny examples to pick from. Never repeat a question they already answered; use their exact words back to them.
+
 ## Attachments
-A message that starts with "[Attached: a photo]" or "[Attached: a voice note]" means they added one with the buttons; you cannot see or hear it. Thank them warmly, use any words they wrote with it as a detail, and if it helps ask one short question about it (where, when, why it matters). Photos go into the opening film; the first voice note plays on the seal. Tell them that once.
+A message that starts with "[Attached: a photo]" or "[Attached: a voice note]" means they added one with the buttons. You can usually see the newest photo (it comes with the message); you cannot hear voice notes. When you can see the photo, name one specific, warm thing in it (the place, the light, what is on the table), never anything about anyone's body, looks or identity, and treat what you see as a detail for decorating. Thank them warmly, use any words they wrote with it as a detail, and if it helps ask one short question about it (where, when, why it matters). Photos go into the opening film; the first voice note plays on the seal. Tell them that once.
 
 ## Progress marker
 At the very end of EVERY message (after the COMPLETE block, if any), add <GATHERED>n</GATHERED>, where n (0 to 8) counts how many of these you now have: what they call each other; something that is theirs; a place with a date; a running joke or habit; how they got around or another everyday ritual; the feel they want; a photo; a voice note. The sender never sees this tag.
@@ -133,31 +140,51 @@ ${summary}
 - You may suggest a first sentence only if they ask, and keep it short; make clear they should change it to their own words.
 ${SHARED_RULES}`
 
-const DESIGN_PROMPT = (allData) => `You design how a letter box looks. Someone is preparing letters for a person they are about to part from. From what they told the guide, choose a name, a first line, a paper style and a few decorations. Decorations come ONLY from the library below; you never invent new ones.
+const DESIGN_TOOL = {
+  name: 'design_letter_box',
+  description: 'The name, first line, paper and decorations for the letter box.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      appNames: { type: 'array', items: { type: 'string' }, maxItems: 3 },
+      welcomeMessage: { type: 'string' },
+      style: { type: 'string', enum: ['scrapbook', 'night', 'flowers', 'quiet'] },
+      motifs: { type: 'array', maxItems: 4, items: { type: 'object', properties: { id: { type: 'string', enum: STICKER_IDS }, why: { type: 'string' } }, required: ['id', 'why'] } },
+      postmark: { type: ['object', 'null'], properties: { place: { type: 'string' }, date: { type: 'string' }, why: { type: 'string' } } },
+      ticket: { type: ['object', 'null'], properties: { kind: { type: 'string', enum: ['bus', 'train', 'plane'] }, letterId: { type: 'string' }, title: { type: 'string' }, line: { type: 'string' }, why: { type: 'string' } } },
+      song: { type: ['object', 'null'], properties: { title: { type: 'string' }, why: { type: 'string' } } },
+    },
+    required: ['appNames', 'welcomeMessage', 'style', 'motifs'],
+  },
+}
+
+/* The sticker library, written once so it stays in the prompt cache: "id" or "id (other words people use)". */
+const STICKER_LIBRARY = STICKER_IDS.map((id) => {
+  const [label, words] = STICKERS[id]
+  const extra = words.split(' ').filter((w) => !label.split(' ').includes(w))
+  return extra.length ? `${id} (${extra.join(' ')})` : id
+}).join('\n')
+
+const DESIGN_SYSTEM = `You design how a letter box looks. Someone is preparing letters for a person they are about to part from. From what they told the guide, choose a name, a first line, a paper style and a few decorations. Stickers come ONLY from the sticker library below, by exact id; you never invent new ones. The words of the letters are never yours: you only dress them.
 
 Rules:
-- Use only things the sender actually said. If nothing fits a decoration, leave it out. Fewer, truer touches beat many.
-- At most 3 motifs. Each "why" quotes or closely paraphrases what they said, addressed to them ("You said you always split a tangerine on the bus."). One short sentence.
+- Use only things the sender actually said or showed in a photo. If nothing fits a decoration, leave it out. Fewer, truer touches beat many.
+- 2 to 4 stickers ("motifs"), each an exact library id. Prefer the most specific sticker that matches what they said ("tangerine" over "red-heart", "steaming-bowl" for ramen, "bus" for the bus they took). Hearts only if nothing more personal fits.
+- Match on meaning, not only exact words: a "clementine" is a tangerine, "late-night convenience-store ramyeon" is a steaming-bowl, "our walks by the Han river" can be water-wave. Korean words count too.
+- Pick stickers that look good together: vary them (one food, one place or object, one animal, say) rather than three of the same kind.
+- Each "why" quotes or closely paraphrases what they said, addressed to them ("You said you always split a tangerine on the bus."). One short sentence.
 - postmark: a real place from their story and its date, if they gave one. "place" at most 24 characters, in capitals is fine.
 - ticket: only if a bus, train or flight is part of their story. Pick ONE letter from "letters" (an open-when or never-said letter fits best) and give it a short ticket title (at most 20 characters, e.g. "Bus 7 home") and a line (at most 38 characters) in their words.
-- style: use the sender's choice if they gave one; otherwise recommend from the feel of their story.
+- style: use the sender's choice if they gave one; otherwise recommend from the feel of their story. scrapbook = playful, lots of photos and shared jokes; night = calm, longing, distance; flowers = soft, family, gratitude; quiet = private, serious, few words.
 - song: only if they named a song; title as they wrote it (with the artist if they gave one).
 - "theirWords" holds the sender's own messages from the conversation and the lines they wrote under their photos. Prefer details that appear there over the summary fields; quote them in each "why".
-- Each library motif lists the words people use for it; match on meaning, not only on exact words (a "clementine" is a tangerine, "late-night convenience-store ramyeon" is ramen).
-- Names: three short names for the letter box, personal to them. welcomeMessage: one line in the sender's voice that the recipient sees first.
+- Names: three short names for the letter box, personal to them (a nickname, a place, a running joke), never generic like "Love Letters". welcomeMessage: one line in the sender's voice that the recipient sees first, in the language the sender wrote in.
+- Before answering, check each sticker id exists in the library exactly as written.
 
-Data: ${allData}
+Answer by calling the design_letter_box tool.
 
-Answer with JSON only, no other text:
-{
-  "appNames": ["", "", ""],
-  "welcomeMessage": "",
-  "style": "scrapbook | night | flowers | quiet",
-  "motifs": [{ "id": "a library id", "why": "" }],
-  "postmark": { "place": "", "date": "YYYY-MM-DD", "why": "" } or null,
-  "ticket": { "kind": "bus | train | plane", "letterId": "", "title": "", "line": "", "why": "" } or null,
-  "song": { "title": "", "why": "" } or null
-}`
+## Sticker library
+${STICKER_LIBRARY}`
 
 // ── input checks ─────────────────────────────────────────────
 
@@ -190,29 +217,70 @@ async function withinCompanionCap(sessionId) {
   }
 }
 
+const PHOTO_EXT = /\.(jpe?g|png|webp|gif)$/i
+
+/** Signed links to the sender's own photos, as image blocks Claude can look at. Needs their sign-in token. */
+async function imageBlocks(req, refs, max) {
+  if (!Array.isArray(refs) || !refs.length) return []
+  const jwt = (req.headers.authorization || '').replace(/^Bearer\s+/i, '')
+  if (!jwt) return []
+  try {
+    const { data } = await db().auth.getUser(jwt)
+    const uid = data?.user?.id
+    if (!uid) return []
+    const paths = refs
+      .filter((r) => typeof r === 'string' && r.startsWith('media:'))
+      .map((r) => r.slice(6))
+      .filter((p) => p.startsWith(`${uid}/`) && PHOTO_EXT.test(p) && !p.includes('..'))
+      .slice(0, max)
+    if (!paths.length) return []
+    const { data: urls } = await db().storage.from('media').createSignedUrls(paths, 600)
+    return (urls || []).filter((u) => u.signedUrl).map((u) => ({ type: 'image', source: { type: 'url', url: u.signedUrl } }))
+  } catch (err) {
+    console.warn('photos unavailable for Claude:', err?.message || err)
+    return []
+  }
+}
+
 // ── handler ──────────────────────────────────────────────────
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { kind, sessionId, messages, phase1, allData, summary, today } = req.body || {}
+  const { kind, sessionId, messages, phase1, allData, summary, today, images } = req.body || {}
   if (!(await isPaid(sessionId))) return res.status(402).json({ error: 'payment_required' })
+
+  // Photos the sender added, so the guide and the designer can actually see them (only the sender's own files).
+  const photoBlocks = await imageBlocks(req, images, kind === 'theme' ? 4 : 1)
 
   let body
   if (kind === 'interview') {
     const clean = cleanMessages(messages)
     if (!clean) return res.status(400).json({ error: 'invalid_messages' })
-    body = { model: MODELS.interview, max_tokens: 2000, system: INTERVIEW_SYSTEM(phase1 || {}, isoToday(today)), messages: clean }
+    if (photoBlocks.length) {
+      const last = clean[clean.length - 1]
+      if (last.role === 'user') last.content = [...photoBlocks, { type: 'text', text: last.content }]
+    }
+    // automatic prompt caching: the long system prompt and earlier turns are read from cache on every new turn
+    body = { model: MODELS.interview, max_tokens: 2000, cache_control: { type: 'ephemeral' }, system: INTERVIEW_SYSTEM(phase1 || {}, isoToday(today)), messages: clean }
   } else if (kind === 'companion') {
     const clean = cleanMessages(messages)
     if (!clean) return res.status(400).json({ error: 'invalid_messages' })
     if (!(await withinCompanionCap(sessionId))) return res.status(429).json({ error: 'cap_reached' })
     const sum = typeof summary === 'string' ? summary.slice(0, MAX_SUMMARY_CHARS) : ''
-    body = { model: MODELS.companion, max_tokens: 700, system: COMPANION_SYSTEM(sum, isoToday(today)), messages: clean }
+    body = { model: MODELS.companion, max_tokens: 700, cache_control: { type: 'ephemeral' }, system: COMPANION_SYSTEM(sum, isoToday(today)), messages: clean }
   } else if (kind === 'theme') {
     const data = JSON.stringify(allData ?? {})
     if (data.length > MAX_PAYLOAD_CHARS) return res.status(413).json({ error: 'too_large' })
-    body = { model: MODELS.theme, max_tokens: 1000, messages: [{ role: 'user', content: DESIGN_PROMPT(data) }] }
+    body = {
+      model: MODELS.theme,
+      max_tokens: 1200,
+      tools: [DESIGN_TOOL],
+      tool_choice: { type: 'tool', name: DESIGN_TOOL.name },
+      // the rules and the sticker library are the same for everyone: cached across all senders
+      system: [{ type: 'text', text: DESIGN_SYSTEM, cache_control: { type: 'ephemeral' } }],
+      messages: [{ role: 'user', content: [...photoBlocks, { type: 'text', text: `Data: ${data}` + (photoBlocks.length ? `\n\nThe ${photoBlocks.length} photo(s) above are ones the sender added. Look at what is in them (places, food, animals, season, light, mood) and let them guide the stickers and the paper. Never describe or guess anything about the people's bodies or identities.` : '') }] }],
+    }
   } else {
     return res.status(400).json({ error: 'invalid_kind' })
   }
@@ -228,7 +296,8 @@ export default async function handler(req, res) {
       console.error('Anthropic error:', r.status, data?.error?.message)
       return res.status(502).json({ error: 'upstream_error' })
     }
-    const text = data.content?.find((b) => b.type === 'text')?.text || ''
+    const tool = data.content?.find((b) => b.type === 'tool_use')
+    const text = tool ? JSON.stringify(tool.input) : data.content?.find((b) => b.type === 'text')?.text || ''
     return res.status(200).json({ text })
   } catch (err) {
     console.error('Claude proxy error:', err)

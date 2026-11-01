@@ -1,26 +1,29 @@
-import { MOTIFS, TICKETS, postmarkDate } from '../utils/decor'
+import { TICKETS, postmarkDate, stickerId, stickerLabel } from '../utils/decor'
 
-/* Hand-drawn pieces that dress a letter. All drawing lives in utils/decor.js; these only place it. */
+/* The pieces that dress a letter. Stickers are Fluent Emoji (MIT) cut out like vinyl stickers;
+   stamps, postmarks, tickets and tape are drawn here. */
+const src = (id) => `/stickers/${id}.svg`
 
-export function Motif({ id, size = 48, className = '', style, label }) {
-  const m = MOTIFS[id]
-  if (!m) return null
+export function Motif({ id, size = 48, className = '', style, label, tilt = 0 }) {
+  const sid = stickerId(id)
+  if (!sid) return null
   return (
-    <svg className={`dc-motif ${className}`} viewBox="0 0 64 64" width={size} height={size} style={style}
-      role={label ? 'img' : undefined} aria-label={label || undefined} aria-hidden={label ? undefined : 'true'}
-      dangerouslySetInnerHTML={{ __html: m.svg }} />
+    <img className={`dc-motif ${className}`} src={src(sid)} width={size} height={size} loading="lazy" decoding="async" draggable="false"
+      alt={label || ''} aria-hidden={label ? undefined : 'true'} title={label || stickerLabel(sid)}
+      style={{ ...style, '--tilt': `${tilt}deg` }} />
   )
 }
 
-/** A perforated postage stamp with a motif in it. */
+/** A perforated postage stamp with a sticker in it. */
 export function Stamp({ id, text = '', size = 56 }) {
-  if (!MOTIFS[id]) return null
+  const sid = stickerId(id)
+  if (!sid) return null
   return (
     <svg className="dc-stamp" viewBox="0 0 60 72" width={size} height={size * 1.2} aria-hidden="true">
       <rect x="3" y="3" width="54" height="66" fill="#F3E4C6" />
       <rect x="3" y="3" width="54" height="66" fill="none" stroke="#FFFDF6" strokeWidth="4" strokeDasharray="0.1 5.9" strokeLinecap="round" />
       <rect x="9" y="9" width="42" height="48" fill="#FFFAEE" stroke="#CDB98F" strokeWidth=".8" />
-      <g transform="translate(12 12) scale(.56)" dangerouslySetInnerHTML={{ __html: MOTIFS[id].svg }} />
+      <image href={src(sid)} x="14" y="13" width="32" height="32" />
       {text && <text x="30" y="65" textAnchor="middle" fontFamily="Schibsted Grotesk, sans-serif" fontSize="6" fontWeight="600" letterSpacing="1" fill="#8A6A3A">{text.toUpperCase().slice(0, 14)}</text>}
     </svg>
   )
@@ -80,7 +83,7 @@ export function StyleSwatch({ style }) {
       <rect x="34" y="12" width="82" height="76" fill={paper} />
       {style === 'scrapbook' && (<><rect x="42" y="20" width="34" height="28" fill="#fff" transform="rotate(-6 59 34)" /><rect x="44" y="22" width="30" height="19" fill="#E7A99A" transform="rotate(-6 59 34)" /><rect x="50" y="15" width="22" height="7" fill="rgba(240,178,96,.85)" transform="rotate(4 61 18)" /></>)}
       {style === 'night' && <circle cx="104" cy="24" r="5" fill="#F0B341" />}
-      {style === 'flowers' && <g transform="translate(92 14) scale(.34)" dangerouslySetInnerHTML={{ __html: MOTIFS.daisy.svg }} />}
+      {style === 'flowers' && <image href={src('blossom')} x="94" y="15" width="20" height="20" />}
       <g fill={style === 'night' ? '#5A6070' : '#8A7A66'} opacity=".45">
         {(style === 'scrapbook' ? [58, 66, 74] : [36, 46, 56, 66, 74]).map((y, i) => <rect key={y} x="44" y={y} width={[58, 50, 62, 44, 54][i]} height="2" />)}
       </g>

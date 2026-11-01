@@ -332,6 +332,7 @@ export function LetterSheet({ item, replies, toName, fromName, signature = null,
           meta={meta}
           prompt={item.prompt}
           letter={item.letter}
+          stickers={item.stickers || []}
           photoUrl={item.photo?.url}
           videoUrl={item.video?.url}
           voiceUrl={item.voice?.url}
@@ -392,7 +393,7 @@ export function Story({ box, token, today: day, onFilm = null }) {
         <section className="wb-section" aria-labelledby="wb-song">
           <h2 id="wb-song">Our song</h2>
           <a className="wb-song" href={`https://www.youtube.com/results?search_query=${encodeURIComponent(box.decor.song.title)}`} target="_blank" rel="noopener noreferrer">
-            <Motif id="music" size={46} />
+            <Motif id="musical-notes" size={46} />
             <span><span className="wb-row-title">{box.decor.song.title}</span><span className="wb-row-sub">Play it when you miss {box.fromName || 'me'}</span></span>
           </a>
         </section>

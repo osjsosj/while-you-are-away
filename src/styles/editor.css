@@ -67,6 +67,8 @@
 .we-ask:hover { text-decoration: underline; text-underline-offset: 4px; }
 .we-remove { margin-left: auto; min-height: 44px; border: none; background: none; color: #A0453A; font-size: 14px; text-decoration: underline; cursor: pointer; }
 .we-saved { margin-top: 10px; font-size: 13px; color: var(--ink-muted); }
+.we-stuck { display: inline-flex; align-items: center; gap: 4px; margin-right: 10px; }
+.we-stuck .dc-motif + .dc-motif { margin-left: -2px; }
 .we-icon-btn { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 50%; background: none; color: inherit; cursor: pointer; }
 .we-icon-btn:hover { background: rgba(127, 140, 160, 0.15); }
 
@@ -83,6 +85,7 @@
 .we-companion-composer { display: flex; gap: 10px; align-items: flex-end; padding: 12px 16px 16px; border-top: 1px solid var(--line); }
 .we-companion-composer textarea { flex: 1; min-height: 52px; max-height: 160px; padding: 12px 14px; border-radius: 14px; border: 1.5px solid rgba(233, 236, 242, 0.28); background: #050A19; color: var(--mist); font-size: 16px; line-height: 1.5; resize: none; outline: none; }
 .we-companion-composer textarea:focus { border-color: var(--light); }
+.we-companion-composer textarea:focus-visible { outline: 2px solid var(--light); outline-offset: 2px; }
 
 @media (min-width: 1100px) {
   .wf:has(.we--with-companion) .wf-top { padding-right: 400px; }
@@ -111,7 +114,7 @@
 .we-film-cap::placeholder { color: #7F8AA0; font-family: var(--sans); }
 .we-film-tools { display: flex; gap: 4px; align-items: center; }
 .we-film-tools button { min-width: 36px; min-height: 36px; border: 1px solid rgba(233, 236, 242, 0.2); border-radius: 8px; background: none; color: var(--mist-soft); font-size: 14px; cursor: pointer; }
-.we-film-tools button:disabled { opacity: 0.3; cursor: default; }
+.we-film-tools button:disabled { opacity: 0.35; color: var(--ink-muted); background: transparent; cursor: not-allowed; }
 .we-film-tools .we-film-del { margin-left: auto; padding: 0 10px; border: none; text-decoration: underline; }
 .we-film-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .we-film .wm-btn.we-film-btn { background: transparent; color: var(--mist); border-color: #46557A; }

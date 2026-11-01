@@ -204,7 +204,7 @@ export function Sundial({ hour, active, scenes }) {
   const label = scenes[active].time
   return (
     <div className="wya-dial" role="img" aria-label={`Time of day: ${time}, ${label.toLowerCase()}`}>
-      <svg width="60" height="60" viewBox="-46 -46 92 92" aria-hidden="true">
+      <svg width="40" height="40" viewBox="-46 -46 92 92" aria-hidden="true">
         <defs>
           <radialGradient id="wyaSun">
             <stop offset="0" stopColor="#F7C566" stopOpacity="0.9" />
@@ -242,7 +242,6 @@ export function Sundial({ hour, active, scenes }) {
       </svg>
       <div className="wya-dial-text">
         <span className="wya-dial-time">{time}</span>
-        <span className="wya-dial-label">{label}</span>
       </div>
     </div>
   )

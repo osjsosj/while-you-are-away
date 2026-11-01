@@ -1,3 +1,13 @@
+/* Stickers: Fluent Emoji cut out like vinyl, a white die-cut edge and a soft lift off the paper. */
+.dc-motif {
+  display: inline-block; flex: none; user-select: none;
+  rotate: var(--tilt, 0deg);
+  filter:
+    drop-shadow(1.5px 0 0 #fff) drop-shadow(-1.5px 0 0 #fff) drop-shadow(0 1.5px 0 #fff) drop-shadow(0 -1.5px 0 #fff)
+    drop-shadow(0 3px 3px rgba(40, 28, 16, 0.22));
+}
+.lp--quiet .dc-motif { filter: drop-shadow(0 1px 1.5px rgba(40, 28, 16, 0.2)); }
+
 /* A letter on paper, and the pieces that dress it. Used by the recipient's box, the preview and the decorating step. */
 
 .lp {
@@ -54,10 +64,8 @@
 
 .lp-foot { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin-top: 22px; min-height: 48px; }
 .lp-stickers { position: relative; display: flex; align-items: flex-end; }
-.lp-sticker { filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.16)); }
-.lp-sticker--0 { transform: rotate(-10deg); }
-.lp-sticker--1 { margin-left: -8px; transform: rotate(12deg) translateY(4px); }
-.lp-sticker--2 { margin-left: -4px; transform: rotate(-4deg) translateY(-6px); }
+.lp-sticker--1 { margin-left: -6px; translate: 0 4px; }
+.lp-sticker--2 { margin-left: -2px; translate: 0 -6px; }
 .lp--quiet .lp-stickers { opacity: .9; filter: grayscale(.2); }
 .lp-signature { width: 150px; height: auto; margin-left: auto; }
 .lp-signature path { fill: none; stroke: var(--lp-ink); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
@@ -92,3 +100,10 @@
 @keyframes lpBurst { 0% { transform: rotate(var(--a)) translateY(0) rotate(0); opacity: 1; } 100% { transform: rotate(var(--a)) translateY(calc(var(--d) * -1)) rotate(260deg); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .lp-pop { display: none; } }
 .lp-body p { text-wrap: pretty; }
+
+/* Layouts chosen by the letter itself */
+.lp--postcard .lp-body { font-size: calc(var(--lp-size, 18px) * 1.22); line-height: 1.6; text-align: center; margin-inline: auto; max-width: 22em; padding: 18px 0 8px; }
+.lp--postcard .lp-body p { text-wrap: balance; }
+.lp--postcard .lp-title { text-align: center; }
+.lp--postcard .lp-prompt { text-align: center; }
+.lp--photo-first .lp-photo { margin: 6px auto 26px; }
