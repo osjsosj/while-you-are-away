@@ -61,7 +61,16 @@ Today is ${str(today)}.
    - Special days: ask whether a birthday, anniversary, holiday or milestone (a graduation, a family day) falls while they are apart, and get the dates.
    - "The day we meet again": one sealed letter for the end, only if there is a date.
    They can add or remove anything, now or later in the editor. Their wish always wins.
-3. Gather what makes it theirs, one question at a time: what they call each other, things that remind them of each other, something only the two of them share, a few moments from their story with dates, whether they want a small pet companion in the box (animal + name), and a name for the letter box.
+3. Gather what makes it theirs. Tell them once, lightly: the more small, specific things they share, the more personal we can make the box look (we decorate it from their details), and they can say "that's enough" any time. Then ask one question at a time, and accept short answers without pushing:
+   - what they call each other;
+   - things that are "theirs": a food or drink they always share, a song, an animal, an object, a place they go;
+   - a few places from their story with dates (the first date, a trip), in their words;
+   - a running joke or a small habit only they would understand;
+   - how they usually got around together, if it matters (a bus line, a train, flights);
+   - whether they want a small pet companion in the box (animal + name);
+   - the feel when the box is opened. Offer four in plain words, then confirm: cozy and playful like a scrapbook with photos and tape; calm and warm like cream paper under a porch light at night; soft with pressed flowers; or quiet white paper with just the words. Recommend one from what you heard, but it is their choice;
+   - a name for the letter box.
+   If they say that's enough, stop gathering and move on.
 4. Their "days before" diary: entries written before parting are stamped with the day. Offer the two options and confirm (see Preference questions):
    - "mirror": an entry written N days before parting opens N days after parting. Days without an entry are skipped quietly.
    - "all": every entry is there from the day they hand it over.
@@ -78,6 +87,12 @@ Only after they confirmed the plan, end your final message with this block (vali
   "symbols": "",
   "special": "",
   "timeline": [{ "date": "YYYY-MM-DD", "label": "", "emoji": "" }],
+  "places": [{ "name": "", "date": "YYYY-MM-DD or empty" }],
+  "shared": "foods, songs, objects, animals, places that are theirs, in their words",
+  "jokes": "",
+  "song": "",
+  "transport": "",
+  "style": "scrapbook | night | flowers | quiet",
   "petName": "",
   "petAnimal": "",
   "appName": "",
@@ -110,14 +125,26 @@ ${summary}
 - You may suggest a first sentence only if they ask, and keep it short; make clear they should change it to their own words.
 ${SHARED_RULES}`
 
-const THEME_PROMPT = (allData) => `Based on the information below about a letter box someone is preparing for a person they love, suggest names and a welcome line. Answer with JSON only, no other text.
+const DESIGN_PROMPT = (allData) => `You design how a letter box looks. Someone is preparing letters for a person they are about to part from. From what they told the guide, choose a name, a first line, a paper style and a few decorations. Decorations come ONLY from the library below; you never invent new ones.
+
+Rules:
+- Use only things the sender actually said. If nothing fits a decoration, leave it out. Fewer, truer touches beat many.
+- At most 3 motifs. Each "why" quotes or closely paraphrases what they said, addressed to them ("You said you always split a tangerine on the bus."). One short sentence.
+- postmark: a real place from their story and its date, if they gave one. "place" at most 24 characters, in capitals is fine.
+- ticket: only if a bus, train or flight is part of their story. Pick ONE letter from "letters" (an open-when or never-said letter fits best) and give it a short ticket title (at most 20 characters, e.g. "Bus 7 home") and a line (at most 38 characters) in their words.
+- style: use the sender's choice if they gave one; otherwise recommend from the feel of their story.
+- Names: three short names for the letter box, personal to them. welcomeMessage: one line in the sender's voice that the recipient sees first.
 
 Data: ${allData}
 
-Output format:
+Answer with JSON only, no other text:
 {
-  "appNames": ["three short names for the letter box, personal to them"],
-  "welcomeMessage": "one line the recipient sees when they open it, in the sender's voice"
+  "appNames": ["", "", ""],
+  "welcomeMessage": "",
+  "style": "scrapbook | night | flowers | quiet",
+  "motifs": [{ "id": "a library id", "why": "" }],
+  "postmark": { "place": "", "date": "YYYY-MM-DD", "why": "" } or null,
+  "ticket": { "kind": "bus | train | plane", "letterId": "", "title": "", "line": "", "why": "" } or null
 }`
 
 // ── input checks ─────────────────────────────────────────────
@@ -173,7 +200,7 @@ export default async function handler(req, res) {
   } else if (kind === 'theme') {
     const data = JSON.stringify(allData ?? {})
     if (data.length > MAX_PAYLOAD_CHARS) return res.status(413).json({ error: 'too_large' })
-    body = { model: MODELS.theme, max_tokens: 600, messages: [{ role: 'user', content: THEME_PROMPT(data) }] }
+    body = { model: MODELS.theme, max_tokens: 1000, messages: [{ role: 'user', content: DESIGN_PROMPT(data) }] }
   } else {
     return res.status(400).json({ error: 'invalid_kind' })
   }

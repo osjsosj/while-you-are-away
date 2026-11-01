@@ -8,6 +8,7 @@ import { Header, Letters, LetterSheet, Seal, Story, OurSky } from './Box'
 import FilmPlayer from '../components/FilmPlayer'
 import { normalizeFilm } from '../utils/film'
 import { signedUrl } from '../utils/media'
+import { postmarkLetterId } from '../utils/decor'
 import './box.css'
 import '../styles/flow.css'
 
@@ -83,7 +84,7 @@ export default function Preview() {
           <main className="wb-main">
             {tab === 'letters'
               ? items.length
-                ? <><OurSky ids={[...opened]} /><Letters items={items} openSet={opened} onOpen={(id) => { setOpenId(id); setOpened((s) => new Set(s).add(id)) }} /></>
+                ? <><OurSky ids={[...opened]} /><Letters items={items} openSet={opened} decor={box.decor} onOpen={(id) => { setOpenId(id); setOpened((s) => new Set(s).add(id)) }} /></>
                 : <p className="wb-note">Nothing written yet. Letters you write appear here on the day they open.</p>
               : <Story box={box} token="preview" today={day} onFilm={film ? playFilm : null} />}
             <p className="wb-note" style={{ marginTop: 32 }}>Letters you haven’t written yet don’t appear. Sealed ones show only their name and the day they open.</p>
@@ -97,13 +98,13 @@ export default function Preview() {
           <FilmPlayer {...playing} fromName={box.fromName} title={box.appName} closing={box.welcome} onDone={() => setPlaying(null)} />
         </div>
       )}
-      {current && <PreviewSheet item={current} box={box} onClose={() => setOpenId(null)} />}
+      {current && <PreviewSheet item={current} box={box} showPostmark={current.id === postmarkLetterId(items)} onClose={() => setOpenId(null)} />}
     </div>
   )
 }
 
 /** The letter sheet with this device's media refs turned into viewable URLs. */
-function PreviewSheet({ item, box, onClose }) {
+function PreviewSheet({ item, box, showPostmark, onClose }) {
   const photo = useMediaUrl(item.photo || null)
   const video = useMediaUrl(item.video || null)
   const voice = useMediaUrl(item.voice || null)
@@ -115,7 +116,7 @@ function PreviewSheet({ item, box, onClose }) {
   }
   return (
     <div className="wb" style={{ minHeight: 0, padding: 0, ...(box.accent ? { '--light': box.accent } : {}) }}>
-      <LetterSheet item={resolved} replies={[]} toName={box.toName} fromName={box.fromName} signature={box.signature} onClose={onClose} onReply={async () => {}} preview />
+      <LetterSheet item={resolved} replies={[]} toName={box.toName} fromName={box.fromName} signature={box.signature} decor={box.decor} showPostmark={showPostmark} onClose={onClose} onReply={async () => {}} preview />
     </div>
   )
 }

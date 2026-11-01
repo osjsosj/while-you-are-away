@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clearDraft, saveDraft } from '../utils/storage'
 import { HeroSky, EndSky, Grain, Sundial } from './landing/Sky'
-import { LETTERS, STEPS, CHAPTERS, PHONE_ROWS, FAQ, WHO, FOUNDER_PHOTO, SCENES } from './landing/content'
+import { LETTERS, STEPS, CHAPTERS, FAQ, WHO, FOUNDER_PHOTO, SCENES } from './landing/content'
 import './landing/landing.css'
 
 const prefersReducedMotion = () => {
@@ -13,17 +13,6 @@ const prefersReducedMotion = () => {
   }
 }
 
-const LockIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <rect x="3" y="7" width="10" height="7" rx="1.5" />
-    <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
-  </svg>
-)
-const ChevronIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <path d="M6 3l5 5-5 5" />
-  </svg>
-)
 const Mark = ({ size = 22, halo = false }) => (
   <svg width={size} height={size} viewBox="0 0 22 22" aria-hidden="true">
     {halo && <circle cx="11" cy="11" r="9" fill="#F0B341" opacity="0.14" />}
@@ -235,11 +224,12 @@ export default function Landing() {
           <h2 id="wya-how-title" className="wya-h2" style={{ maxWidth: '18em' }}>
             You prepare the goodbye. They get something to hold on to.
           </h2>
-          <p className="wya-lede">You do the writing before you part. They do the opening while you're apart.</p>
-          <ol className="wya-steps" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-            {STEPS.map((s) => (
-              <li key={s.title} className={`wya-step${s.now ? ' wya-step--now' : ''}`}>
-                <p className="wya-step-when">{s.when}</p>
+          <p className="wya-lede">You bring the words and the memories. We turn them into a box they can open, one letter at a time.</p>
+          <ol className="wya-flow">
+            {STEPS.map((s, i) => (
+              <li key={s.title} className={`wya-flow-step${s.now ? ' wya-step--now' : ''}`}>
+                <div className="wya-shot"><img src={s.img} alt={s.alt} width="300" height="649" loading="lazy" decoding="async" /></div>
+                <p className="wya-step-when"><span className="wya-flow-n">{i + 1}</span>{s.when}</p>
                 <h3>{s.title}</h3>
                 <p>{s.body}</p>
               </li>
@@ -253,36 +243,14 @@ export default function Landing() {
         <div className={reveal(2)}>
           <div className="wya-receive-grid">
             <div className="wya-phone-col">
-              <div className="wya-phone" role="img" aria-label="Example of a letter box on a phone">
-                <div className="wya-screen">
-                  <div className="wya-notch" aria-hidden="true" />
-                  <div className="wya-screen-head">
-                    <div>
-                      <p style={{ fontSize: 12, color: '#9AA4B8' }}>Letters from Jae</p>
-                      <p className="wya-serif" style={{ marginTop: 2, fontSize: 24, color: '#F4F1E6' }}>For Mina</p>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <p className="wya-serif" style={{ fontSize: 30, lineHeight: 1, color: '#F0B341' }}>47</p>
-                      <p style={{ marginTop: 4, fontSize: 11, color: '#C9D0DC' }}>days to go</p>
-                    </div>
-                  </div>
-                  <div className="wya-screen-rule" />
-                  {PHONE_ROWS.map((r, i) => (
-                    <div key={r.title} className={`wya-row${i === chapter.row ? ' is-on' : ''}`}>
-                      <div style={{ minWidth: 0 }}>
-                        <p className="wya-row-title">{r.title}</p>
-                        <p className="wya-row-sub">{r.sub}</p>
-                      </div>
-                      {r.locked ? <LockIcon /> : <ChevronIcon />}
-                    </div>
-                  ))}
-                </div>
+              <div className="wya-video-phone">
+                <video src="/landing/opening.mp4" poster="/landing/opening-poster.webp" autoPlay={!prefersReducedMotion()} controls={prefersReducedMotion()} muted loop playsInline preload="metadata" aria-label="A recording of a letter box being opened: the seal, a short photo film, the letters, a letter with a taped photo and a folded note" />
               </div>
             </div>
             <div className="wya-receive-copy">
               <h2 id="wya-receive-title" className="wya-h2">Everything you wrote, in one place they can carry.</h2>
               <p className="wya-lede">
-                A private letter box on their phone, in the name and colors you choose. It works offline, counts down with them, and lets them write back to every letter.
+                A private letter box on their phone, dressed in your story. It opens with a short film of your photos and your voice, works offline, counts down with them, and lets them write back to every letter.
               </p>
               <div className="wya-chips" role="group" aria-label="Kinds of letters">
                 {CHAPTERS.map((c, i) => (

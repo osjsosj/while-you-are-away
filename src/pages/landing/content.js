@@ -28,10 +28,10 @@ export const LETTERS = [
 ]
 
 export const STEPS = [
-  { when: 'A week or a month before', title: 'You write', body: 'A few lines on the days you can, and the things you never got around to saying. Gentle prompts help when the words won’t come.' },
-  { when: 'The day you part', title: 'You hand it over', body: 'One letter box on their phone, with everything you wrote waiting inside.', now: true },
-  { when: 'While you’re apart', title: 'They open, one by one', body: 'New letters unlock on schedule. Others are there for the nights they need you most.' },
-  { when: 'The day you meet again', title: 'The last letter', body: 'Saved for the end, so the waiting always has somewhere to arrive.' },
+  { when: 'After checkout, about 10 minutes', title: 'Tell us about your goodbye', body: 'A short conversation. Share the small things only you two know, or say “that’s enough” whenever you like.', img: '/landing/step-plan.webp', alt: 'The planning conversation on a phone' },
+  { when: 'Right after', title: 'We dress the box from your story', body: 'Paper, a stamp, a postmark from your first date, a letter shaped like your bus ticket. Switch off anything that isn’t you.', img: '/landing/step-dress.webp', alt: 'A decorated first letter with a postmark, a stamp and a bus ticket' },
+  { when: 'Any day before you part', title: 'You write the words', body: 'Every word is yours. Add a photo, your voice, a folded note. A companion helps when the words won’t come.', img: '/landing/step-write.webp', alt: 'Writing a letter on a phone' },
+  { when: 'While you’re apart', title: 'They open them one at a time', body: 'On their phone, on the right days, even offline. They can write back to every letter.', img: '/landing/step-open.webp', alt: 'An opened letter with a taped photo and a folded note', now: true },
 ]
 
 // `row` points at the matching line in the phone preview

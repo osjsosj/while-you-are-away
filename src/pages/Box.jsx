@@ -8,6 +8,9 @@ import Constellation from '../components/Constellation'
 import Moon from '../components/Moon'
 import { moonOn } from '../utils/sky'
 import { filmFrom } from '../utils/film'
+import { postmarkLetterId } from '../utils/decor'
+import LetterPaper from '../components/LetterPaper'
+import { TicketBanner } from '../components/Decor'
 import './box.css'
 
 /* The recipient's letter box, opened from the link the sender hands over. */
@@ -115,7 +118,7 @@ export default function Box() {
       </div>
       <main className="wb-main">
         {tab === 'letters'
-          ? <><OurSky ids={opened} /><Letters items={items} openSet={openSet} onOpen={(id) => { setOpenId(id); markOpened(id) }} /></>
+          ? <><OurSky ids={opened} /><Letters items={items} openSet={openSet} decor={box.decor} onOpen={(id) => { setOpenId(id); markOpened(id) }} /></>
           : <Story box={box} token={token} onFilm={film ? () => setPlaying(true) : null} />}
       </main>
       <InstallHint token={token} />
@@ -126,6 +129,8 @@ export default function Box() {
           toName={box.toName}
           fromName={box.fromName}
           signature={box.signature}
+          decor={box.decor}
+          showPostmark={current.id === postmarkLetterId(items)}
           onClose={() => setOpenId(null)}
           onReply={async (body) => {
             const { reply } = await post({ action: 'reply', itemId: current.id, body })
@@ -190,7 +195,8 @@ const ORDER = ['tonight', 'before', 'scheduled', 'never', 'anytime', 'occasions'
 const TIMED = new Set(['tonight', 'scheduled', 'occasions', 'last'])
 const QUIET = new Set(['anytime', 'never']) // open any time, never flagged as "new"
 
-export function Letters({ items, openSet, onOpen }) {
+export function Letters({ items, openSet, onOpen, decor = null }) {
+  const ticketId = decor?.ticket?.letterId
   const fresh = items.filter((i) => i.open && !i.empty && !openSet.has(i.id) && !QUIET.has(i.section))
   const freshIds = new Set(fresh.map((i) => i.id))
 
@@ -200,7 +206,7 @@ export function Letters({ items, openSet, onOpen }) {
         <section className="wb-section" aria-labelledby="wb-new">
           <h2 id="wb-new">New for you</h2>
           <div className="wb-list">
-            {fresh.map((i) => <Row key={i.id} item={i} isNew onOpen={onOpen} />)}
+            {fresh.map((i) => <Row key={i.id} item={i} isNew onOpen={onOpen} ticket={i.id === ticketId ? decor.ticket : null} />)}
           </div>
         </section>
       )}
@@ -216,7 +222,7 @@ export function Letters({ items, openSet, onOpen }) {
           <section key={sec} className="wb-section" aria-labelledby={`wb-${sec}`}>
             <h2 id={`wb-${sec}`}>{SECTION_TITLES[sec]}</h2>
             <div className="wb-list">
-              {shown.map((i) => <Row key={i.id} item={i} isNew={!openSet.has(i.id) && !QUIET.has(i.section)} onOpen={onOpen} />)}
+              {shown.map((i) => <Row key={i.id} item={i} isNew={!openSet.has(i.id) && !QUIET.has(i.section)} onOpen={onOpen} ticket={i.id === ticketId ? decor.ticket : null} />)}
               {next && (
                 <div className="wb-row wb-row--locked">
                   <div>
@@ -247,7 +253,14 @@ const SECTION_TITLES = {
   last: 'The day we meet again',
 }
 
-function Row({ item, isNew, onOpen }) {
+function Row({ item, isNew, onOpen, ticket = null }) {
+  if (ticket) {
+    return (
+      <button type="button" className="wb-row wb-row--ticket" onClick={() => onOpen(item.id)} disabled={item.empty} aria-label={`${item.label}${isNew ? ', new' : ''}`}>
+        <TicketBanner ticket={{ ...ticket, title: item.label }} compact />
+      </button>
+    )
+  }
   const sub = item.section === 'before' ? item.stamp : item.section === 'anytime' ? item.hint || 'Whenever you need it' : item.section === 'never' ? item.hint || '' : item.opensOn ? `Arrived ${formatLong(item.opensOn)}` : ''
   const title = item.section === 'before' && item.label === item.stamp ? (item.letter || '').split('\n')[0].slice(0, 80) || item.label : item.label
   return (
@@ -261,7 +274,7 @@ function Row({ item, isNew, onOpen }) {
   )
 }
 
-export function LetterSheet({ item, replies, toName, fromName, signature = null, onClose, onReply, preview = false }) {
+export function LetterSheet({ item, replies, toName, fromName, signature = null, decor = null, showPostmark = false, onClose, onReply, preview = false }) {
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -288,27 +301,31 @@ export function LetterSheet({ item, replies, toName, fromName, signature = null,
     }
   }
 
+  const style = decor?.style || 'night'
+  const meta = item.section === 'before' ? `${item.stamp} · ${item.date}` : item.opensOn ? formatLong(item.opensOn) : SECTION_TITLES[item.section] || ''
+
   return (
     <div className="wb-sheet-wrap" role="dialog" aria-modal="true" aria-labelledby="wb-sheet-title" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <article className="wb-sheet">
+      <article className={`wb-sheet wb-sheet--${style}`}>
         <button type="button" className="wb-close" onClick={onClose} aria-label="Close letter">
           <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 3l10 10M13 3L3 13" /></svg>
         </button>
-        <p className="wb-sheet-meta"><span className="wb-dot" aria-hidden="true" />{item.section === 'before' ? `${item.stamp} · ${item.date}` : item.opensOn ? formatLong(item.opensOn) : SECTION_TITLES[item.section] || ''}</p>
-        <h2 id="wb-sheet-title">{item.label}</h2>
-        {item.prompt && <p className="wb-prompt">{item.prompt}</p>}
-        {item.letter && <div className="wb-letter">{item.letter}</div>}
-        {item.photo?.url && <img className="wb-photo" src={item.photo.url} alt="" loading="lazy" />}
-        {item.video?.url && <video className="wb-photo" src={item.video.url} controls playsInline preload="metadata" />}
-        {item.voice?.url && (
-          <div className="wb-voice">
-            <p>A voice note from {fromName || 'me'}</p>
-            <audio controls src={item.voice.url} preload="metadata" />
-          </div>
-        )}
-        {item.letter && (signature?.d
-          ? <svg className="wb-signature" viewBox="0 0 400 150" role="img" aria-label={`Signed, ${fromName || 'me'}`}><path d={signature.d} /></svg>
-          : fromName && <p className="wb-sign">— {fromName}</p>)}
+        <LetterPaper
+          decor={decor}
+          title={item.label}
+          titleId="wb-sheet-title"
+          meta={meta}
+          prompt={item.prompt}
+          letter={item.letter}
+          photoUrl={item.photo?.url}
+          videoUrl={item.video?.url}
+          voiceUrl={item.voice?.url}
+          fromName={fromName}
+          signature={signature}
+          note={item.note}
+          showPostmark={showPostmark}
+          isTicket={decor?.ticket?.letterId === item.id}
+        />
 
         {preview ? (
           <p className="wb-quiet wb-small" style={{ marginTop: 28 }}>Here, {toName || 'they'} can write back to you. Replies arrive on your hand-over page.</p>

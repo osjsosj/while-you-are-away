@@ -7,6 +7,7 @@ import { buildPetConfig } from './htmlGenerator.js'
 import { getPlan, planSlots } from './plan.js'
 import { normalizeFilm } from './film.js'
 import { cleanSignature } from './sky.js'
+import { normalizeDecor, activeDecor } from './decor.js'
 
 export function addDays(iso, n) {
   const [y, m, d] = iso.split('-').map(Number)
@@ -63,7 +64,7 @@ export function recipientView(draft, today) {
     if (it.section === 'before') Object.assign(base, { stamp: it.stamp, date: it.date })
     if (!open) return base
     const c = it.content || {}
-    const out = { ...base, letter: c.letter || '', prompt: c.prompt || '' }
+    const out = { ...base, letter: c.letter || '', prompt: c.prompt || '', note: typeof c.note === 'string' ? c.note.slice(0, 240) : '' }
     for (const f of MEDIA_FIELDS) if (c[f]) out[f] = c[f]
     out.empty = !out.letter && !MEDIA_FIELDS.some((f) => out[f])
     return out
@@ -88,6 +89,7 @@ export function recipientView(draft, today) {
       accent: typeof draft.accent === 'string' && /^#[0-9a-f]{6}$/i.test(draft.accent) ? draft.accent : null,
       pet: buildPetConfig(phase2),
       signature: cleanSignature(draft.signature),
+      decor: activeDecor(normalizeDecor(draft.decor || { style: 'night' }, ticketLetterIds(draft))),
       timeline: (phase2.timeline || []).filter((t) => t && t.label).map((t) => ({ date: t.date || '', label: t.label, emoji: t.emoji || '' })),
     },
     items: visible,
@@ -101,4 +103,10 @@ export function trustedToday(clientDate, now = new Date()) {
   if (!isISO(clientDate)) return utc
   const diff = daysBetween(utc, clientDate)
   return Math.abs(diff) <= 1 ? clientDate : utc
+}
+
+/** Letters a ticket may dress: never-said, open-when and special-day letters. */
+export function ticketLetterIds(draft) {
+  const plan = getPlan(draft)
+  return [...plan.anytime, ...plan.neverSaid, ...plan.occasions].map((x) => x.id)
 }

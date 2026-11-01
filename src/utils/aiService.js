@@ -59,7 +59,8 @@ export function askCompanion(messages, summary) {
 export async function generateLetterboxConfig(allData) {
   try {
     const text = await callClaude({ kind: 'theme', allData })
-    return JSON.parse(text.replace(/```json|```/g, '').trim())
+    const t = text.replace(/```json|```/g, '')
+    return JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1))
   } catch (err) {
     if (err instanceof PaymentRequiredError) throw err
     return null

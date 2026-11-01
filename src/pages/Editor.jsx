@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDraft, saveDraft } from '../utils/storage'
 import { getPlan, normalizePlan, planSlots, SCHEDULES, SECTION_INFO, suggestedCount } from '../utils/plan'
@@ -8,6 +8,8 @@ import MomentMedia from '../components/MomentMedia'
 import Companion from '../components/Companion'
 import FilmEditor from '../components/FilmEditor'
 import SignaturePad from '../components/SignaturePad'
+import { Motif, StyleSwatch } from '../components/Decor'
+import { STYLES, MOTIFS, TICKETS } from '../utils/decor'
 import { buildSummary, isFilled } from '../utils/summary'
 import '../styles/editor.css'
 import './diary.css'
@@ -68,6 +70,8 @@ export default function Editor() {
           <div className="we-progress-bar"><span style={{ width: `${slots.length ? (filled / slots.length) * 100 : 0}%` }} /></div>
           <p className="wf-note">{filled} of {slots.length} letters written. Write in any order; nothing has to be finished today.</p>
         </div>
+
+        <DecorStrip decor={draft.decor} onEdit={() => navigate('/generate')} />
 
         <button type="button" className="we-diary" onClick={() => navigate('/diary')}>
           <span>
@@ -282,6 +286,16 @@ function LetterSheet({ slot, content, plan, toName, onChange, onPlan, onAsk, onC
   const item = listKey ? plan[listKey].find((x) => x.id === slot.id) : null
   const [letter, setLetter] = useState(content.letter || '')
   const [title, setTitle] = useState(item?.label || '')
+  const letterRef = useRef(null)
+  // the letter grows with what they write, so long letters read as a page, not a scroll box
+  useLayoutEffect(() => {
+    const el = letterRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.max(240, el.scrollHeight + 4)}px`
+  }, [letter])
+  const [note, setNote] = useState(content.note || '')
+  const [noteOpen, setNoteOpen] = useState(!!content.note)
 
   const saveLetter = (v) => {
     setLetter(v)
@@ -323,6 +337,7 @@ function LetterSheet({ slot, content, plan, toName, onChange, onPlan, onAsk, onC
         <label htmlFor="we-letter" className="wf-sr">Your letter</label>
         <textarea
           id="we-letter"
+          ref={letterRef}
           className="we-letter"
           value={letter}
           onChange={(e) => saveLetter(e.target.value)}
@@ -332,6 +347,15 @@ function LetterSheet({ slot, content, plan, toName, onChange, onPlan, onAsk, onC
         />
         <MomentMedia value={{ photo: content.photo || null, video: content.video || null, voice: content.voice || null }} onChange={(v) => onChange(v)} />
 
+        {noteOpen ? (
+          <div className="we-note">
+            <label htmlFor="we-note" className="we-note-label">A folded note inside <span>{toName || 'They'} taps it to unfold it. A line, a joke, a small secret.</span></label>
+            <textarea id="we-note" className="we-note-input" rows={2} maxLength={240} value={note} onChange={(e) => { setNote(e.target.value); onChange({ note: e.target.value }) }} placeholder="Bring an umbrella. Or don’t, and I’ll share mine." />
+          </div>
+        ) : (
+          <button type="button" className="we-note-add" onClick={() => setNoteOpen(true)}>+ Hide a folded note inside</button>
+        )}
+
         <div className="we-sheet-actions">
           <button type="button" className="wf-btn wf-btn--ink" onClick={close}>Done</button>
           <button type="button" className="we-ask" onClick={onAsk}><span className="wf-dot" aria-hidden="true" /> Help me with this one</button>
@@ -340,5 +364,25 @@ function LetterSheet({ slot, content, plan, toName, onChange, onPlan, onAsk, onC
         <p className="we-saved" aria-live="polite">Saved as you type.</p>
       </article>
     </div>
+  )
+}
+
+function DecorStrip({ decor, onEdit }) {
+  if (!decor || !STYLES[decor.style]) return null
+  const off = decor.off || {}
+  const bits = [
+    ...(decor.motifs || []).filter((m) => !off[`motif:${m.id}`] && MOTIFS[m.id]).map((m) => MOTIFS[m.id].label.toLowerCase()),
+    decor.postmark && !off.postmark && `${decor.postmark.place} postmark`,
+    decor.ticket && !off.ticket && TICKETS[decor.ticket.kind] && TICKETS[decor.ticket.kind].label.toLowerCase(),
+  ].filter(Boolean)
+  return (
+    <button type="button" className="we-decor" onClick={onEdit}>
+      <span className="we-decor-sw"><StyleSwatch style={decor.style} /></span>
+      <span className="we-decor-text">
+        <span className="we-decor-title">{STYLES[decor.style].name} paper{bits.length ? `, ${bits.join(', ')}` : ''}</span>
+        <span className="we-decor-sub">How every letter is dressed. Change it any time.</span>
+      </span>
+      <span className="we-decor-motifs" aria-hidden="true">{(decor.motifs || []).slice(0, 2).map((m) => <Motif key={m.id} id={m.id} size={30} />)}</span>
+    </button>
   )
 }
