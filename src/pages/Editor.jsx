@@ -9,6 +9,9 @@ import Companion from '../components/Companion'
 import FilmEditor from '../components/FilmEditor'
 import SignaturePad from '../components/SignaturePad'
 import { Motif, StyleSwatch } from '../components/Decor'
+import SignInModal from '../components/SignInModal'
+import { uploadMedia, NeedSignInError, useMediaUrl } from '../utils/media'
+import { useRecorder, fmtSeconds } from '../utils/useRecorder'
 import { STYLES, MOTIFS, TICKETS } from '../utils/decor'
 import { buildSummary, isFilled } from '../utils/summary'
 import '../styles/editor.css'
@@ -67,7 +70,7 @@ export default function Editor() {
         <p className="wf-note">For {p1.toName || 'them'}{p1.startDate ? ` · you part ${formatLong(p1.startDate)}` : ''}</p>
         <h1 className="wf-h1" style={{ marginTop: 6 }}>{name}</h1>
         <div className="we-progress" aria-label={`${filled} of ${slots.length} letters written`}>
-          <div className="we-progress-bar"><span style={{ width: `${slots.length ? (filled / slots.length) * 100 : 0}%` }} /></div>
+          <div className="we-progress-bar"><span style={{ transform: `scaleX(${slots.length ? filled / slots.length : 0})` }} /></div>
           <p className="wf-note">{filled} of {slots.length} letters written. Write in any order; nothing has to be finished today.</p>
         </div>
 
@@ -92,6 +95,8 @@ export default function Editor() {
           title={name}
           closing={draft.generatedConfig?.welcomeMessage}
         />
+
+        <SealVoice value={draft.sealVoice} toName={p1.toName} onChange={(sealVoice) => update({ sealVoice })} />
 
         <section className="we-section" aria-labelledby="we-sign">
           <div className="we-section-head">
@@ -384,5 +389,41 @@ function DecorStrip({ decor, onEdit }) {
       </span>
       <span className="we-decor-motifs" aria-hidden="true">{(decor.motifs || []).slice(0, 2).map((m) => <Motif key={m.id} id={m.id} size={30} />)}</span>
     </button>
+  )
+}
+
+function SealVoice({ value, toName, onChange }) {
+  const url = useMediaUrl(value || null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [pending, setPending] = useState(null)
+  const save = async (blob) => {
+    setBusy(true)
+    setError('')
+    try { onChange(await uploadMedia(blob)) } catch (err) {
+      if (err instanceof NeedSignInError) setPending(blob)
+      else setError(err.message || 'That didn’t save. Try again.')
+    } finally { setBusy(false) }
+  }
+  const rec = useRecorder(save)
+  return (
+    <section className="we-section we-seal" aria-labelledby="we-seal">
+      <div className="we-section-head">
+        <div>
+          <h2 id="we-seal" className="wf-h2">The first thing {toName || 'they'} hear{toName ? 's' : ''}</h2>
+          <p className="wf-note">About ten seconds of your voice. It plays when {toName || 'they'} tap{toName ? 's' : ''} the seal to open the box. Say hello the way you always do.</p>
+        </div>
+      </div>
+      <div className="we-seal-row">
+        <button type="button" className={`wm-btn we-film-btn${rec.recording ? ' wm-btn--rec' : ''}`} onClick={rec.recording ? rec.stop : rec.start} disabled={busy && !rec.recording} aria-pressed={rec.recording}>
+          {rec.recording ? `Stop · ${fmtSeconds(rec.seconds)}` : value ? 'Record it again' : 'Record your hello'}
+        </button>
+        {value && (url ? <audio src={url} controls preload="metadata" /> : <span className="wm-loading" />)}
+        {value && <button type="button" className="wf-link we-small-link" onClick={() => onChange(null)}>Remove</button>}
+      </div>
+      {busy && <p className="wf-note" role="status">Saving…</p>}
+      {(error || rec.error) && <p className="wf-error" role="alert">{error || rec.error}</p>}
+      {pending && <SignInModal onClose={() => setPending(null)} onDone={() => { const b = pending; setPending(null); save(b) }} />}
+    </section>
   )
 }

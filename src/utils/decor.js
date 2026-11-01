@@ -104,6 +104,22 @@ export const MOTIFS = {
     label: 'Paper planes', words: ['plane', 'flight', 'airport', 'travel', 'trip', 'abroad', 'fly', '비행기', '공항', '여행'],
     svg: `<path d="M6 30L58 8 40 56 30 38z" fill="#FFFDF6" ${INK}/><path d="M30 38L58 8 22 34z" fill="#E7EEF7" ${INK}/><path d="M30 38l-2 12 8-8" fill="#C9D6E8" ${INK}/><path d="M4 50c6-2 10-6 12-12" fill="none" stroke="#9AA4B8" stroke-width="1.6" stroke-dasharray="3 4" stroke-linecap="round"/>`,
   },
+  popcorn: {
+    label: 'Movie nights', words: ['movie', 'movies', 'film', 'cinema', 'popcorn', 'netflix', '영화'],
+    svg: `<path d="M16 26h32l-4 30H20z" fill="#FFFDF6" ${INK}/><path d="M22 26l2 30M32 26v30M42 26l-2 30" stroke="#E04B4B" stroke-width="4"/><path d="M16 26h32l-4 30H20z" fill="none" ${INK}/><g fill="#FFF2C4" ${INK}><circle cx="20" cy="22" r="6"/><circle cx="29" cy="17" r="7"/><circle cx="39" cy="18" r="6.5"/><circle cx="46" cy="24" r="5"/><circle cx="33" cy="25" r="5"/></g>`,
+  },
+  gamepad: {
+    label: 'Games', words: ['game', 'games', 'gaming', 'video game', 'mario', 'nintendo', 'playstation', 'xbox', 'switch', '게임'],
+    svg: `<path d="M18 22h28c7 0 12 6 13 14l1 8c1 6-6 9-10 5l-6-6H20l-6 6c-4 4-11 1-10-5l1-8c1-8 6-14 13-14z" fill="#5B6E9A" ${INK}/><path d="M18 30v10M13 35h10" stroke="#FFFDF6" stroke-width="3" stroke-linecap="round"/><circle cx="44" cy="31" r="3" fill="#F0B341"/><circle cx="50" cy="37" r="3" fill="#E07A7A"/><path d="M24 26c2-1 5-2 8-2" ${HI}/>`,
+  },
+  bicycle: {
+    label: 'Bike rides', words: ['bike', 'bikes', 'bicycle', 'cycling', 'ride', '자전거'],
+    svg: `<circle cx="16" cy="42" r="11" fill="none" ${INK}/><circle cx="48" cy="42" r="11" fill="none" ${INK}/><path d="M16 42l10-18h16l6 18M26 24l8 18h-18M34 42l8-18M22 20h8M42 24l-2-6h6" fill="none" stroke="#C8323C" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="34" cy="42" r="2" fill="#3A2E26"/>`,
+  },
+  pizza: {
+    label: 'Pizza', words: ['pizza', '피자'],
+    svg: `<path d="M8 16c15-6 33-6 48 0L32 58z" fill="#F2C14E" ${INK}/><path d="M8 16c15-6 33-6 48 0l-3 6c-13-5-29-5-42 0z" fill="#D9934A" ${INK}/><g fill="#D1453B" stroke="#3A2E26" stroke-width="1.2"><circle cx="24" cy="27" r="4"/><circle cx="38" cy="29" r="4"/><circle cx="31" cy="41" r="3.5"/></g><g fill="#5E8C3A"><circle cx="30" cy="31" r="1.4"/><circle cx="35" cy="38" r="1.4"/></g>`,
+  },
 }
 export const MOTIF_IDS = Object.keys(MOTIFS)
 
@@ -135,9 +151,10 @@ export function normalizeDecor(raw, letterIds = []) {
     const letterId = letterIds.includes(r.ticket.letterId) ? r.ticket.letterId : letterIds[0]
     if (letterId) ticket = { kind: r.ticket.kind, letterId, title: clean(r.ticket.title, 22), line: clean(r.ticket.line, 40), why: clean(r.ticket.why, 140) }
   }
+  const song = r.song && clean(r.song.title, 60) ? { title: clean(r.song.title, 60), why: clean(r.song.why, 140) } : null
   const off = {}
   if (r.off && typeof r.off === 'object') for (const k of Object.keys(r.off)) if (r.off[k] === true) off[k.slice(0, 40)] = true
-  return { style, motifs, postmark: pm, ticket, off }
+  return { style, motifs, postmark: pm, ticket, song, off }
 }
 
 /** The plan with anything the sender switched off removed — what the recipient actually gets. */
@@ -150,6 +167,9 @@ export function activeDecor(decor) {
     postmark: decor.postmark && !off.postmark ? decor.postmark : null,
     ticket: decor.ticket && !off.ticket ? decor.ticket : null,
     tape: !off.tape,
+    song: decor.song && !off.song ? decor.song : null,
+    sealVoice: !off.sealVoice,
+    celebrate: !off.celebrate,
   }
 }
 
@@ -171,6 +191,7 @@ export function fallbackDecor(phase2 = {}, letterIds = []) {
     motifs,
     postmark: place ? { place: place.name, date: place.date } : null,
     ticket: kind ? { kind, letterId: letterIds[0] } : null,
+    song: typeof phase2.song === 'string' && phase2.song.trim() ? { title: phase2.song } : null,
   }, letterIds)
 }
 

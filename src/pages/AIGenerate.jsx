@@ -21,6 +21,13 @@ function fallbackNames(d) {
   return [d.phase2?.appName, `For ${to}`, `While you’re away, ${to}`].filter(Boolean).slice(0, 3)
 }
 
+/** The sender's own lines from the planning chat and under their photos: the truest source for decorations. */
+function theirWords(d) {
+  const said = (d.interviewChat || []).filter((m) => m.role === 'user').map((m) => m.content.replace(/^\[Attached: [^\]]+\]\s*/, '')).filter(Boolean)
+  const captions = (d.film?.photos || []).map((p) => p.caption).filter(Boolean)
+  return [...said, ...captions.map((c) => `(photo) ${c}`)].join('\n').slice(-6000)
+}
+
 function designInput(d) {
   const p1 = d.phase1 || {}
   const p2 = d.phase2 || {}
@@ -38,7 +45,8 @@ function designInput(d) {
       styleChoice: p2.style, appNameIdea: p2.appName,
     },
     letters,
-    library: { motifs: MOTIF_IDS.map((id) => ({ id, label: MOTIFS[id].label })), tickets: Object.keys(TICKETS), styles: STYLE_IDS },
+    theirWords: theirWords(d),
+    library: { motifs: MOTIF_IDS.map((id) => ({ id, label: MOTIFS[id].label, words: MOTIFS[id].words.filter((w) => /^[a-z ]+$/.test(w)).join(', ') })), tickets: Object.keys(TICKETS), styles: STYLE_IDS },
   }
 }
 
@@ -124,6 +132,9 @@ export default function AIGenerate() {
     ...decor.motifs.map((m, i) => ({ key: `motif:${m.id}`, art: <Motif id={m.id} size={44} />, title: MOTIFS[m.id].label, why: m.why || 'From what you shared.', what: i === 0 ? 'On the stamp, and in the corner of each letter.' : 'Tucked into the corner of each letter.' })),
     decor.postmark && { key: 'postmark', art: <span className="gn-pm"><Postmark place={decor.postmark.place} date={decor.postmark.date} size={56} /></span>, title: `Postmarked ${decor.postmark.place}`, why: decor.postmark.why || (decor.postmark.date ? `${formatLong(decor.postmark.date)}.` : ''), what: 'Stamped on the first letter, like real mail.' },
     decor.ticket && ticketLetter && { key: 'ticket', art: <span className="gn-tk">{TICKETS[decor.ticket.kind].label.split(' ')[0]}</span>, title: `“${ticketLetter.label}” becomes a ${TICKETS[decor.ticket.kind].label.toLowerCase()}`, why: decor.ticket.why || '', what: decor.ticket.line ? `“${decor.ticket.line}”` : '' },
+    decor.song && { key: 'song', art: <Motif id="music" size={44} />, title: `Our song: ${decor.song.title}`, why: decor.song.why || 'You told us about it.', what: `A card in “Our story” that plays it for ${to}.` },
+    draft.sealVoice && { key: 'sealVoice', art: <span className="gn-seal" />, title: 'Your voice on the seal', why: 'The voice note you recorded.', what: `${to} hears it when they tap to open the box.` },
+    plan.occasions.length > 0 && { key: 'celebrate', art: <Motif id="cake" size={44} />, title: 'A little celebration on special days', why: plan.occasions.map((o) => o.label).slice(0, 2).join(', '), what: 'Those letters open with a small burst of confetti.' },
     decor.style !== 'quiet' && { key: 'tape', art: <span className="gn-tape" />, title: 'Photos taped in', why: 'Any photo you add sits on the page like a print.', what: '' },
   ].filter(Boolean)
 

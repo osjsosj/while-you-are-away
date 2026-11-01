@@ -107,3 +107,20 @@
   .wfm-slide.is-on img, .wfm-light { animation: none; }
   .wfm-card, .wfm-slide, .wfm-slide figcaption { transition-duration: 1ms !important; transition-delay: 0s !important; }
 }
+
+/* photos sit in a frame that matches the letter box's paper */
+.wfm-frame { position: relative; display: inline-block; line-height: 0; }
+.wfm-frame img { display: block; width: auto; height: auto; min-width: min(60vw, 320px); object-fit: contain; max-width: min(84vw, 860px); max-height: calc(100vh - 230px); }
+.wfm-slide.is-on .wfm-frame { animation: wfmDrift var(--dur, 6s) linear both; }
+.wfm-slide.is-on .wfm-frame img { animation: none; }
+.wfm-tape { display: none; }
+.wfm--scrapbook .wfm-frame, .wfm--flowers .wfm-frame { padding: 12px 12px 54px; background: #FFFDF8; box-shadow: 0 30px 70px -28px rgba(0, 0, 0, 0.9); transform: rotate(-1.4deg); }
+.wfm--scrapbook .wfm-frame img, .wfm--flowers .wfm-frame img { border-radius: 0; box-shadow: none; max-height: calc(100vh - 300px); max-width: min(78vw, 820px); }
+.wfm--scrapbook .wfm-tape, .wfm--flowers .wfm-tape { display: block; position: absolute; top: -14px; left: 50%; width: 110px; height: 30px; transform: translateX(-50%) rotate(2deg); background: rgba(240, 170, 90, 0.85); clip-path: polygon(3% 0, 97% 5%, 100% 50%, 96% 100%, 2% 95%, 0 50%); z-index: 1; }
+.wfm--flowers .wfm-tape { background: rgba(214, 171, 178, 0.85); }
+.wfm--scrapbook figcaption, .wfm--flowers figcaption { font-family: 'Caveat', 'Segoe Print', cursive; font-size: clamp(24px, 4.6vw, 32px); }
+.wfm--scrapbook { background: radial-gradient(ellipse at 50% 120%, #6B4E35 0%, #2A1E16 70%); }
+.wfm--flowers { background: radial-gradient(ellipse at 50% 120%, #6E5257 0%, #241A1E 70%); }
+.wfm--quiet { background: #0E0F12; }
+.wfm--quiet .wfm-frame img { border-radius: 2px; box-shadow: none; }
+@media (prefers-reduced-motion: reduce) { .wfm-slide.is-on .wfm-frame { animation: none; } }

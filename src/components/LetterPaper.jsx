@@ -19,7 +19,7 @@ function paragraphs(text) {
 
 export default function LetterPaper({
   decor, title, titleId, meta, prompt, letter, photoUrl, videoUrl, voiceUrl, fromName,
-  signature, note, showPostmark = false, isTicket = false, textSizeControl = true,
+  signature, note, showPostmark = false, isTicket = false, textSizeControl = true, celebrate = false,
 }) {
   const d = decor || { style: 'night', motifs: [], postmark: null, ticket: null, tape: true }
   const [size, setSize] = useState(readSize)
@@ -31,6 +31,12 @@ export default function LetterPaper({
 
   return (
     <div className={`lp lp--${d.style}`} style={{ '--lp-size': `${size}px` }}>
+      {celebrate && (
+        <div className="lp-pop" aria-hidden="true">
+          <Motif id="cake" size={64} className="lp-pop-cake" />
+          {Array.from({ length: 18 }, (_, i) => <i key={i} style={{ '--a': `${(i * 360) / 18}deg`, '--d': `${70 + (i % 4) * 26}px`, '--c': ['#F0B341', '#E07A7A', '#7FC4D9', '#9FCB9A', '#B9A4E8'][i % 5] }} />)}
+        </div>
+      )}
       <div className="lp-head">
         <div className="lp-meta">
           {d.style === 'flowers' && <Motif id="daisy" size={44} className="lp-pressed" />}

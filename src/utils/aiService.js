@@ -67,6 +67,12 @@ export async function generateLetterboxConfig(allData) {
   }
 }
 
+/** Split the hidden <GATHERED>n</GATHERED> marker off an interview reply. */
+export function extractGathered(text) {
+  const m = String(text).match(/<GATHERED>\s*(\d+)\s*<\/GATHERED>/)
+  return { text: String(text).replace(/<GATHERED>[\s\S]*?<\/GATHERED>/g, '').trim(), gathered: m ? Math.min(8, Number(m[1])) : null }
+}
+
 /** Pull the <COMPLETE>{…}</COMPLETE> block out of the interview's last message. */
 export function extractComplete(text) {
   const m = text.match(/<COMPLETE>([\s\S]*?)<\/COMPLETE>/)

@@ -32,6 +32,7 @@ export default function Preview() {
 
   const { box, items, film } = useMemo(() => recipientView(draft, day), [draft, day])
   const [playing, setPlaying] = useState(null)
+  const sealVoiceUrl = useMediaUrl(box.sealVoice || null)
   const playFilm = async () => {
     const f = normalizeFilm(film)
     const photos = await Promise.all(f.photos.map(async (p) => ({ id: p.id, caption: p.caption, url: await signedUrl(p.photo) })))
@@ -73,7 +74,7 @@ export default function Preview() {
       </div>
 
       {sealed ? (
-        <Seal box={box} onOpen={() => { setSealed(false); if (film) playFilm() }} />
+        <Seal box={box} voiceUrl={sealVoiceUrl} onOpen={() => { setSealed(false); if (film) playFilm() }} />
       ) : (
         <div className="wb" style={box.accent ? { '--light': box.accent } : undefined}>
           <Header box={box} today={day} offline={false} />
@@ -95,7 +96,7 @@ export default function Preview() {
 
       {playing && playing.photos.length > 0 && (
         <div className="wb" style={{ minHeight: 0, padding: 0, ...(box.accent ? { '--light': box.accent } : {}) }}>
-          <FilmPlayer {...playing} fromName={box.fromName} title={box.appName} closing={box.welcome} onDone={() => setPlaying(null)} />
+          <FilmPlayer {...playing} paper={box.decor?.style} fromName={box.fromName} title={box.appName} closing={box.welcome} onDone={() => setPlaying(null)} />
         </div>
       )}
       {current && <PreviewSheet item={current} box={box} showPostmark={current.id === postmarkLetterId(items)} onClose={() => setOpenId(null)} />}

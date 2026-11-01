@@ -7,7 +7,7 @@ import '../styles/film.css'
  * the sender's voice underneath, then the way into the letters.
  * `photos` = [{ id, url, caption }], `voiceUrl` optional.
  */
-export default function FilmPlayer({ photos, voiceUrl, fromName, title, closing, onDone, doneLabel = 'Open your letters' }) {
+export default function FilmPlayer({ photos, voiceUrl, fromName, title, closing, onDone, doneLabel = 'Open your letters', paper = 'night' }) {
   const [step, setStep] = useState(-1) // -1 title, 0..n-1 photos, n end
   const [paused, setPaused] = useState(false)
   const [voiceSec, setVoiceSec] = useState(0)
@@ -76,7 +76,7 @@ export default function FilmPlayer({ photos, voiceUrl, fromName, title, closing,
   }
 
   return (
-    <div className="wfm" role="dialog" aria-modal="true" aria-label={`A short film from ${fromName || 'me'}`}>
+    <div className={`wfm wfm--${paper}`} role="dialog" aria-modal="true" aria-label={`A short film from ${fromName || 'me'}`}>
       {voiceUrl && <audio ref={audio} src={voiceUrl} preload="auto" onLoadedMetadata={(e) => setVoiceSec(Number.isFinite(e.currentTarget.duration) ? e.currentTarget.duration : 0)} />}
 
       <div className={`wfm-card${step === -1 ? ' is-on' : ''}`} aria-hidden={step !== -1}>
@@ -87,7 +87,10 @@ export default function FilmPlayer({ photos, voiceUrl, fromName, title, closing,
 
       {photos.map((p, i) => (
         <figure key={p.id} className={`wfm-slide${i === step ? ' is-on' : ''}${i === step - 1 ? ' is-prev' : ''}`} aria-hidden={i !== step} style={{ '--dur': `${per + 1.4}s` }}>
-          <img src={p.url} alt={p.caption || `Photo ${i + 1}`} />
+          <span className="wfm-frame">
+            <span className="wfm-tape" aria-hidden="true" />
+            <img src={p.url} alt={p.caption || `Photo ${i + 1}`} />
+          </span>
           {p.caption && <figcaption>{p.caption}</figcaption>}
         </figure>
       ))}

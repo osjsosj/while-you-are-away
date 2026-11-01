@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { localISODate, daysBetween, formatLong } from '../utils/diary'
 import Dog from '../components/pets/Dog'
@@ -10,7 +10,7 @@ import { moonOn } from '../utils/sky'
 import { filmFrom } from '../utils/film'
 import { postmarkLetterId } from '../utils/decor'
 import LetterPaper from '../components/LetterPaper'
-import { TicketBanner } from '../components/Decor'
+import { TicketBanner, Motif } from '../components/Decor'
 import './box.css'
 
 /* The recipient's letter box, opened from the link the sender hands over. */
@@ -89,13 +89,13 @@ export default function Box() {
   const { box, items, replies = [], opened = [] } = data
   const film = filmFrom(data.film)
   if (sealed) {
-    return <Seal box={box} onOpen={() => { write(`wya_seen_${token}`, true); setSealed(false) }} />
+    return <Seal box={box} voiceUrl={box.sealVoice?.url || null} onOpen={() => { write(`wya_seen_${token}`, true); setSealed(false) }} />
   }
   // the film plays by itself once, the first time it's there (the day they part), and any time from "Our story"
   if (film && (playing || !filmSeen)) {
     return (
       <div className="wb" style={box.accent ? { '--light': box.accent } : undefined}>
-        <FilmPlayer {...film} fromName={box.fromName} title={box.appName} closing={box.welcome} onDone={() => { write(`wya_film_${token}`, true); setFilmSeen(true); setPlaying(false) }} />
+        <FilmPlayer {...film} paper={box.decor?.style} fromName={box.fromName} title={box.appName} closing={box.welcome} onDone={() => { write(`wya_film_${token}`, true); setFilmSeen(true); setPlaying(false) }} />
       </div>
     )
   }
@@ -153,17 +153,32 @@ function Message({ title, body }) {
   )
 }
 
-export function Seal({ box, onOpen }) {
+export function Seal({ box, onOpen, voiceUrl = null }) {
+  const [listening, setListening] = useState(false)
+  const audio = useRef(null)
+  const done = useRef(false)
+  const finish = () => { if (done.current) return; done.current = true; audio.current?.pause(); onOpen() }
+  const tap = () => {
+    if (!voiceUrl || listening) return finish()
+    setListening(true)
+    const a = audio.current
+    a.onended = () => setTimeout(finish, 500)
+    a.play().catch(finish)
+    setTimeout(finish, 15000) // never keep them waiting on a long note
+  }
   return (
     <div className="wb wb-center wb-seal-screen">
       <div className="wb-seal-card">
+        {voiceUrl && <audio ref={audio} src={voiceUrl} preload="auto" />}
         <p className="wb-quiet">From {box.fromName || 'someone who loves you'}</p>
         <h1>{box.appName}</h1>
         {box.welcome && <p className="wb-welcome">{box.welcome}</p>}
-        <button type="button" className="wb-seal" onClick={onOpen} aria-label="Open your letter box">
+        <button type="button" className={`wb-seal${listening ? ' is-listening' : ''}`} onClick={tap} aria-label={voiceUrl ? `Open your letter box and hear ${box.fromName || 'a voice note'}` : 'Open your letter box'}>
           <span aria-hidden="true" />
         </button>
-        <p className="wb-quiet">Tap the seal to open</p>
+        {listening
+          ? <p className="wb-quiet wb-listening">{box.fromName || 'They'} has something to say… <button type="button" onClick={finish}>Open now</button></p>
+          : <p className="wb-quiet">{voiceUrl ? `Tap the seal. ${box.fromName || 'Someone'} has something to say.` : 'Tap the seal to open'}</p>}
       </div>
     </div>
   )
@@ -325,6 +340,7 @@ export function LetterSheet({ item, replies, toName, fromName, signature = null,
           note={item.note}
           showPostmark={showPostmark}
           isTicket={decor?.ticket?.letterId === item.id}
+          celebrate={!!decor?.celebrate && item.section === 'occasions'}
         />
 
         {preview ? (
@@ -372,6 +388,15 @@ export function Story({ box, token, today: day, onFilm = null }) {
           </button>
         </section>
       )}
+      {box.decor?.song && (
+        <section className="wb-section" aria-labelledby="wb-song">
+          <h2 id="wb-song">Our song</h2>
+          <a className="wb-song" href={`https://www.youtube.com/results?search_query=${encodeURIComponent(box.decor.song.title)}`} target="_blank" rel="noopener noreferrer">
+            <Motif id="music" size={46} />
+            <span><span className="wb-row-title">{box.decor.song.title}</span><span className="wb-row-sub">Play it when you miss {box.fromName || 'me'}</span></span>
+          </a>
+        </section>
+      )}
       <Moons partDate={box.partDate} today={today} />
       {box.pet && (
         <section className="wb-section wb-pet" aria-labelledby="wb-pet-name">
@@ -400,7 +425,7 @@ export function Story({ box, token, today: day, onFilm = null }) {
           </ol>
         </section>
       )}
-      {!onFilm && !box.partDate && !box.pet && box.timeline.length === 0 && <p className="wb-note">Nothing here yet.</p>}
+      {!onFilm && !box.decor?.song && !box.partDate && !box.pet && box.timeline.length === 0 && <p className="wb-note">Nothing here yet.</p>}
     </>
   )
 }

@@ -90,6 +90,7 @@ export function recipientView(draft, today) {
       pet: buildPetConfig(phase2),
       signature: cleanSignature(draft.signature),
       decor: activeDecor(normalizeDecor(draft.decor || { style: 'night' }, ticketLetterIds(draft))),
+      sealVoice: typeof draft.sealVoice === 'string' && /^(media:|data:)/.test(draft.sealVoice) && !(draft.decor && draft.decor.off && draft.decor.off.sealVoice) ? draft.sealVoice : null,
       timeline: (phase2.timeline || []).filter((t) => t && t.label).map((t) => ({ date: t.date || '', label: t.label, emoji: t.emoji || '' })),
     },
     items: visible,

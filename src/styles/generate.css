@@ -51,3 +51,4 @@
   .gn-touches li { grid-template-columns: 48px 1fr auto; gap: 10px; padding: 10px; }
   .gn-art { width: 48px; height: 44px; }
 }
+.gn-seal { width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #F6C25E, #E09A26); box-shadow: 0 0 14px rgba(240, 179, 65, 0.6), inset 0 0 0 4px rgba(120, 72, 8, 0.25); }

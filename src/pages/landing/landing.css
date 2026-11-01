@@ -53,7 +53,7 @@
   margin: 0 auto;
 }
 .wya-reveal { transition: opacity 1000ms var(--ease), transform 1000ms var(--ease); }
-.wya-reveal.is-hidden { opacity: 0; transform: translateY(26px); }
+.wya-reveal.is-hidden { transform: translateY(18px); } /* words stay visible at rest; only the motion waits for the scroll */
 
 .wya-serif { font-family: var(--serif); }
 .wya-h2 {
@@ -289,8 +289,8 @@
 .wya-chapter {
   max-width: 32em;
   min-height: 132px;
-  padding: 4px 0 4px 24px;
-  border-left: 3px solid var(--light);
+  position: relative;
+  padding: 4px 0;
   transition: opacity 240ms ease, transform 240ms ease;
 }
 .wya-chapter.is-fading { opacity: 0; transform: translateX(-6px); }
@@ -490,3 +490,6 @@
   .wya-flow::-webkit-scrollbar { display: none; }
   .wya-flow-step { scroll-snap-align: start; }
 }
+
+.wya p { text-wrap: pretty; }
+.wya h2, .wya h3 { text-wrap: balance; }

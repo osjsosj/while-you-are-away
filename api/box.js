@@ -69,6 +69,7 @@ async function view(req, res, box) {
     for (const p of data.film.photos) slots.push([p, 'photo'])
     slots.push([data.film, 'voice'])
   }
+  if (data.box.sealVoice) slots.push([data.box, 'sealVoice'])
   await signMedia(slots, box.userId)
   if (data.film) {
     data.film.photos = data.film.photos.filter((p) => p.photo)

@@ -70,12 +70,20 @@ Today is ${str(today)}.
    - whether they want a small pet companion in the box (animal + name);
    - the feel when the box is opened. Offer four in plain words, then confirm: cozy and playful like a scrapbook with photos and tape; calm and warm like cream paper under a porch light at night; soft with pressed flowers; or quiet white paper with just the words. Recommend one from what you heard, but it is their choice;
    - a name for the letter box.
-   If they say that's enough, stop gathering and move on.
+   - photos: invite them, once, to drop in two or three photos of the two of them or of things that are "theirs" with the photo button below the chat (they become the short film that plays the first time the box is opened);
+   - their voice: invite them, once, to record about ten seconds with the microphone button, saying hello the way they always do (it plays when the recipient taps the seal to open the box).
+   If they say "that's enough" (or press the button that says so), stop gathering right away, thank them, and move on to step 4. Never make them feel they gave too little.
 4. Their "days before" diary: entries written before parting are stamped with the day. Offer the two options and confirm (see Preference questions):
    - "mirror": an entry written N days before parting opens N days after parting. Days without an entry are skipped quietly.
    - "all": every entry is there from the day they hand it over.
 5. Close warmly. Tell them the best letters are made of small everyday moments: whenever something makes them think of the other person (a few lines, a photo, a short video, a voice memo, "on the way to buy your gift"), they can drop it into their "days before" page any time, and you will be there in the editor to help them write.
 ${SHARED_RULES}
+## Attachments
+A message that starts with "[Attached: a photo]" or "[Attached: a voice note]" means they added one with the buttons; you cannot see or hear it. Thank them warmly, use any words they wrote with it as a detail, and if it helps ask one short question about it (where, when, why it matters). Photos go into the opening film; the first voice note plays on the seal. Tell them that once.
+
+## Progress marker
+At the very end of EVERY message (after the COMPLETE block, if any), add <GATHERED>n</GATHERED>, where n (0 to 8) counts how many of these you now have: what they call each other; something that is theirs; a place with a date; a running joke or habit; how they got around or another everyday ritual; the feel they want; a photo; a voice note. The sender never sees this tag.
+
 ## When complete
 Only after they confirmed the plan, end your final message with this block (valid JSON, dates as YYYY-MM-DD):
 <COMPLETE>
@@ -133,6 +141,9 @@ Rules:
 - postmark: a real place from their story and its date, if they gave one. "place" at most 24 characters, in capitals is fine.
 - ticket: only if a bus, train or flight is part of their story. Pick ONE letter from "letters" (an open-when or never-said letter fits best) and give it a short ticket title (at most 20 characters, e.g. "Bus 7 home") and a line (at most 38 characters) in their words.
 - style: use the sender's choice if they gave one; otherwise recommend from the feel of their story.
+- song: only if they named a song; title as they wrote it (with the artist if they gave one).
+- "theirWords" holds the sender's own messages from the conversation and the lines they wrote under their photos. Prefer details that appear there over the summary fields; quote them in each "why".
+- Each library motif lists the words people use for it; match on meaning, not only on exact words (a "clementine" is a tangerine, "late-night convenience-store ramyeon" is ramen).
 - Names: three short names for the letter box, personal to them. welcomeMessage: one line in the sender's voice that the recipient sees first.
 
 Data: ${allData}
@@ -144,7 +155,8 @@ Answer with JSON only, no other text:
   "style": "scrapbook | night | flowers | quiet",
   "motifs": [{ "id": "a library id", "why": "" }],
   "postmark": { "place": "", "date": "YYYY-MM-DD", "why": "" } or null,
-  "ticket": { "kind": "bus | train | plane", "letterId": "", "title": "", "line": "", "why": "" } or null
+  "ticket": { "kind": "bus | train | plane", "letterId": "", "title": "", "line": "", "why": "" } or null,
+  "song": { "title": "", "why": "" } or null
 }`
 
 // ── input checks ─────────────────────────────────────────────
