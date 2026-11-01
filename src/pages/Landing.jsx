@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clearDraft, saveDraft } from '../utils/storage'
 import { HeroSky, EndSky, Grain, Sundial } from './landing/Sky'
+import Cinema from './landing/Cinema'
+import { cinemaAllowed } from './landing/motion'
 import { LETTERS, STEPS, CHAPTERS, FAQ, WHO, FOUNDER_PHOTO, SCENES } from './landing/content'
 import './landing/landing.css'
 
@@ -58,6 +60,7 @@ export default function Landing() {
   const [active, setActive] = useState(0)
   const [hour, setHour] = useState(SCENES[0].hour)
   const [seen, setSeen] = useState(() => SCENES.map((_, i) => i === 0))
+  const [cine] = useState(() => cinemaAllowed())
 
   useEffect(() => {
     document.title = "While You're Away — letters for the time apart"
@@ -140,7 +143,8 @@ export default function Landing() {
   const chapter = CHAPTERS[chapterIdx]
 
   return (
-    <div className="wya" ref={scrollerRef}>
+    <div className={`wya${cine ? ' wya--cine' : ''}`} ref={scrollerRef}>
+      {cine && <Cinema scrollerRef={scrollerRef} />}
       <Sundial hour={hour} active={active} scenes={SCENES} />
 
       {/* ── Night: the goodbye ── */}
@@ -151,7 +155,7 @@ export default function Landing() {
         onMouseLeave={() => moveSky(0, 0)}
         aria-label="While You're Away"
       >
-        <HeroSky farRef={farRef} nearRef={nearRef} />
+        {!cine && <HeroSky farRef={farRef} nearRef={nearRef} />}
         <header className="wya-header">
           <a href="/" className="wya-brand">
             <Mark />
@@ -227,7 +231,7 @@ export default function Landing() {
           <p className="wya-lede">You bring the words and the memories. We turn them into a box they can open, one letter at a time.</p>
           <ol className="wya-flow">
             {STEPS.map((s, i) => (
-              <li key={s.title} className={`wya-flow-step${s.now ? ' wya-step--now' : ''}`}>
+              <li key={s.title} className={`wya-flow-step${s.now ? ' wya-step--now' : ''}`} style={{ '--i': i }}>
                 <div className="wya-shot"><img src={s.img} alt={s.alt} width="300" height="649" loading="lazy" decoding="async" /></div>
                 <p className="wya-step-when"><span className="wya-flow-n">{i + 1}</span>{s.when}</p>
                 <h3>{s.title}</h3>
@@ -337,7 +341,7 @@ export default function Landing() {
 
       {/* ── Night again: start ── */}
       <section data-scene="5" className="wya-scene wya-start" aria-labelledby="wya-start-title">
-        <EndSky />
+        {!cine && <EndSky />}
         <div className="wya-start-body">
           <div className={reveal(5)}>
             <div className="wya-start-grid">

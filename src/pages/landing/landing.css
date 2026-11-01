@@ -496,3 +496,20 @@
 
 .wya p { text-wrap: pretty; }
 .wya h2, .wya h3 { text-wrap: balance; }
+
+/* ---------- cinematic sky (Cinema.jsx; off for reduced motion and data saver) ---------- */
+.wya-cinema { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; pointer-events: none; }
+.wya--cine .wya-scene { z-index: 1; }
+.wya--cine .wya-hero, .wya--cine .wya-start { background: transparent; }
+.wya--cine .wya-how { background: linear-gradient(180deg, transparent 0%, transparent 58%, rgba(42, 45, 90, 0.82) 78%, #5E4E75 91%, #C9958F 100%); }
+/* the hero's words and letter drift at different speeds as the camera lifts away */
+.wya--cine .wya-hero-copy { translate: 0 calc(var(--hero-out, 0) * 18vh); opacity: calc(1 - var(--hero-out, 0) * 0.85); }
+.wya--cine .wya-letter-col { translate: 0 calc(var(--hero-out, 0) * -8vh); rotate: calc(var(--hero-out, 0) * -2.5deg); }
+.wya--cine .wya-hero-title { text-shadow: 0 2px 30px rgba(3, 7, 20, 0.55); }
+/* scenes arrive with depth; everything stays readable at rest */
+.wya--cine .wya-reveal .wya-flow-step { transition: transform 1150ms var(--ease) calc(var(--i, 0) * 120ms); }
+.wya--cine .wya-reveal.is-hidden .wya-flow-step { transform: translateY(64px); }
+.wya--cine .wya-reveal .wya-video-phone { transition: transform 1400ms var(--ease) 120ms; }
+.wya--cine .wya-reveal.is-hidden .wya-video-phone { transform: perspective(1000px) rotateY(-16deg) rotateX(6deg) translateY(44px) scale(0.92); }
+.wya--cine .wya-reveal .wya-form { transition: transform 1200ms var(--ease) 200ms; }
+.wya--cine .wya-reveal.is-hidden .wya-form { transform: translateY(40px) rotate(1.2deg); }
