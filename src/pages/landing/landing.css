@@ -99,7 +99,7 @@
 .wya-btn--outline:hover { background: rgba(233, 236, 242, 0.1); }
 .wya-link {
   min-height: 52px;
-  padding: 15px 4px;
+  padding: 15px 0;
   border: none;
   background: transparent;
   color: var(--mist);
@@ -496,6 +496,21 @@
 
 .wya p { text-wrap: pretty; }
 .wya h2, .wya h3 { text-wrap: balance; }
+/* short notes break into even lines instead of leaving one word behind */
+.wya-letter-meta span, .wya .wya-form-note { text-wrap: balance; }
+
+/* four steps side by side: each row (screen, when, title, body) lines up across columns, whatever wraps */
+@media (min-width: 981px) {
+  @supports (grid-template-rows: subgrid) {
+    .wya-flow { row-gap: 6px; }
+    .wya-flow-step { display: grid; grid-row: span 4; grid-template-rows: subgrid; gap: 6px 0; align-content: start; }
+  }
+}
+
+/* the sundial is fixed bottom-right; keep the footer's links out from under it */
+@media (min-width: 901px) and (min-height: 761px) {
+  .wya-footer { padding-right: 176px; }
+}
 
 /* ---------- cinematic sky (Cinema.jsx; off for reduced motion and data saver) ---------- */
 .wya-cinema { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; pointer-events: none; }

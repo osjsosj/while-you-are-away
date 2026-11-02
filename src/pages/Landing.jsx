@@ -159,7 +159,7 @@ export default function Landing() {
         <header className="wya-header">
           <a href="/" className="wya-brand">
             <Mark />
-            While You're Away
+            While You’re Away
           </a>
           <button type="button" className="wya-btn wya-btn--outline" onClick={() => goTo(5)}>
             Start your letter box
@@ -175,7 +175,7 @@ export default function Landing() {
                   Every hello feels like a gift. Goodbyes usually just happen to us. The more you prepare one, the more it can hold.
                 </p>
                 <p className="wya-hero-sub wya-in-2">
-                  Write to them in the days before you part. They'll open it one letter at a time, for as long as you're apart.
+                  Write to them in the days before you part. They’ll open it one letter at a time, for as long as you’re apart.
                 </p>
                 <div className="wya-cta-row wya-in-3">
                   <button type="button" className="wya-btn wya-btn--light" onClick={() => goTo(5)}>
@@ -322,16 +322,16 @@ export default function Landing() {
             )}
             <div className="wya-why-copy">
               <h2 id="wya-why-title" className="wya-why-h">Why I made this</h2>
-              <p className="wya-why-roles">I'm a soldier. A student far from home. A son. Someone's partner. Someone's best friend.</p>
+              <p className="wya-why-roles">I’m a soldier. A student far from home. A son. Someone’s partner. Someone’s best friend.</p>
               <div className="wya-why-body">
                 <p>
                   Each of those has come with a goodbye. The last night before basic training, holding on until we ran out of tears. An airport bus I boarded with a straight face, then cried on the whole way. A phone call telling me my closest friend was gone. A hospital room, my mother beside me, when the doctor said my father might not wake up.
                 </p>
-                <p>Every time, gifts and good dinners felt like grasping at straws. Even “I love you” couldn't carry it. What stayed with me were the words I hadn't said.</p>
+                <p>Every time, gifts and good dinners felt like grasping at straws. Even “I love you” couldn’t carry it. What stayed with me were the words I hadn’t said.</p>
                 <p>
-                  So I started writing them down: the days we'd had, the things I'd never said out loud, the future I hoped for. While You're Away is that letter box, made for anyone with a goodbye coming.
+                  So I started writing them down: the days we’d had, the things I’d never said out loud, the future I hoped for. While You’re Away is that letter box, made for anyone with a goodbye coming.
                 </p>
-                <p>We won't write it for you. It will be as good as the care you put in, and we're here to help you get every bit of it onto the page.</p>
+                <p>We won’t write it for you. It will be as good as the care you put in, and we’re here to help you get every bit of it onto the page.</p>
               </div>
               <p className="wya-sign">Jin, founder</p>
             </div>
@@ -375,13 +375,13 @@ export default function Landing() {
                   onChange={(e) => setPartDate(e.target.value)}
                 />
                 <button type="submit" className="wya-btn wya-btn--ink">Start your letter box</button>
-                <p className="wya-form-note">Free to start. You pay only when you're ready to build the box.</p>
+                <p className="wya-form-note">Free to start. You pay only when you’re ready to build the box.</p>
               </form>
             </div>
           </div>
         </div>
         <footer className="wya-footer">
-          <span>While You're Away</span>
+          <span>While You’re Away</span>
           <span className="wya-footer-links">
             <a href="/terms">Terms</a>
             <a href="/privacy">Privacy</a>
