@@ -3,84 +3,12 @@
 export const CONTACT = 'hello@getwhileyouareaway.com'
 export const PRICE = '$24'
 
-export const BENEFITS = [
-  {
-    title: 'A diary they don’t know about',
-    body: 'In the days before you part, write a little each day, in secret: what you thought today, how it feels as the day gets closer. Each entry keeps its countdown, D-9, D-3, D-1, and they read it after you’ve gone.',
-    control: 'diary',
-  },
-  {
-    title: 'Letter paper made from your story',
-    body: 'An AI counselor listens to your goodbye, then dresses every letter for it: the paper, a stamp, a postmark from your first date, a note shaped like your bus ticket. It never writes the words. Those stay yours.',
-    control: 'dress',
-  },
-  {
-    title: 'Something to open while you’re apart',
-    body: 'Letters open on a rhythm, so there’s always one more coming. “Open when…” letters wait for a hard night, and one stays sealed until the day you meet again.',
-    control: 'apart',
-  },
-]
-
-// The letter the benefits section shows, one per choice of its controls. Illustrative copy.
-export const SAMPLE_LETTERS = {
-  d9: {
-    group: 'diary',
-    label: 'D-9',
-    meta: 'The days before · 9 days to go',
-    title: 'Nine days left',
-    body: 'Today you cried and said it was allergies. It hurt to watch. I’m so glad I’m writing these. Every one is a day I got to spend thinking only about you.',
-  },
-  d3: {
-    group: 'diary',
-    label: 'D-3',
-    meta: 'The days before · 3 days to go',
-    title: 'Three days',
-    body: 'I put your charger in my bag by accident and didn’t give it back. I think I wanted one more reason to see you before Sunday.',
-  },
-  d1: {
-    group: 'diary',
-    label: 'D-1',
-    meta: 'The days before · tomorrow',
-    title: 'Tomorrow',
-    body: 'I keep starting sentences I can’t finish. So just this: I’m proud of you, and I’m already counting.',
-  },
-  week: {
-    group: 'apart',
-    label: 'Week 4',
-    meta: 'While we’re apart · opened today',
-    title: 'Week four',
-    body: 'If you’re reading this, you’ve already done the hardest part once. I keep thinking about the bus stop, and how you said the rain was the reason your eyes were wet.',
-  },
-  sleep: {
-    group: 'apart',
-    label: 'Open when you can’t sleep',
-    meta: 'Open when… · any time',
-    title: 'For a sleepless night',
-    body: 'Okay. Put the phone down after this one. I mean it. Think about the night the power went out and we played cards by candlelight until two.',
-  },
-  last: {
-    group: 'apart',
-    label: 'The day we meet again',
-    meta: 'Sealed until the very end',
-    title: 'The day we meet again',
-    body: 'You waited. Thank you for waiting.',
-  },
-}
-
-// SAMPLE reviews: placeholders until real ones exist. Replace before launch; never present these as real.
-export const REVIEWS = [
-  { initials: 'MK', who: 'Wrote to her partner before a year abroad', date: 'Sample review', body: 'I wrote the last letter on the bus to the airport. She told me she saved week six for a night she couldn’t sleep.' },
-  { initials: 'JR', who: 'Wrote to his parents before the wedding', date: 'Sample review', body: 'My dad isn’t a letters person. He read every one out loud to my mom.' },
-  { initials: 'TS', who: 'Wrote before basic training', date: 'Sample review', body: 'I’m not a writer. The questions got me started and the rest just came.' },
-]
-
 export const FAQ = [
   { q: 'What if I miss a day of writing?', a: 'They’ll never know. Each entry shows the day it was written, never the days in between. No streaks and no empty pages, just what you had to say.' },
   { q: 'I’m not a good writer. Will it still be good?', a: 'You don’t need to be a writer. A short guided conversation and gentle prompts help you find what to say, and the words stay yours.' },
   { q: 'How early should I start?', a: 'A month before is ideal, but a week is plenty. You can also write everything in one evening. It’s your goodbye.' },
   { q: 'What do they actually receive?', a: 'A letter box you hand over on the day you part. It opens in their phone’s browser with nothing to install, works offline, and keeps their replies.' },
-  { q: 'Do they need to install anything?', a: 'No. Their letter box opens in their phone’s browser from a private link, works offline, and lets them write back to every letter.' },
-  { q: 'Who can read what I write?', a: 'Your drafts are saved to your account so you can write from any device. Once you hand it over, the letter box lives on their phone, and only they can open it.' },
+  { q: 'Who can read what I write?', a: 'Your drafts are saved to your account so you can write from any device. The recipient opens their box using the link you share. Keep that link private.' },
   { q: 'How much does it cost?', a: `${PRICE}, paid once, for the whole letter box. No subscription, and a full refund within 14 days for any reason.` },
 ]
 

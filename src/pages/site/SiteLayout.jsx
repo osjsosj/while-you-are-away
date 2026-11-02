@@ -1,8 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { CONTACT } from './content'
-import useGlassNav from './useGlassNav'
 import './site.css'
 
 const LINKS = [
@@ -42,11 +40,9 @@ function LocalTime() {
   return now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })
 }
 
-export default function SiteLayout({ children }) {
+export default function SiteLayout({ children, cinematic = false, background = null }) {
   const { pathname } = useLocation()
   useRise()
-  const barRef = useRef(null)
-  const glass = useGlassNav(barRef)
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [pathname])
@@ -64,14 +60,21 @@ export default function SiteLayout({ children }) {
           ))}
         </ul>
       </nav>
+      <details className="ws-mobile-menu">
+        <summary>Main menu <span aria-hidden="true">+</span></summary>
+        <nav aria-label="Mobile main">
+          <ul>{LINKS.map(([to, label]) => <li key={to}><NavLink to={to}>{label}</NavLink></li>)}</ul>
+        </nav>
+      </details>
     </>
   )
 
   return (
-    <div className="ws">
+    <div className={cinematic ? 'ws ws--cinematic' : 'ws'}>
+      {background}
       <a className="ws-skip" href="#main">Skip to content</a>
-      <header className={glass ? 'ws-bar ws-bar--glass' : 'ws-bar'} ref={barRef}>
-        {glass ? createPortal(bar, glass) : bar}
+      <header className="ws-bar">
+        {bar}
       </header>
 
       <main id="main">{children}</main>

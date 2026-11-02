@@ -296,7 +296,7 @@ A night palette of navy, moonlit mist and cream paper, lit by one amber lamp.
 
 **The Paper Is the Warmth Rule.** Warm, bright surfaces are reserved for letters and the things that hold the sender's words (and the form that starts them). Chrome on night is a navy tone step on the public site or translucent mist (`rgba(233, 236, 242, 0.03–0.08)`) in the app, never cream.
 
-**The Flat Night Rule.** The public site uses no gradients. Depth is a step from `night` to `night-mid` to `night-surface` to `night-high`. The only `linear-gradient` is the slider track's solid amber fill, sized to the value.
+**The Flat Night Rule.** Inner public pages use no gradients. The homepage motion exception below permits readability scrims over the supplied night-sky footage, a masked horizon image, and physical shadows on the envelope and paper. Depth is a step from `night` to `night-mid` to `night-surface` to `night-high`. The only `linear-gradient` is the slider track's solid amber fill, sized to the value.
 
 **The Retired Rose Rule.** The cream-and-rose palette from before the night redesign (warm creams, dusty rose, brown text, DM Sans, Playfair Display) has been removed from the code. Don't bring it back. `src/index.css` holds only the night body background, and the Tailwind theme stays empty.
 
@@ -439,3 +439,16 @@ The site's ease is `cubic-bezier(0.16, 1, 0.3, 1)`. The hero headline lines rise
 - **Don't** use Caveat outside handwritten notes, tickets and scrapbook captions.
 - **Don't** uppercase or letter-space labels.
 - **Don't** use flat pure black (`#000`) backgrounds or saturated alarm reds; errors are soft coral on night and brick on paper.
+
+
+## Continuous homepage motion exception November 2026
+
+The homepage now follows one letter through a continuous, locally hosted night sky. This section supersedes the older homepage hero, benefits, sample-review, and snapshot-glass descriptions above. Inner-page layouts and the writing app retain their existing design.
+
+- `Journey.jsx` keeps all three chapters in normal document flow. A sticky envelope opens from native scroll progress on desktop; there is no wheel interception, forced snapping, or artificial scroll smoothing. The sample button also opens and closes it directly.
+- Below 900px, the scene becomes a natural single column. The envelope opens on request, without pinning a large object over the text. Reduced motion uses a still sky and an already-open sample; no video is requested initially. The sky can be paused and stops when the tab is hidden. Data Saver also uses the poster.
+- The calendar follows the story as its own interactive timeline, with the original departure date, duration, delivery rhythm and sealed-final-letter controls. Paper creation is one three-step tabbed demonstration, using the actual `ChatFragment` and `PaperFragment` components.
+- Native CSS glass replaces page-snapshot WebGL glass on all four site routes. The navigation keeps its glass appearance over live imagery without loading html2canvas or recapturing the page. A native mobile menu keeps all navigation links available on narrow phones.
+- Homepage-only exceptions allow a low-opacity gradient scrim for readable text over footage, a masked horizon image to bridge the recipient scene, a fine orbit around the letter, and a physical shadow beneath the envelope and real paper. No second accent color is introduced.
+- Schibsted Grotesk, Literata and Caveat remain the brand fonts. The headline retains “Goodbyes can be prepared.” The sample letter is explicitly illustrative. Placeholder testimonials and repeated paper descriptions have been removed; no customer claims are invented.
+- The homepage files are `Home.jsx`, `Journey.jsx`, `NightSky.jsx`, `useScrollScene.js` and `home.css` under `src/pages/site/`. Rive source in `animation/perigan/` is independent and is not modified or replaced by the retired three.js experiment.
