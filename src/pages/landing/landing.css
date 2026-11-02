@@ -513,3 +513,43 @@
 .wya--cine .wya-reveal.is-hidden .wya-video-phone { transform: perspective(1000px) rotateY(-16deg) rotateX(6deg) translateY(44px) scale(0.92); }
 .wya--cine .wya-reveal .wya-form { transition: transform 1200ms var(--ease) 200ms; }
 .wya--cine .wya-reveal.is-hidden .wya-form { transform: translateY(40px) rotate(1.2deg); }
+
+/* ---------- mobile, rebuilt: one idea per screen, nothing cut off at the edge ---------- */
+@media (max-width: 720px) {
+  /* hero: the promise and the button fill the first screen; the example letter peeks in below */
+  .wya-hero-body { padding: 0 20px 72px; }
+  .wya-hero-grid { gap: 40px; }
+  .wya-hero-copy { flex-basis: auto; min-height: calc(100svh - 160px); display: flex; flex-direction: column; justify-content: center; }
+  .wya-hero-title { font-size: clamp(40px, 11.6vw, 50px); line-height: 1.05; }
+  .wya-hero-lede { font-size: 17px; }
+  .wya-cta-row { gap: 18px; }
+  .wya-cta-row .wya-btn--light { width: 100%; justify-content: center; }
+  .wya-letter-col { flex-basis: auto; }
+  .wya--cine .wya-letter-col { translate: none; rotate: none; }
+  .wya-stack { padding: 10px 0 0 10px; }
+  /* example tabs and letter kinds: one row you can swipe, not a stack of pills */
+  .wya-tabs, .wya-chips { flex-wrap: nowrap; overflow-x: auto; margin-left: -20px; margin-right: -20px; padding: 2px 20px 6px; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 20px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, transparent 0, #000 20px, #000 calc(100% - 28px), transparent); }
+  .wya-tabs::-webkit-scrollbar, .wya-chips::-webkit-scrollbar { display: none; }
+  .wya-tabs .wya-pill, .wya-chips .wya-pill { flex: none; }
+
+  /* how it works: a vertical timeline, a small real screen beside each step */
+  .wya-how .wya-lede { margin-bottom: 36px; }
+  .wya-flow { display: flex; flex-direction: column; gap: 32px; overflow: visible; margin: 0; padding: 0; scroll-snap-type: none; position: relative; }
+  .wya-flow-step { display: grid; grid-template-columns: 108px minmax(0, 1fr); grid-template-rows: auto auto 1fr; column-gap: 18px; row-gap: 6px; max-width: none; align-items: start; }
+  .wya-flow-step .wya-shot { grid-row: 1 / span 3; margin: 0; padding: 4px; border-radius: 18px; max-width: none; }
+  .wya-flow-step .wya-shot img { border-radius: 14px; }
+  .wya-flow-step h3 { font-size: 19px; }
+  .wya-flow-step p:last-child { font-size: 14.5px; line-height: 1.5; }
+  .wya--cine .wya-reveal.is-hidden .wya-flow-step { transform: translateY(36px); }
+
+  /* what they receive: words first, then the phone, centred and smaller */
+  .wya-receive-grid { flex-direction: column-reverse; flex-wrap: nowrap; align-items: stretch; gap: 40px; }
+  .wya-receive-copy { flex-basis: auto; }
+  .wya-phone-col { flex-basis: auto; }
+  .wya-video-phone { width: min(250px, 66vw); padding: 7px; border-radius: 34px; }
+  .wya-video-phone video { border-radius: 28px; }
+
+  /* the last screen: form full width, comfortable to thumb */
+  .wya-start-body { padding: 96px 20px 40px; }
+  .wya-form .wya-btn--ink { width: 100%; }
+}
