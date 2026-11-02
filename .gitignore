@@ -24,3 +24,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Tool working files
+.playwright-mcp/
+.taste-skill/
+.impeccable/review/
+liquid-glass-js/
+.claude/settings.local.json
+animation/*/build/shots/
+animation/*/build/*.log
