@@ -1,0 +1,404 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-01T00:00:00Z",
+  "title": "Design System: While You're Away",
+  "extensions": {
+    "colorMeta": {
+      "night": {
+        "role": "neutral",
+        "displayName": "Midnight",
+        "canonical": "#050A19",
+        "tonalRamp": [
+          "#02050D",
+          "#050A19",
+          "#0B1430",
+          "#101A33",
+          "#18234A",
+          "#2A3556",
+          "#46557A",
+          "#A9B3C6"
+        ]
+      },
+      "night-mid": {
+        "role": "neutral",
+        "displayName": "Deep Night",
+        "canonical": "#0B1430"
+      },
+      "night-high": {
+        "role": "neutral",
+        "displayName": "High Night",
+        "canonical": "#18234A"
+      },
+      "night-surface": {
+        "role": "neutral",
+        "displayName": "Night Surface",
+        "canonical": "#101A33"
+      },
+      "light": {
+        "role": "primary",
+        "displayName": "Lamplight Amber",
+        "canonical": "#F0B341",
+        "tonalRamp": [
+          "#5C3D06",
+          "#8A5C0E",
+          "#C98A1E",
+          "#F0B341",
+          "#F6C25E",
+          "#F8D27E",
+          "#F7D9A0",
+          "#FDF1D8"
+        ]
+      },
+      "light-hi": {
+        "role": "primary",
+        "displayName": "Lit Amber",
+        "canonical": "#F6C25E"
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Letter Paper",
+        "canonical": "#F6F3EA",
+        "tonalRamp": [
+          "#5E554B",
+          "#8C8577",
+          "#B9B2A2",
+          "#DDD8C9",
+          "#E9E5D9",
+          "#F6F3EA",
+          "#FBF6EA",
+          "#FFFDF8"
+        ]
+      },
+      "paper-bright": {
+        "role": "neutral",
+        "displayName": "Bright Paper",
+        "canonical": "#FFFDF8"
+      },
+      "paper-line": {
+        "role": "neutral",
+        "displayName": "Paper Rule",
+        "canonical": "#DDD8C9"
+      },
+      "moonlit": {
+        "role": "neutral",
+        "displayName": "Moonlit White",
+        "canonical": "#F4F1E6"
+      },
+      "mist": {
+        "role": "neutral",
+        "displayName": "Mist",
+        "canonical": "#E9ECF2",
+        "tonalRamp": [
+          "#4E596B",
+          "#7F8AA0",
+          "#A9B3C6",
+          "#B9C2D3",
+          "#C9D0DC",
+          "#D3D9E3",
+          "#E9ECF2",
+          "#F6F7FA"
+        ]
+      },
+      "mist-soft": {
+        "role": "neutral",
+        "displayName": "Soft Mist",
+        "canonical": "#C9D0DC"
+      },
+      "mist-muted": {
+        "role": "neutral",
+        "displayName": "Muted Mist",
+        "canonical": "#A9B3C6"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#1B2536",
+        "tonalRamp": [
+          "#101A33",
+          "#1B2536",
+          "#26334D",
+          "#3D4859",
+          "#4E596B",
+          "#5A6070",
+          "#9AA4B2",
+          "#D8DCE3"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Soft Ink",
+        "canonical": "#3D4859"
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Muted Ink",
+        "canonical": "#4E596B"
+      },
+      "ink-on-light": {
+        "role": "neutral",
+        "displayName": "Night Ink",
+        "canonical": "#101A33"
+      },
+      "slate-edge": {
+        "role": "neutral",
+        "displayName": "Slate Edge",
+        "canonical": "#46557A"
+      },
+      "danger": {
+        "role": "neutral",
+        "displayName": "Soft Coral",
+        "canonical": "#F2A99E"
+      },
+      "note-yellow": {
+        "role": "neutral",
+        "displayName": "Note Yellow",
+        "canonical": "#FFF6C9"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Landing hero only; 46px on phones."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page and scene titles; 32px on phones; balanced wrap."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Section headings, step titles, wordmark."
+      },
+      "letter": {
+        "displayName": "Letter",
+        "purpose": "The sender's words: letter bodies and quoted examples."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Interface prose and ledes."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Field labels and button text, sentence case."
+      },
+      "hand": {
+        "displayName": "Hand",
+        "purpose": "Handwritten notes, ticket lines, scrapbook captions only."
+      }
+    },
+    "shadows": [
+      {
+        "name": "paper-glow",
+        "value": "0 0 70px rgba(240, 179, 65, 0.08), 0 24px 60px -24px rgba(0, 0, 0, 0.7)",
+        "purpose": "Any paper surface sitting on night."
+      },
+      {
+        "name": "lamp-bloom",
+        "value": "0 12px 30px -12px rgba(240, 179, 65, 0.6)",
+        "purpose": "Primary button hover."
+      },
+      {
+        "name": "focus-halo",
+        "value": "0 0 0 4px rgba(240, 179, 65, 0.14)",
+        "purpose": "Focused input on night, with amber border."
+      },
+      {
+        "name": "device",
+        "value": "0 34px 80px -24px rgba(16, 26, 51, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.08)",
+        "purpose": "Phone frames on the landing."
+      },
+      {
+        "name": "seal-glow",
+        "value": "0 0 0 10px rgba(240, 179, 65, 0.1), 0 0 80px rgba(240, 179, 65, 0.35)",
+        "purpose": "The wax seal on the recipient's first open."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(0.2, 0.7, 0.2, 1)",
+        "purpose": "Shared ease for reveals, panels and entrances."
+      },
+      {
+        "name": "lift",
+        "value": "250ms ease",
+        "purpose": "Button hover lift, color and bloom."
+      },
+      {
+        "name": "state",
+        "value": "200ms ease",
+        "purpose": "Borders, fills and color on pills, inputs, rows."
+      },
+      {
+        "name": "reveal",
+        "value": "1000ms",
+        "purpose": "Scroll reveals on the landing (motion only, text stays visible)."
+      },
+      {
+        "name": "message-in",
+        "value": "360ms",
+        "purpose": "Chat messages entering."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "xs",
+        "value": "420px"
+      },
+      {
+        "name": "sm",
+        "value": "560px"
+      },
+      {
+        "name": "md",
+        "value": "640px"
+      },
+      {
+        "name": "lg",
+        "value": "720px"
+      },
+      {
+        "name": "xl",
+        "value": "900px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one amber action per view.",
+      "html": "<button class=\"ds-btn\">Start your letter box</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; padding: 14px 26px; border: none; border-radius: 999px; background: #F0B341; color: #101A33; font: 600 16px 'Schibsted Grotesk', system-ui, sans-serif; cursor: pointer; transition: transform 250ms ease, box-shadow 250ms ease, background-color 250ms ease; } .ds-btn:hover { transform: translateY(-2px); background: #F6C25E; box-shadow: 0 12px 30px -12px rgba(240, 179, 65, 0.6); } .ds-btn:active { transform: none; } .ds-btn:focus-visible { outline: 2px solid #F0B341; outline-offset: 3px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action on night.",
+      "html": "<button class=\"ds-btn-ghost\">Save and finish later</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 14px 26px; border-radius: 999px; border: 1.5px solid rgba(233, 236, 242, 0.45); background: transparent; color: #E9ECF2; font: 600 16px 'Schibsted Grotesk', system-ui, sans-serif; cursor: pointer; transition: background-color 250ms ease; } .ds-btn-ghost:hover { background: rgba(233, 236, 242, 0.08); } .ds-btn-ghost:focus-visible { outline: 2px solid #F0B341; outline-offset: 3px; }"
+    },
+    {
+      "name": "Ink Button",
+      "kind": "button",
+      "refersTo": "button-ink",
+      "description": "Primary action on paper or daylight scenes.",
+      "html": "<div class=\"ds-on-paper\"><button class=\"ds-btn-ink\">Continue</button></div>",
+      "css": ".ds-on-paper { padding: 20px; background: #F6F3EA; border-radius: 12px; } .ds-btn-ink { min-height: 52px; padding: 14px 26px; border: none; border-radius: 999px; background: #1B2536; color: #FBFCFD; font: 600 16px 'Schibsted Grotesk', system-ui, sans-serif; cursor: pointer; transition: transform 250ms ease, box-shadow 250ms ease, background-color 250ms ease; } .ds-btn-ink:hover { transform: translateY(-2px); background: #26334D; box-shadow: 0 10px 24px -12px rgba(16, 26, 51, 0.6); } .ds-btn-ink:focus-visible { outline: 2px solid #1B2536; outline-offset: 3px; }"
+    },
+    {
+      "name": "Choice Pill",
+      "kind": "chip",
+      "refersTo": "pill",
+      "description": "Single or multi choice on night; selected fills moonlit.",
+      "html": "<div class=\"ds-pills\"><button class=\"ds-pill\" aria-pressed=\"true\">A partner</button><button class=\"ds-pill\" aria-pressed=\"false\">A parent</button><button class=\"ds-pill\" aria-pressed=\"false\">A friend</button></div>",
+      "css": ".ds-pills { display: flex; flex-wrap: wrap; gap: 10px; padding: 20px; background: #0B1430; } .ds-pill { min-height: 44px; padding: 10px 16px; border-radius: 999px; border: 1.5px solid #46557A; background: rgba(10, 18, 38, 0.35); color: #D3D9E3; font: 15px 'Schibsted Grotesk', system-ui, sans-serif; cursor: pointer; transition: border-color 200ms ease, background-color 200ms ease, color 200ms ease; } .ds-pill:hover { border-color: #A9B4CF; color: #FFFFFF; } .ds-pill[aria-pressed='true'] { border-color: #F4F1E6; background: #F4F1E6; color: #101A33; } .ds-pill:focus-visible { outline: 2px solid #F0B341; outline-offset: 3px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Label above, help between, amber focus halo.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-label\" for=\"ds-to\">Who are you writing to?</label><p class=\"ds-help\">Their first name is enough.</p><input id=\"ds-to\" class=\"ds-input\" placeholder=\"Sam\" /></div>",
+      "css": ".ds-field { padding: 20px; background: #0B1430; } .ds-label { display: block; margin-bottom: 8px; font: 600 15px 'Schibsted Grotesk', system-ui, sans-serif; color: #E9ECF2; } .ds-help { margin: 0 0 8px; font: 14px 'Schibsted Grotesk', system-ui, sans-serif; color: #A9B3C6; } .ds-input { width: 100%; min-height: 48px; padding: 11px 14px; border-radius: 10px; border: 1.5px solid rgba(233, 236, 242, 0.28); background: rgba(5, 10, 25, 0.5); color: #E9ECF2; font: 16px 'Schibsted Grotesk', system-ui, sans-serif; outline: none; color-scheme: dark; transition: border-color 200ms ease, box-shadow 200ms ease; } .ds-input::placeholder { color: #7F8AA0; } .ds-input:hover { border-color: rgba(233, 236, 242, 0.45); } .ds-input:focus { border-color: #F0B341; box-shadow: 0 0 0 4px rgba(240, 179, 65, 0.14); }"
+    },
+    {
+      "name": "Box Tabs",
+      "kind": "nav",
+      "description": "Sticky tabs in the recipient's box, amber underline on the selected tab.",
+      "html": "<nav class=\"ds-tabs\" role=\"tablist\"><button class=\"ds-tab\" role=\"tab\" aria-selected=\"true\">Letters</button><button class=\"ds-tab\" role=\"tab\" aria-selected=\"false\">Our story</button><button class=\"ds-tab\" role=\"tab\" aria-selected=\"false\">Replies</button></nav>",
+      "css": ".ds-tabs { display: flex; gap: 24px; padding: 0 20px; background: rgba(8, 14, 32, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(233, 236, 242, 0.1); } .ds-tab { min-height: 48px; padding: 0; border: none; border-bottom: 2px solid transparent; background: none; color: #A9B3C6; font: 500 15px 'Schibsted Grotesk', system-ui, sans-serif; cursor: pointer; } .ds-tab:hover { color: #E9ECF2; } .ds-tab[aria-selected='true'] { color: #E9ECF2; border-bottom-color: #F0B341; } .ds-tab:focus-visible { outline: 2px solid #F0B341; outline-offset: 3px; }"
+    },
+    {
+      "name": "Letter Rows",
+      "kind": "custom",
+      "refersTo": "letter-row",
+      "description": "The recipient's list. Today's letter is the one lit paper row; locked letters are dashed.",
+      "html": "<div class=\"ds-list\"><button class=\"ds-row ds-row--new\"><span><span class=\"ds-row-title\">Week 4</span><span class=\"ds-row-sub\">New today</span></span><i class=\"ds-dot\"></i></button><button class=\"ds-row\"><span><span class=\"ds-row-title\">Open when you can’t sleep</span><span class=\"ds-row-sub\">Any time</span></span></button><div class=\"ds-row ds-row--locked\"><span><span class=\"ds-row-title\">The day we meet again</span><span class=\"ds-row-sub\">Sealed until then</span></span></div></div>",
+      "css": ".ds-list { display: flex; flex-direction: column; gap: 8px; padding: 20px; background: #0B1430; } .ds-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 60px; padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(233, 236, 242, 0.12); background: rgba(255, 255, 255, 0.03); color: #A9B3C6; text-align: left; cursor: pointer; transition: background-color 200ms ease, border-color 200ms ease, transform 200ms ease; } button.ds-row:hover { border-color: rgba(233, 236, 242, 0.3); transform: translateY(-1px); } .ds-row:focus-visible { outline: 2px solid #F0B341; outline-offset: 3px; } .ds-row-title { display: block; font: 16px/1.35 'Literata', Georgia, serif; color: #E9ECF2; } .ds-row-sub { display: block; margin-top: 2px; font: 13px 'Schibsted Grotesk', system-ui, sans-serif; color: #A9B3C6; } .ds-row--new { background: #F6F3EA; border-color: #F6F3EA; } .ds-row--new .ds-row-title { color: #1B2536; } .ds-row--new .ds-row-sub { color: #5A6070; } .ds-row--locked { cursor: default; border-style: dashed; opacity: 0.6; } .ds-dot { width: 8px; height: 8px; border-radius: 50%; background: #F0B341; box-shadow: 0 0 0 3px rgba(240, 179, 65, 0.2); }"
+    },
+    {
+      "name": "Letter Paper",
+      "kind": "card",
+      "refersTo": "paper",
+      "description": "A letter on night: cream paper, amber halo, Literata body, a strip of tape.",
+      "html": "<div class=\"ds-night\"><article class=\"ds-paper\"><span class=\"ds-tape\"></span><p class=\"ds-meta\">Written 21 days before your flight</p><h2 class=\"ds-title\">To Daniel</h2><p class=\"ds-body\">You practiced ordering coffee in Korean at breakfast and you were terrible at it. I’m going to miss hearing you be terrible at things.</p></article></div>",
+      "css": ".ds-night { padding: 32px 20px; background: linear-gradient(180deg, #050A19 0%, #0B1430 60%, #101A33 100%); } .ds-paper { position: relative; max-width: 420px; margin: 0 auto; padding: 28px; border-radius: 12px; background: #F6F3EA; color: #1B2536; box-shadow: 0 0 70px rgba(240, 179, 65, 0.08), 0 24px 60px -24px rgba(0, 0, 0, 0.7); } .ds-tape { position: absolute; top: -10px; left: 50%; width: 88px; height: 22px; background: rgba(240, 179, 65, 0.7); transform: translateX(-50%) rotate(-3deg); } .ds-meta { margin: 0; font: 13px 'Schibsted Grotesk', system-ui, sans-serif; letter-spacing: .02em; color: #5A6070; } .ds-title { margin: 6px 0 14px; font: 400 26px/1.2 'Literata', Georgia, serif; } .ds-body { margin: 0; font: 18px/1.8 'Literata', Georgia, serif; }"
+    },
+    {
+      "name": "Guide Bubble",
+      "kind": "custom",
+      "refersTo": "chat-bubble-guide",
+      "description": "The planning guide speaks on paper, in serif.",
+      "html": "<div class=\"ds-chat\"><p class=\"ds-msg ds-msg--ai\">What’s one small thing about them you never want to forget?</p><p class=\"ds-msg ds-msg--me\">The way she hums when she cooks.</p></div>",
+      "css": ".ds-chat { display: flex; flex-direction: column; gap: 10px; padding: 20px; background: #0B1430; } .ds-msg { max-width: 86%; margin: 0; padding: 14px 18px; border-radius: 18px; font: 16px/1.6 'Schibsted Grotesk', system-ui, sans-serif; } .ds-msg--ai { align-self: flex-start; background: #F6F3EA; color: #1B2536; border-bottom-left-radius: 6px; font: 17px/1.6 'Literata', Georgia, serif; } .ds-msg--me { align-self: flex-end; background: rgba(233, 236, 242, 0.1); color: #E9ECF2; border-bottom-right-radius: 6px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "A Lamp Left On",
+    "overview": "Someone is still thinking of you in the dark. The whole product lives at night: a deep navy sky, cool moonlit text, and a single warm amber light that marks the one thing worth doing next. Letters are the only bright, warm surfaces. They sit on the night like paper under a desk lamp, with a faint amber halo around them. Everything else is quiet chrome that gets out of the way.\n\nTime is the material. The landing walks through a day, from late night through before dawn, morning, afternoon and dusk, back to evening, with a sundial marking the hour and the sky changing behind each scene. The builder, diary and recipient box stay in the night. Motion is slow and unhurried (1000ms reveals, 250ms lifts, a gentle cubic-bezier(0.2, 0.7, 0.2, 1) ease) and turns off completely under reduced motion.\n\nThe letter itself is crafted and tactile: paper variants, washi tape, stamps, postmarks, pressed flowers, die-cut vinyl stickers and handwritten Caveat notes. The interface around it is soft and calm, never pushy.",
+    "keyCharacteristics": [
+      "Night-first. Navy gradients from night to night-surface, never flat black.",
+      "One warm light. Amber (light) is the single accent: primary action, focus, today's letter, the seal.",
+      "Paper glows. Cream paper surfaces carry ink text and an amber halo.",
+      "Literata for anything the heart says, Schibsted Grotesk for anything the interface says.",
+      "Pills and soft corners, 44px+ touch targets, mobile-first column widths (560–720px).",
+      "Unhurried motion, fully disabled under prefers-reduced-motion."
+    ],
+    "rules": [
+      {
+        "name": "The One Lamp Rule",
+        "body": "Amber is the only accent. One amber primary action per view; everything else is mist, paper or ink. If two things glow, neither does.",
+        "section": "colors"
+      },
+      {
+        "name": "The Paper Is the Warmth Rule",
+        "body": "Warm, bright surfaces are reserved for letters and the things that hold the sender's words. UI chrome on night stays translucent mist (rgba(233, 236, 242, 0.03–0.08)), never cream.",
+        "section": "colors"
+      },
+      {
+        "name": "The Retired Rose Rule",
+        "body": "The cream-and-rose palette from before the night redesign (warm creams, dusty rose, brown text, DM Sans, Playfair Display) has been removed from the code. Don't bring it back. src/index.css holds only the night body background, and the Tailwind theme stays empty.",
+        "section": "colors"
+      },
+      {
+        "name": "The Heart and Hands Rule",
+        "body": "Serif for what the sender or the product says to a person (headlines, letters, the guide's chat replies, row titles). Sans for what the interface says (labels, buttons, help, meta). Never set a letter in sans or a button in serif.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Tracking Rule",
+        "body": "Headlines get slight negative tracking (-0.01 to -0.03em). Nothing is uppercase-tracked. Labels stay sentence case.",
+        "section": "typography"
+      },
+      {
+        "name": "The Thumb Rule",
+        "body": "Every interactive element is at least 44px tall. Primary buttons and inputs are 48–52px.",
+        "section": "layout"
+      },
+      {
+        "name": "The Light, Not Shadow Rule",
+        "body": "On night, a surface earns prominence by being lit (paper, amber), not by casting a darker shadow. Never put a heavy shadow on a translucent mist card.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do build every new screen on the night gradient (night → night-mid → night-surface) and reserve warm surfaces for paper.",
+      "Do keep amber to one primary action per view, plus focus and \"today\" signals.",
+      "Do set headlines and letter text in Literata, and interface text in Schibsted Grotesk.",
+      "Do keep touch targets at 44px or more, and text inputs at 16px.",
+      "Do use the shared ease cubic-bezier(0.2, 0.7, 0.2, 1), and kill all animation and transition under prefers-reduced-motion.",
+      "Do use a 2px amber :focus-visible outline offset 3px on night.",
+      "Do keep text visible at rest. Scroll reveals move the text, they never hide it."
+    ],
+    "donts": [
+      "Don't use the retired cream/rose palette, DM Sans, or Playfair Display in new work.",
+      "Don't introduce a second accent color, or tint UI chrome cream or amber.",
+      "Don't put heavy shadows on translucent night cards. Light lifts surfaces here, shadow doesn't.",
+      "Don't use Caveat outside handwritten notes, tickets and scrapbook captions.",
+      "Don't uppercase or letter-space labels.",
+      "Don't use flat pure black (#000) backgrounds or alarm-red errors."
+    ]
+  }
+}

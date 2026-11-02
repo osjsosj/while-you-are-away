@@ -3,7 +3,7 @@
  * Runs on the server (/api/box) so locked letters never leave it.
  */
 import { stampFor, formatLong, daysBetween, normalizeUnlock } from './diary.js'
-import { buildPetConfig } from './htmlGenerator.js'
+import { buildPetConfig } from './pet.js'
 import { getPlan, planSlots } from './plan.js'
 import { normalizeFilm } from './film.js'
 import { cleanSignature } from './sky.js'
