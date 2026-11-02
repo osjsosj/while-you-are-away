@@ -393,6 +393,7 @@ Reviews are a comment thread, not cards with stars. Each is a 16px-radius `night
 
 ### Navigation
 - **Site bar:** Wordmark at left (a 12px amber dot and "While You're Away" in moonlit 600, 17px), three links at right (Services, About, Contact) in 600 soft mist at 16px, 44px tall. Hover and the active page turn moonlit; the active page takes an amber underline. On phones the wordmark and links step down to 14px.
+- **Glass bar:** The site bar floats 12px from the top (8px on phones) on the page margins, 64px tall (56px on phones), 22px corners (18px). Where WebGL allows, liquid-glass-js (vendored in public/vendor/liquid-glass, MIT) turns it into a refracting glass panel over the page, set up in src/pages/site/useGlassNav.js. It is the one deliberate exception to the no-glass rule. Elsewhere, and while the glass loads, it is a flat translucent night panel (rgba(11, 20, 48, 0.86)). Links on the glass carry a soft night text-shadow for legibility.
 - **Builder top bar (app):** Sticky translucent navy, wordmark at left, step list at right (13px muted mist, the current step semibold mist).
 - **Box tabs (app):** Sticky translucent navy, 48px tabs in 15px medium muted mist. The selected tab is mist with a 2px amber underline.
 

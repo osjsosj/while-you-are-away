@@ -1,0 +1,41 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600;800&family=Literata:opsz,wght@7..72,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:900px;overflow:hidden;background:#050A19;color:#E9ECF2;font-family:'Schibsted Grotesk',sans-serif}
+.nav{display:flex;justify-content:space-between;align-items:center;padding:28px 64px;font-weight:600;font-size:15px}
+.nav a{color:#C9D0DC;margin-left:28px;text-decoration:none}
+.wrap{display:grid;grid-template-columns:7fr 5fr;gap:64px;padding:72px 64px 0}
+h1{font-weight:800;font-size:112px;line-height:.9;letter-spacing:-.05em;color:#F4F1E6}
+h1 em{font-style:normal;color:#F0B341}
+.chips{display:flex;gap:12px;margin-top:40px}
+.chip{background:#101A33;border-radius:12px;padding:14px 18px;min-width:200px}
+.chip b{display:block;font-size:13px;color:#A9B3C6;font-weight:600}
+.chip span{font-size:22px;font-weight:600}
+.lede{margin-top:32px;font-size:19px;line-height:1.5;color:#C9D0DC;max-width:34em}
+.btn{display:inline-block;margin-top:32px;background:#F0B341;color:#101A33;font-weight:600;font-size:17px;padding:16px 28px;border-radius:999px}
+.box{background:#0B1430;border-radius:20px;padding:24px}
+.box h2{font-weight:600;font-size:15px;color:#A9B3C6;margin-bottom:14px}
+.row{display:flex;justify-content:space-between;padding:16px;border-radius:12px;background:rgba(255,255,255,.04);margin-bottom:8px}
+.row .t{font-family:Literata,serif;font-size:17px}.row .s{font-size:13px;color:#A9B3C6}
+.row.on{background:#F6F3EA;color:#1B2536}.row.on .s{color:#5A6070}
+.row.lock{color:#C9D0DC;border:1px dashed rgba(233,236,242,.3);background:none}
+</style></head><body>
+<div class="nav"><span>While You’re Away</span><span><a>Services</a><a>About</a><a>Contact</a></span></div>
+<div class="wrap">
+<div>
+<h1>Fourteen letters,<br><em>one every week.</em></h1>
+<div class="chips"><div class="chip"><b>Apart for</b><span>12 weeks</span></div><div class="chip"><b>Opens</b><span>Every week</span></div><div class="chip"><b>Seal one for the day you meet again</b><span>On</span></div></div>
+<p class="lede">Goodbyes can be prepared. Write to them in the days before you part, and they open one letter at a time, for as long as you’re apart.</p>
+<span class="btn">Start your letter box</span>
+</div>
+<div class="box"><h2>Sam’s letter box</h2>
+<div class="row"><span class="t">Tonight</span><span class="s">Opened</span></div>
+<div class="row on"><span class="t">Week 4</span><span class="s">New today</span></div>
+<div class="row"><span class="t">Open when you can’t sleep</span><span class="s">Any time</span></div>
+<div class="row lock"><span class="t">Week 5</span><span class="s">Opens Nov 11</span></div>
+<div class="row lock"><span class="t">The day we meet again</span><span class="s">Sealed</span></div>
+</div>
+</div>
+</body></html>

@@ -1,0 +1,46 @@
+{
+  "title": "Choose the home page structure",
+  "question": "The night world, palette and type are settled. Pick how the home page is built: the roll dealt three structures.",
+  "options": [
+    {
+      "id": "calendar",
+      "kind": "assigned",
+      "label": "The time apart, as a calendar",
+      "kicker": "THE ROLL",
+      "lineage": "a paper wall calendar with the days that hold a letter circled",
+      "thesis": "The hero is the stretch of time apart laid out as weeks; each week with a letter glows amber, and the reunion day is sealed.",
+      "palette": ["#050A19", "#101A33", "#F6F3EA", "#F0B341", "#E9ECF2"],
+      "materials": ["night ground", "calendar grid of weeks", "one amber light per letter"],
+      "viewport": "Headline left, a 12-week calendar right with letter days lit and the last day sealed; one button under the headline.",
+      "risk": "A calendar can read as scheduling software rather than feeling.",
+      "html": ".impeccable/mocks/decision/calendar.html"
+    },
+    {
+      "id": "board",
+      "kind": "dealt",
+      "label": "Departures board of goodbyes",
+      "lineage": "an airport or station departures board, one row per goodbye",
+      "thesis": "Goodbyes listed like departures (basic training, a wedding, a flight abroad), each row showing the letters that leave with them.",
+      "palette": ["#050A19", "#0B1430", "#F0B341", "#E9ECF2"],
+      "materials": ["split-flap rows", "night concourse", "amber status column"],
+      "viewport": "A full-width board of five goodbyes under a two-line promise; status column reads letters ready; one button.",
+      "risk": "Travel imagery narrows the audience toward airports when many goodbyes are not trips.",
+      "html": ".impeccable/mocks/decision/board.html"
+    },
+    {
+      "id": "letterbox",
+      "kind": "dealt",
+      "label": "The letter box, working",
+      "lineage": "the recipient's real letter box screen",
+      "thesis": "You set how long you are apart and how often; the headline counts the letters and the real letter box fills in beside it.",
+      "palette": ["#050A19", "#101A33", "#F6F3EA", "#F0B341", "#E9ECF2"],
+      "materials": ["live controls on the sentence", "recipient letter rows", "one lit paper row for today"],
+      "viewport": "Two-line headline that changes with three product controls; the recipient's letter list at true size on the right; one button.",
+      "risk": "Leans on interaction; with motion off it must still read as a finished promise.",
+      "html": ".impeccable/mocks/decision/letterbox.html"
+    }
+  ],
+  "reroll": true,
+  "buildPath": { "value": "code" },
+  "steer": true
+}
