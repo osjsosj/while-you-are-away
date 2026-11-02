@@ -14,10 +14,12 @@ web
 
 ## Product Purpose
 
-While You're Away turns a goodbye into a letter box that keeps arriving. The sender writes before parting; the recipient opens one letter at a time for as long as they're apart. Success means the sender says what they never quite said out loud, and the recipient always has one more letter to look forward to.
+While You're Away turns a goodbye into a letter box that keeps arriving. In the days before parting, the sender keeps a countdown diary in secret (D-14 … D-1): what they thought that day and how their feelings change as the parting gets closer. After parting, the recipient reads those entries and opens letters one at a time for as long as they're apart. The goal is to move them: success means the recipient is genuinely touched, the sender says what they never quite said out loud, and there is always one more letter to look forward to.
 
 ## Positioning
 
+- **The differentiator: letter paper made from their story.** An AI counselor talks with the sender about the goodbye and dresses the letter paper around it (paper, stamps, a postmark from a meaningful date, a note shaped like a real ticket), so each letter feels made for that person and the emotion lands as strongly as possible. The counselor shapes the paper and the plan, never the words.
+- **The days before, written in secret.** A D-day countdown diary the recipient doesn't know about until they part.
 - **The words stay the sender's.** The AI plans the box and helps when the words won't come, but it never writes the letters. Quality comes from the sender's care, not generation.
 - **It opens over time.** Letters unlock on a rhythm (daily, weekly, every two weeks), "open when…" letters wait for a bad day or a sleepless night, special days open on their date, and one letter stays sealed until the day you meet again.
 - **Nothing to install.** The recipient opens it in their phone's browser. It works offline and carries their replies back.

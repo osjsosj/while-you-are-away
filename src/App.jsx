@@ -2,7 +2,10 @@ import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { hydrateFromDB } from './utils/storage'
 import Legal from './pages/Legal'
-import Landing from './pages/Landing'
+import Home from './pages/site/Home'
+import Services from './pages/site/Services'
+import About from './pages/site/About'
+import Contact from './pages/site/Contact'
 import Interview from './pages/Interview'
 import Paywall from './pages/Paywall'
 import AIInterview from './pages/AIInterview'
@@ -22,7 +25,10 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Landing />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/services" element={<Services />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="/interview" element={<Interview />} />
         <Route path="/paywall" element={<Paywall />} />
         <Route path="/ai-interview" element={<AIInterview />} />
