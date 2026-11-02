@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import SiteLayout from './SiteLayout'
 import { STEPS, KINDS, INCLUDED, PRICE } from './content'
+import { StepFragment } from './Fragments'
 
 export default function Services() {
   useEffect(() => {
@@ -28,7 +29,7 @@ export default function Services() {
         <ol className="steps">
           {STEPS.map((s) => (
             <li key={s.title} className="step" data-rise>
-              <img src={s.img} alt={s.alt} width="600" height="1298" loading="lazy" className={s.crop ? 'shot-crop' : undefined} />
+              <StepFragment kind={s.frag} />
               <h3 className="step-title">{s.title}</h3>
               <p className="step-body">{s.body}</p>
               <p className="step-when">{s.when}</p>

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import SiteLayout from './SiteLayout'
+import { PaperFragment } from './Fragments'
 
 const PROMISES = [
   ['We won’t write it for you.', 'The guide plans and asks; it never puts words in your mouth. A letter is worth what you put into it.'],
@@ -29,8 +30,8 @@ export default function About() {
           <p className="ab-sign">Jin, founder</p>
         </div>
         <figure className="ab-shot" data-rise>
-          <img src="/landing/step-write.webp" alt="Writing a letter in While You’re Away" width="600" height="1298" loading="lazy" className="shot-crop" />
-          <figcaption>Writing a letter, with the companion close by.</figcaption>
+          <PaperFragment title="Week four" meta="While we’re apart · opened today" body="If you’re reading this, you’ve already done the hardest part once. I keep thinking about the bus stop, and how you said the rain was the reason your eyes were wet." />
+          <figcaption>A letter from Jae to Mina, on paper made from their story.</figcaption>
         </figure>
       </section>
 

@@ -85,10 +85,10 @@ export const FAQ = [
 ]
 
 export const STEPS = [
-  { when: 'After checkout, about 10 minutes', title: 'Tell us about your goodbye', body: 'A short conversation. Share the small things only you two know, or say “that’s enough” whenever you like.', img: '/landing/step-plan.webp', alt: 'The planning conversation on a phone' },
-  { when: 'Right after', title: 'We dress the box from your story', body: 'Paper, a stamp, a postmark from your first date, a letter shaped like your bus ticket. Switch off anything that isn’t you.', img: '/landing/step-dress.webp', alt: 'A decorated first letter with a postmark, a stamp and a bus ticket' },
-  { when: 'Any day before you part', title: 'You write the words', body: 'Every word is yours. Add a photo, your voice, a folded note. A companion helps when the words won’t come.', img: '/landing/step-write.webp', alt: 'Writing a letter on a phone', crop: true },
-  { when: 'While you’re apart', title: 'They open them one at a time', body: 'On their phone, on the right days, even offline. They can write back to every letter.', img: '/landing/step-open.webp', alt: 'An opened letter with a taped photo and a folded note' },
+  { when: 'After checkout, about 10 minutes', title: 'Tell us about your goodbye', body: 'A short conversation. Share the small things only you two know, or say “that’s enough” whenever you like.', frag: 'chat' },
+  { when: 'Right after', title: 'The counselor makes your paper', body: 'From your story: the paper, a stamp, a postmark from your first date, a letter shaped like your bus ticket. Switch off anything that isn’t you.', frag: 'paper' },
+  { when: 'Any day before you part', title: 'You write the words', body: 'Only what you want to say, or how today felt. Add a photo or your voice. A companion helps when the words won’t come.', frag: 'write' },
+  { when: 'While you’re apart', title: 'They open them one at a time', body: 'On their phone, on the right days, even offline. They can write back to every letter.', frag: 'box' },
 ]
 
 export const KINDS = [

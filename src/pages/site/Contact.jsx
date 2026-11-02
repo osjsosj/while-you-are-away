@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import SiteLayout from './SiteLayout'
 import { CONTACT, STEPS } from './content'
+import { StepFragment } from './Fragments'
 
 const TOPICS = ['A question before I start', 'Help with my letter box', 'A refund', 'Something else']
 
@@ -65,7 +66,7 @@ export default function Contact() {
         <ul className="ct-shots">
           {STEPS.map((s) => (
             <li key={s.title} data-rise>
-              <img src={s.img} alt={s.alt} width="600" height="1298" loading="lazy" className={s.crop ? 'shot-crop' : undefined} />
+              <StepFragment kind={s.frag} />
               <p>{s.title}</p>
             </li>
           ))}

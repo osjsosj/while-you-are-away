@@ -5,6 +5,8 @@ import SiteLayout from './SiteLayout'
 import TimeApart from './TimeApart'
 import { RHYTHMS } from './letters'
 import { BENEFITS, SAMPLE_LETTERS, REVIEWS, FAQ } from './content'
+import { ChatFragment, PaperFragment } from './Fragments'
+import { PAPER_STYLES } from './paper'
 
 const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 const fromIso = (s) => {
@@ -96,35 +98,47 @@ function Hero() {
   )
 }
 
-function Meaning() {
+const FIRST_LINE = 'Today you cried and said it was allergies. It hurt to watch, and I’m so glad I’m writing these.'
+
+function PaperStory() {
+  const [style, setStyle] = useState('night')
+  const [words, setWords] = useState(FIRST_LINE)
   return (
-    <section className="hm" aria-labelledby="hm-title">
-      <div className="hm-copy" data-rise>
-        <h2 id="hm-title" className="ws-h2">A goodbye you get to prepare</h2>
-        <p className="hm-say">Most goodbyes just happen to us: a last night, an airport bus, a phone call. This one you can get ready for.</p>
-        <p className="hm-body">
-          Gifts and good dinners rarely carry it. What stays are the words you didn’t say. While You’re Away gives those words a place,
-          and a time to arrive, so the weeks apart feel less like waiting.
-        </p>
+    <section className="hp" aria-labelledby="hp-title">
+      <div className="hp-head" data-rise>
+        <h2 id="hp-title" className="ws-h2">Letter paper made for the two of you</h2>
+        <p className="hp-say">A letter is special because everything in it was chosen for one person: the paper, the stamp, the words. Going digital shouldn’t lose that.</p>
       </div>
-      <figure className="hm-film" data-rise>
-        <video src="/landing/opening.mp4" poster="/landing/opening-poster.webp" autoPlay muted loop playsInline width="600" height="1298" aria-label="The short film that plays when they first open the letter box" />
-        <img src="/landing/step-dress.webp" alt="A first letter dressed with a postmark, a stamp and a bus ticket" width="600" height="1298" loading="lazy" />
-        <img src="/landing/step-open.webp" alt="An opened letter with a taped photo and a folded note" width="600" height="1298" loading="lazy" />
-        <figcaption>What they receive: a short film of your photos and voice, a letter dressed from your story, and the letters themselves.</figcaption>
-      </figure>
+      <ol className="hp-steps">
+        <li className="hp-step" data-rise>
+          <ChatFragment />
+          <div className="hp-gap" aria-hidden="true" />
+          <h3 className="hp-title">Talk about the two of you</h3>
+          <p>Tell the AI counselor about your relationship, and add the photos and voice notes you want in the box.</p>
+        </li>
+        <li className="hp-step" data-rise>
+          <PaperFragment style={style} />
+          <div className="seg seg--light hp-styles" role="group" aria-label="Paper">
+            {PAPER_STYLES.map((s) => (
+              <button key={s.id} type="button" aria-pressed={style === s.id} onClick={() => setStyle(s.id)}>{s.name}</button>
+            ))}
+          </div>
+          <h3 className="hp-title">It makes the paper from your story</h3>
+          <p>From what you share, the counselor composes the letter paper: the paper, a stamp, a postmark from the day you met, stickers from your story. Change anything that isn’t you.</p>
+        </li>
+        <li className="hp-step" data-rise>
+          <PaperFragment style={style} body={words} photo={false} title="Today" meta="The days before · D-9" />
+          <label className="hp-write">
+            <span>Try it: write a line</span>
+            <textarea rows="3" value={words} maxLength={280} onChange={(e) => setWords(e.target.value)} />
+          </label>
+          <h3 className="hp-title">You only write the words</h3>
+          <p>What you want to say, or how today felt. The paper is already yours, so you can just write.</p>
+        </li>
+      </ol>
     </section>
   )
 }
-
-const POSTMARK = (
-  <svg className="hb-postmark" viewBox="0 0 120 120" width="96" height="96" aria-hidden="true">
-    <circle cx="60" cy="60" r="52" fill="none" stroke="currentColor" strokeWidth="3" />
-    <circle cx="60" cy="60" r="40" fill="none" stroke="currentColor" strokeWidth="1.5" />
-    <text x="60" y="56" textAnchor="middle" fontSize="14" fontWeight="700" fill="currentColor">APR 2</text>
-    <text x="60" y="74" textAnchor="middle" fontSize="11" fill="currentColor">HAN RIVER</text>
-  </svg>
-)
 
 function Benefits() {
   const [which, setWhich] = useState('d9')
@@ -135,14 +149,9 @@ function Benefits() {
   return (
     <section className="hb" aria-labelledby="hb-title">
       <div className="hb-stage">
-        <article className={dressed ? 'hb-letter hb-letter--dressed' : 'hb-letter'} data-ui aria-live="polite">
-          {dressed && <span className="hb-tape" aria-hidden="true" />}
-          {dressed && POSTMARK}
-          <p className="hb-meta">{letter.meta}</p>
-          <h3 className="hb-ltitle">{letter.title}</h3>
-          <p className="hb-lbody">{letter.body}</p>
-          {dressed && <p className="hb-ticket" aria-hidden="true"><span>City bus · one way</span>Open when you miss me</p>}
-        </article>
+        <div aria-live="polite">
+          <PaperFragment style="night" dressed={dressed} title={letter.title} meta={letter.meta} body={letter.body} photo={false} />
+        </div>
       </div>
 
       <div className="hb-col">
@@ -224,7 +233,7 @@ export default function Home() {
   return (
     <SiteLayout>
       <Hero />
-      <Meaning />
+      <PaperStory />
       <Benefits />
       <Reviews />
       <Faq />
