@@ -103,7 +103,7 @@ button.wb-row:hover:not(:disabled) { border-color: rgba(233, 236, 242, 0.3); tra
 .wb-new { flex: none; padding: 3px 9px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 11px; font-weight: 600; }
 
 /* letter sheet */
-.wb-sheet-wrap { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center; background: rgba(5, 10, 25, 0.65); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); animation: wbFade 200ms ease both; }
+.wb-sheet-wrap { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center; background: rgba(5, 10, 25, 0.65); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
 .wb-sheet {
   position: relative;
   width: 100%;
@@ -114,7 +114,6 @@ button.wb-row:hover:not(:disabled) { border-color: rgba(233, 236, 242, 0.3); tra
   border-radius: 20px 20px 0 0;
   background: var(--paper);
   color: var(--ink);
-  animation: wbUp 380ms cubic-bezier(.32,.72,0,1) both;
 }
 @keyframes wbUp { from { transform: translateY(40px); opacity: 0.4; } to { transform: none; opacity: 1; } }
 @keyframes wbFade { from { opacity: 0; } to { opacity: 1; } }
@@ -212,3 +211,20 @@ button.wb-row:hover:not(:disabled) { border-color: rgba(233, 236, 242, 0.3); tra
 .wb-song:hover { border-color: rgba(233, 236, 242, 0.35); }
 .wb-song > span { display: flex; flex-direction: column; gap: 2px; }
 .wb-song .dc-motif { flex: none; border-radius: 50%; background: #FBF6EA; padding: 4px; }
+
+/* Motion: the seal breaking, the envelope opening */
+.wb-seal-card { position: relative; }
+.wb-seal-burst { position: absolute; left: 50%; width: 96px; height: 96px; margin-left: -48px; border-radius: 50%; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle, rgba(248, 210, 126, 0.9) 0%, rgba(240, 179, 65, 0.35) 45%, transparent 70%); }
+.wb-seal-wrap { position: relative; display: flex; justify-content: center; }
+.wb-seal-wrap > .wb-seal-burst { top: 28px; }
+.wb-env { position: absolute; left: 50%; top: 50%; width: min(280px, 72vw); aspect-ratio: 280 / 180; margin: 0; translate: -50% -50%;
+  border-radius: 6px; background: linear-gradient(180deg, #EEE8D8, #E4DCC6); box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45), 0 0 80px rgba(240, 179, 65, 0.18);
+  perspective: 700px; pointer-events: none; }
+.wb-env::before { content: ''; position: absolute; inset: 0; border-radius: 6px;
+  background: linear-gradient(to top right, transparent 49.6%, rgba(27, 37, 54, 0.1) 50%, transparent 50.4%), linear-gradient(to top left, transparent 49.6%, rgba(27, 37, 54, 0.1) 50%, transparent 50.4%); }
+.wb-env-flap { position: absolute; left: 0; top: 0; width: 100%; height: 61%; transform-origin: 50% 0; backface-visibility: visible; overflow: visible; }
+.wb-env-flap path { fill: #F6F3EA; stroke: rgba(27, 37, 54, 0.12); stroke-width: 1; }
+.wb-env-seal { position: absolute; left: 50%; top: 57%; width: 34px; height: 34px; translate: -50% -50%; border-radius: 50%;
+  background: radial-gradient(circle at 38% 34%, #F8D27E 0%, #F0B341 45%, #C98A1E 100%); box-shadow: 0 0 24px rgba(240, 179, 65, 0.5); }
+.wb-sheet-wrap > .wb-sheet { z-index: 1; }

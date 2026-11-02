@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { motion, AnimatePresence, MotionConfig, useAnimate, useReducedMotion } from 'motion/react'
 import { localISODate, daysBetween, formatLong } from '../utils/diary'
 import Dog from '../components/pets/Dog'
 import Cat from '../components/pets/Cat'
@@ -71,6 +72,7 @@ export default function Box() {
   const [sealed, setSealed] = useState(() => !read(`wya_seen_${token}`))
   const [playing, setPlaying] = useState(false)
   const [filmSeen, setFilmSeen] = useState(() => !!read(`wya_film_${token}`))
+  const [firstOpen, setFirstOpen] = useState(false)
 
   useEffect(() => {
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {})
@@ -110,6 +112,7 @@ export default function Box() {
   }
 
   return (
+    <MotionConfig reducedMotion="user">
     <div className="wb" style={box.accent ? { '--light': box.accent } : undefined}>
       <Header box={box} today={data.today || localISODate()} offline={status === 'offline'} />
       <div className="wb-tabs" role="tablist" aria-label="Sections">
@@ -117,13 +120,20 @@ export default function Box() {
         <button type="button" role="tab" aria-selected={tab === 'story'} className="wb-tab" onClick={() => setTab('story')}>Our story</button>
       </div>
       <main className="wb-main">
-        {tab === 'letters'
-          ? <><OurSky ids={opened} /><Letters items={items} openSet={openSet} decor={box.decor} onOpen={(id) => { setOpenId(id); markOpened(id) }} /></>
-          : <Story box={box} token={token} onFilm={film ? () => setPlaying(true) : null} />}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div key={tab} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.28, ease: [0.2, 0.7, 0.2, 1] }}>
+            {tab === 'letters'
+              ? <><OurSky ids={opened} /><Letters items={items} openSet={openSet} decor={box.decor} onOpen={(id) => { setFirstOpen(!openSet.has(id)); setOpenId(id); markOpened(id) }} /></>
+              : <Story box={box} token={token} onFilm={film ? () => setPlaying(true) : null} />}
+          </motion.div>
+        </AnimatePresence>
       </main>
       <InstallHint token={token} />
+      <AnimatePresence>
       {current && (
         <LetterSheet
+          key={current.id}
+          envelope={firstOpen}
           item={current}
           replies={replies.filter((r) => r.item_id === current.id)}
           toName={box.toName}
@@ -138,7 +148,9 @@ export default function Box() {
           }}
         />
       )}
+      </AnimatePresence>
     </div>
+    </MotionConfig>
   )
 }
 
@@ -157,7 +169,22 @@ export function Seal({ box, onOpen, voiceUrl = null }) {
   const [listening, setListening] = useState(false)
   const audio = useRef(null)
   const done = useRef(false)
-  const finish = () => { if (done.current) return; done.current = true; audio.current?.pause(); onOpen() }
+  const [scope, animate] = useAnimate()
+  const reduce = useReducedMotion()
+  // the seal presses, breaks into light, and the card lifts away before the box opens
+  const finish = async () => {
+    if (done.current) return
+    done.current = true
+    audio.current?.pause()
+    if (reduce || !scope.current) return onOpen()
+    try {
+      await animate('.wb-seal', { scale: 0.86 }, { duration: 0.12, ease: 'easeOut' })
+      animate('.wb-seal-burst', { scale: [0.6, 5], opacity: [0.9, 0] }, { duration: 0.75, ease: [0.2, 0.7, 0.2, 1] })
+      animate('.wb-seal', { scale: 1.5, opacity: 0 }, { duration: 0.4, ease: 'easeOut' })
+      await animate(scope.current, { y: -28, opacity: 0 }, { duration: 0.55, delay: 0.15, ease: [0.4, 0, 0.2, 1] })
+    } catch { /* unmounted mid-way */ }
+    onOpen()
+  }
   const tap = () => {
     if (!voiceUrl || listening) return finish()
     setListening(true)
@@ -168,14 +195,17 @@ export function Seal({ box, onOpen, voiceUrl = null }) {
   }
   return (
     <div className="wb wb-center wb-seal-screen">
-      <div className="wb-seal-card">
+      <div className="wb-seal-card" ref={scope}>
         {voiceUrl && <audio ref={audio} src={voiceUrl} preload="auto" />}
         <p className="wb-quiet">From {box.fromName || 'someone who loves you'}</p>
         <h1>{box.appName}</h1>
         {box.welcome && <p className="wb-welcome">{box.welcome}</p>}
-        <button type="button" className={`wb-seal${listening ? ' is-listening' : ''}`} onClick={tap} aria-label={voiceUrl ? `Open your letter box and hear ${box.fromName || 'a voice note'}` : 'Open your letter box'}>
-          <span aria-hidden="true" />
-        </button>
+        <div className="wb-seal-wrap">
+          <button type="button" className={`wb-seal${listening ? ' is-listening' : ''}`} onClick={tap} aria-label={voiceUrl ? `Open your letter box and hear ${box.fromName || 'a voice note'}` : 'Open your letter box'}>
+            <span aria-hidden="true" />
+          </button>
+          <span className="wb-seal-burst" aria-hidden="true" />
+        </div>
         {listening
           ? <p className="wb-quiet wb-listening">{box.fromName || 'They'} has something to say… <button type="button" onClick={finish}>Open now</button></p>
           : <p className="wb-quiet">{voiceUrl ? `Tap the seal. ${box.fromName || 'Someone'} has something to say.` : 'Tap the seal to open'}</p>}
@@ -218,14 +248,14 @@ export function Letters({ items, openSet, onOpen, decor = null }) {
   return (
     <>
       {fresh.length > 0 && (
-        <section className="wb-section" aria-labelledby="wb-new">
+        <motion.section className="wb-section" aria-labelledby="wb-new" {...rise(0)}>
           <h2 id="wb-new">New for you</h2>
           <div className="wb-list">
             {fresh.map((i) => <Row key={i.id} item={i} isNew onOpen={onOpen} ticket={i.id === ticketId ? decor.ticket : null} />)}
           </div>
-        </section>
+        </motion.section>
       )}
-      {ORDER.map((sec) => {
+      {ORDER.map((sec, n) => {
         const all = items.filter((i) => i.section === sec)
         if (!all.length) return null
         const open = all.filter((i) => i.open && !freshIds.has(i.id))
@@ -234,7 +264,7 @@ export function Letters({ items, openSet, onOpen, decor = null }) {
         if (!open.length && !next && !(sec === 'before' && locked.length)) return null
         const shown = sec === 'before' || sec === 'scheduled' ? [...open].reverse() : open
         return (
-          <section key={sec} className="wb-section" aria-labelledby={`wb-${sec}`}>
+          <motion.section key={sec} className="wb-section" aria-labelledby={`wb-${sec}`} {...rise(n + 1)}>
             <h2 id={`wb-${sec}`}>{SECTION_TITLES[sec]}</h2>
             <div className="wb-list">
               {shown.map((i) => <Row key={i.id} item={i} isNew={!openSet.has(i.id) && !QUIET.has(i.section)} onOpen={onOpen} ticket={i.id === ticketId ? decor.ticket : null} />)}
@@ -251,12 +281,20 @@ export function Letters({ items, openSet, onOpen, decor = null }) {
             {sec === 'scheduled' && locked.length > 1 && <p className="wb-note">{locked.length - 1} more after that.</p>}
             {sec === 'occasions' && locked.length > 1 && <p className="wb-note">{locked.length - 1} more special {locked.length - 1 === 1 ? 'day' : 'days'} to come.</p>}
             {sec === 'before' && locked.length > 0 && <p className="wb-note">{all.length > locked.length ? 'More are on their way.' : 'The first one arrives soon.'}</p>}
-          </section>
+          </motion.section>
         )
       })}
     </>
   )
 }
+
+// sections settle in one after another when the box opens
+const rise = (n) => ({
+  initial: { opacity: 0, y: 18 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, delay: Math.min(n, 6) * 0.07, ease: [0.2, 0.7, 0.2, 1] },
+})
+const press = { whileTap: { scale: 0.98 }, transition: { type: 'spring', stiffness: 500, damping: 30 } }
 
 const SECTION_TITLES = {
   tonight: 'Tonight',
@@ -271,25 +309,28 @@ const SECTION_TITLES = {
 function Row({ item, isNew, onOpen, ticket = null }) {
   if (ticket) {
     return (
-      <button type="button" className="wb-row wb-row--ticket" onClick={() => onOpen(item.id)} disabled={item.empty} aria-label={`${item.label}${isNew ? ', new' : ''}`}>
+      <motion.button {...press} type="button" className="wb-row wb-row--ticket" onClick={() => onOpen(item.id)} disabled={item.empty} aria-label={`${item.label}${isNew ? ', new' : ''}`}>
         <TicketBanner ticket={{ ...ticket, title: item.label }} compact />
-      </button>
+      </motion.button>
     )
   }
   const sub = item.section === 'before' ? item.stamp : item.section === 'anytime' ? item.hint || 'Whenever you need it' : item.section === 'never' ? item.hint || '' : item.opensOn ? `Arrived ${formatLong(item.opensOn)}` : ''
   const title = item.section === 'before' && item.label === item.stamp ? (item.letter || '').split('\n')[0].slice(0, 80) || item.label : item.label
   return (
-    <button type="button" className={`wb-row${isNew ? ' wb-row--new' : ''}`} onClick={() => onOpen(item.id)} disabled={item.empty}>
+    <motion.button {...press} type="button" className={`wb-row${isNew ? ' wb-row--new' : ''}`} onClick={() => onOpen(item.id)} disabled={item.empty}>
       <div style={{ minWidth: 0 }}>
         <p className="wb-row-title">{title}</p>
         {sub && <p className="wb-row-sub">{sub}</p>}
       </div>
       {isNew ? <span className="wb-new">New</span> : <ChevronIcon />}
-    </button>
+    </motion.button>
   )
 }
 
-export function LetterSheet({ item, replies, toName, fromName, signature = null, decor = null, showPostmark = false, onClose, onReply, preview = false }) {
+export function LetterSheet({ item, replies, toName, fromName, signature = null, decor = null, showPostmark = false, onClose, onReply, preview = false, envelope = false }) {
+  const reduce = useReducedMotion()
+  // a first opening plays the envelope: the flap lifts, then the paper rises out of it
+  const [stage, setStage] = useState(envelope && !reduce ? 'envelope' : 'paper')
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -320,8 +361,27 @@ export function LetterSheet({ item, replies, toName, fromName, signature = null,
   const meta = item.section === 'before' ? `${item.stamp} · ${item.date}` : item.opensOn ? formatLong(item.opensOn) : SECTION_TITLES[item.section] || ''
 
   return (
-    <div className="wb-sheet-wrap" role="dialog" aria-modal="true" aria-labelledby="wb-sheet-title" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <article className={`wb-sheet wb-sheet--${style}`}>
+    <motion.div className="wb-sheet-wrap" role="dialog" aria-modal="true" aria-labelledby="wb-sheet-title" onClick={(e) => e.target === e.currentTarget && onClose()}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.25, delay: 0.1 } }} transition={{ duration: 0.25 }}>
+      {envelope && !reduce && (
+        <motion.div className="wb-env" aria-hidden="true"
+          initial={{ opacity: 0, scale: 0.8, y: 30 }}
+          animate={stage === 'envelope' ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, y: 160, scale: 0.92 }}
+          transition={stage === 'envelope' ? { type: 'spring', stiffness: 220, damping: 22 } : { duration: 0.32, ease: [0.5, 0, 0.75, 0] }}>
+          <motion.svg className="wb-env-flap" viewBox="0 0 280 110" preserveAspectRatio="none"
+            initial={{ rotateX: 0 }} animate={{ rotateX: 180 }}
+            transition={{ delay: 0.45, duration: 0.5, ease: [0.6, 0, 0.3, 1] }}
+            onAnimationComplete={() => setStage('paper')}>
+            <path d="M0 0 H280 L140 104 Z" />
+          </motion.svg>
+          <span className="wb-env-seal" />
+        </motion.div>
+      )}
+      <motion.article className={`wb-sheet wb-sheet--${style}`}
+        initial={envelope && !reduce ? { opacity: 0, y: '30vh', scale: 0.9 } : { opacity: 0, y: 48 }}
+        animate={stage === 'paper' ? { opacity: 1, y: 0, scale: 1 } : undefined}
+        exit={{ opacity: 0, y: 60, transition: { duration: 0.28, ease: [0.4, 0, 1, 1] } }}
+        transition={{ type: 'spring', stiffness: 170, damping: 24, mass: 0.9 }}>
         <button type="button" className="wb-close" onClick={onClose} aria-label="Close letter">
           <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 3l10 10M13 3L3 13" /></svg>
         </button>
@@ -362,8 +422,8 @@ export function LetterSheet({ item, replies, toName, fromName, signature = null,
           {!error && toName && <p className="wb-quiet wb-small">{fromName || 'They'} will see your reply.</p>}
         </section>
         )}
-      </article>
-    </div>
+      </motion.article>
+    </motion.div>
   )
 }
 
