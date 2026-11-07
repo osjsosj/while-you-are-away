@@ -11,6 +11,7 @@ import { filmFrom } from '../utils/film'
 import { postmarkLetterId } from '../utils/decor'
 import LetterPaper from '../components/LetterPaper'
 import { TicketBanner, Motif } from '../components/Decor'
+import LetterApp from './box/LetterApp'
 import './box.css'
 
 /* The recipient's letter box, opened from the link the sender hands over. */
@@ -24,6 +25,12 @@ function useBox(token) {
   const [status, setStatus] = useState(data ? 'cached' : 'loading')
 
   const load = useCallback(async () => {
+    // local development only: /b/demo renders a sample box without the server
+    if (import.meta.env.DEV && token.startsWith('demo')) {
+      const { demoBox } = await import('./box/demoBox')
+      setData(demoBox(token))
+      return setStatus('live')
+    }
     try {
       const res = await fetch(`/api/box?token=${encodeURIComponent(token)}&today=${localISODate()}`)
       if (res.status === 404) return setStatus('missing')
@@ -44,6 +51,9 @@ function useBox(token) {
   }, [load])
 
   const post = async (payload) => {
+    if (import.meta.env.DEV && token.startsWith('demo')) {
+      return { reply: { item_id: payload.itemId, body: payload.body, created_at: new Date().toISOString() } }
+    }
     const res = await fetch(`/api/box?token=${encodeURIComponent(token)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -67,7 +77,6 @@ export default function Box() {
   const { token } = useParams()
   const { data, status, post, patch } = useBox(token)
   const [openId, setOpenId] = useState(null)
-  const [tab, setTab] = useState('letters')
   const [sealed, setSealed] = useState(() => !read(`wya_seen_${token}`))
   const [playing, setPlaying] = useState(false)
   const [filmSeen, setFilmSeen] = useState(() => !!read(`wya_film_${token}`))
@@ -109,18 +118,21 @@ export default function Box() {
     post({ action: 'open', itemId: id }).catch(() => {})
   }
 
+  const today = data.today || localISODate()
   return (
-    <div className="wb" style={box.accent ? { '--light': box.accent } : undefined}>
-      <Header box={box} today={data.today || localISODate()} offline={status === 'offline'} />
-      <div className="wb-tabs" role="tablist" aria-label="Sections">
-        <button type="button" role="tab" aria-selected={tab === 'letters'} className="wb-tab" onClick={() => setTab('letters')}>Letters</button>
-        <button type="button" role="tab" aria-selected={tab === 'story'} className="wb-tab" onClick={() => setTab('story')}>Our story</button>
-      </div>
-      <main className="wb-main">
-        {tab === 'letters'
-          ? <><OurSky ids={opened} /><Letters items={items} openSet={openSet} decor={box.decor} onOpen={(id) => { setOpenId(id); markOpened(id) }} /></>
-          : <Story box={box} token={token} onFilm={film ? () => setPlaying(true) : null} />}
-      </main>
+    <div className="wb wb--app" style={box.accent ? { '--light': box.accent } : undefined}>
+      <LetterApp
+        box={box}
+        items={items}
+        replies={replies}
+        opened={opened}
+        today={today}
+        offline={status === 'offline'}
+        film={film}
+        onFilm={film ? () => setPlaying(true) : null}
+        onOpen={(id) => { setOpenId(id); markOpened(id) }}
+        story={<Story box={box} token={token} today={today} />}
+      />
       <InstallHint token={token} />
       {current && (
         <LetterSheet

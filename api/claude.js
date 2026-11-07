@@ -51,6 +51,8 @@ Today is ${str(today)}.
 - The day they part: ${str(p.startDate) || 'not given'}
 - The day they meet again: ${str(p.endDate) || 'no set date'}
 - Situation in their words: ${str(p.situation, 300) || 'not given'}
+- Letters they said they'd like to write: ${Array.isArray(p.letterWishes) && p.letterWishes.length ? p.letterWishes.map((w) => str(w, 40)).join(', ') : 'undecided (help them choose)'}
+Don't ask again for what is already known; start from it.
 
 ## Your job, in this order
 1. Understand the goodbye. Ask what is happening (basic training, deployment, studying abroad, a move, a wedding, a new job...), how often they will be able to talk while apart (not at all, sometimes, every day), and anything that makes this goodbye particular.

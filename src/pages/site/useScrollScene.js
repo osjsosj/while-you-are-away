@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useSyncExternalStore } from 'react'
 
 const QUERY = '(prefers-reduced-motion: reduce)'
 const subscribe = (listener) => {
@@ -13,13 +13,11 @@ export function useReducedMotion() {
 }
 
 const clamp = (n) => Math.max(0, Math.min(1, n))
-const ease = (n) => n * n * (3 - 2 * n)
 
 /** Native scrolling owns the page. Only the visible scene schedules a single frame. */
 export default function useScrollScene() {
   const scene = useRef(null)
   const reduced = useReducedMotion()
-  const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
     const node = scene.current
@@ -30,11 +28,7 @@ export default function useScrollScene() {
       frame = 0
       const rect = node.getBoundingClientRect()
       const p = clamp(-rect.top / Math.max(1, rect.height - window.innerHeight))
-      const opening = window.matchMedia('(min-width: 901px)').matches ? ease(clamp((p - 0.05) / 0.48)) : 0
-      node.style.setProperty('--scroll-open', opening.toFixed(4))
-      setExpanded(opening > 0.9)
       node.style.setProperty('--journey-progress', p.toFixed(4))
-      node.style.setProperty('--journey-travel', `${(p * 36).toFixed(2)}px`)
     }
     const schedule = () => {
       if (visible && !frame) frame = requestAnimationFrame(update)
@@ -55,5 +49,5 @@ export default function useScrollScene() {
     }
   }, [reduced])
 
-  return { scene, expanded: reduced || expanded }
+  return { scene }
 }

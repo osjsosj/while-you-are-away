@@ -62,7 +62,7 @@ export function recipientView(draft, today) {
   const items = allItems(draft).map((it) => {
     const open = !it.opensOn || it.opensOn <= today
     const base = { id: it.id, section: it.section, label: it.label, hint: it.hint || '', emoji: it.emoji || '', opensOn: it.opensOn, open }
-    if (it.section === 'before') Object.assign(base, { stamp: it.stamp, date: it.date })
+    if (it.section === 'before') Object.assign(base, { stamp: it.stamp, date: it.date, writtenOn: it.writtenOn })
     if (!open) return base
     const c = it.content || {}
     const out = { ...base, letter: c.letter || '', prompt: c.prompt || '', note: typeof c.note === 'string' ? c.note.slice(0, 240) : '' }
