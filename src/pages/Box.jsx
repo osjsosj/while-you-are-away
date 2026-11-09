@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { localISODate, daysBetween, formatLong } from '../utils/diary'
+import { localISODate, formatLong } from '../utils/diary'
 import Dog from '../components/pets/Dog'
 import Cat from '../components/pets/Cat'
 import FilmPlayer from '../components/FilmPlayer'
@@ -10,8 +10,10 @@ import { moonOn } from '../utils/sky'
 import { filmFrom } from '../utils/film'
 import { postmarkLetterId } from '../utils/decor'
 import LetterPaper from '../components/LetterPaper'
-import { TicketBanner, Motif } from '../components/Decor'
+import { Motif } from '../components/Decor'
 import LetterApp from './box/LetterApp'
+import Mascot, { Says } from '../components/Mascot'
+import { loadMove } from '../utils/mascot'
 import './box.css'
 
 /* The recipient's letter box, opened from the link the sender hands over. */
@@ -92,7 +94,7 @@ export default function Box() {
   if (!data) {
     return status === 'offline-empty'
       ? <Message title="You’re offline" body="Open this link once while connected, and it will be here even without signal." />
-      : <div className="wb wb-center" aria-busy="true"><span className="wb-spinner" aria-label="Loading" /></div>
+      : <div className="wb wb-center" aria-busy="true"><span role="img" aria-label="Loading"><Mascot move="walk" size={120} /></span></div>
   }
 
   const { box, items, replies = [], opened = [] } = data
@@ -131,7 +133,7 @@ export default function Box() {
         film={film}
         onFilm={film ? () => setPlaying(true) : null}
         onOpen={(id) => { setOpenId(id); markOpened(id) }}
-        story={<Story box={box} token={token} today={today} />}
+        story={<><OurSky ids={opened} /><Story box={box} token={token} today={today} /></>}
       />
       <InstallHint token={token} />
       {current && (
@@ -165,11 +167,20 @@ function Message({ title, body }) {
   )
 }
 
+/** The first open: Perigan has brought the box. Tap him and he sets the letter down. */
 export function Seal({ box, onOpen, voiceUrl = null }) {
   const [listening, setListening] = useState(false)
+  const [dropping, setDropping] = useState(false)
   const audio = useRef(null)
   const done = useRef(false)
-  const finish = () => { if (done.current) return; done.current = true; audio.current?.pause(); onOpen() }
+  const finish = () => {
+    if (done.current) return
+    done.current = true
+    audio.current?.pause()
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return onOpen()
+    setDropping(true)
+    setTimeout(onOpen, 1900) // the length of the put-down move
+  }
   const tap = () => {
     if (!voiceUrl || listening) return finish()
     setListening(true)
@@ -178,6 +189,8 @@ export function Seal({ box, onOpen, voiceUrl = null }) {
     a.play().catch(finish)
     setTimeout(finish, 15000) // never keep them waiting on a long note
   }
+  useEffect(() => { loadMove('putdown').catch(() => {}) }, []) // ready before they tap
+  const from = box.fromName || 'Someone'
   return (
     <div className="wb wb-center wb-seal-screen">
       <div className="wb-seal-card">
@@ -185,88 +198,13 @@ export function Seal({ box, onOpen, voiceUrl = null }) {
         <p className="wb-quiet">From {box.fromName || 'someone who loves you'}</p>
         <h1>{box.appName}</h1>
         {box.welcome && <p className="wb-welcome">{box.welcome}</p>}
-        <button type="button" className={`wb-seal${listening ? ' is-listening' : ''}`} onClick={tap} aria-label={voiceUrl ? `Open your letter box and hear ${box.fromName || 'a voice note'}` : 'Open your letter box'}>
-          <span aria-hidden="true" />
+        {!dropping && <Says tail="down" className="wb-seal-says">{listening ? `${from} has something to say…` : voiceUrl ? `Tap me. ${from} has something to say.` : 'This is for you. Tap me to open it.'}</Says>}
+        <button type="button" className="wb-perigan" onClick={tap} disabled={dropping} aria-label={voiceUrl ? `Open your letter box and hear ${box.fromName || 'a voice note'}` : 'Open your letter box'}>
+          <Mascot move={dropping ? 'putdown' : 'idle'} size={190} />
         </button>
-        {listening
-          ? <p className="wb-quiet wb-listening">{box.fromName || 'They'} has something to say… <button type="button" onClick={finish}>Open now</button></p>
-          : <p className="wb-quiet">{voiceUrl ? `Tap the seal. ${box.fromName || 'Someone'} has something to say.` : 'Tap the seal to open'}</p>}
+        {listening && !dropping && <p className="wb-quiet wb-listening"><button type="button" onClick={finish}>Open now</button></p>}
       </div>
     </div>
-  )
-}
-
-export function Header({ box, today, offline }) {
-  let line = ''
-  if (box.partDate && today < box.partDate) {
-    const n = daysBetween(today, box.partDate)
-    line = n === 1 ? 'Your letters start arriving tomorrow.' : `Your letters start arriving in ${n} days.`
-  } else if (box.returnDate && today < box.returnDate) {
-    const n = daysBetween(today, box.returnDate)
-    line = `${n} ${n === 1 ? 'day' : 'days'} until we meet again`
-  } else if (box.returnDate && today === box.returnDate) {
-    line = 'Today is the day.'
-  }
-  return (
-    <header className="wb-header">
-      <p className="wb-quiet">Letters from {box.fromName || 'me'}</p>
-      <h1>{box.appName}</h1>
-      {box.welcome && <p className="wb-welcome">{box.welcome}</p>}
-      {line && <p className="wb-count"><span className="wb-dot" aria-hidden="true" />{line}</p>}
-      {offline && <p className="wb-offline">Offline. Showing what was saved on this phone.</p>}
-    </header>
-  )
-}
-
-const ORDER = ['tonight', 'before', 'scheduled', 'never', 'anytime', 'occasions', 'last']
-const TIMED = new Set(['tonight', 'scheduled', 'occasions', 'last'])
-const QUIET = new Set(['anytime', 'never']) // open any time, never flagged as "new"
-
-export function Letters({ items, openSet, onOpen, decor = null }) {
-  const ticketId = decor?.ticket?.letterId
-  const fresh = items.filter((i) => i.open && !i.empty && !openSet.has(i.id) && !QUIET.has(i.section))
-  const freshIds = new Set(fresh.map((i) => i.id))
-
-  return (
-    <>
-      {fresh.length > 0 && (
-        <section className="wb-section" aria-labelledby="wb-new">
-          <h2 id="wb-new">New for you</h2>
-          <div className="wb-list">
-            {fresh.map((i) => <Row key={i.id} item={i} isNew onOpen={onOpen} ticket={i.id === ticketId ? decor.ticket : null} />)}
-          </div>
-        </section>
-      )}
-      {ORDER.map((sec) => {
-        const all = items.filter((i) => i.section === sec)
-        if (!all.length) return null
-        const open = all.filter((i) => i.open && !freshIds.has(i.id))
-        const locked = all.filter((i) => !i.open)
-        const next = TIMED.has(sec) ? locked[0] : null
-        if (!open.length && !next && !(sec === 'before' && locked.length)) return null
-        const shown = sec === 'before' || sec === 'scheduled' ? [...open].reverse() : open
-        return (
-          <section key={sec} className="wb-section" aria-labelledby={`wb-${sec}`}>
-            <h2 id={`wb-${sec}`}>{SECTION_TITLES[sec]}</h2>
-            <div className="wb-list">
-              {shown.map((i) => <Row key={i.id} item={i} isNew={!openSet.has(i.id) && !QUIET.has(i.section)} onOpen={onOpen} ticket={i.id === ticketId ? decor.ticket : null} />)}
-              {next && (
-                <div className="wb-row wb-row--locked">
-                  <div>
-                    <p className="wb-row-title">{next.label}</p>
-                    <p className="wb-row-sub">{sec === 'last' ? `Sealed until ${formatLong(next.opensOn)}` : `Opens ${formatLong(next.opensOn)}`}</p>
-                  </div>
-                  <LockIcon />
-                </div>
-              )}
-            </div>
-            {sec === 'scheduled' && locked.length > 1 && <p className="wb-note">{locked.length - 1} more after that.</p>}
-            {sec === 'occasions' && locked.length > 1 && <p className="wb-note">{locked.length - 1} more special {locked.length - 1 === 1 ? 'day' : 'days'} to come.</p>}
-            {sec === 'before' && locked.length > 0 && <p className="wb-note">{all.length > locked.length ? 'More are on their way.' : 'The first one arrives soon.'}</p>}
-          </section>
-        )
-      })}
-    </>
   )
 }
 
@@ -280,31 +218,16 @@ const SECTION_TITLES = {
   last: 'The day we meet again',
 }
 
-function Row({ item, isNew, onOpen, ticket = null }) {
-  if (ticket) {
-    return (
-      <button type="button" className="wb-row wb-row--ticket" onClick={() => onOpen(item.id)} disabled={item.empty} aria-label={`${item.label}${isNew ? ', new' : ''}`}>
-        <TicketBanner ticket={{ ...ticket, title: item.label }} compact />
-      </button>
-    )
-  }
-  const sub = item.section === 'before' ? item.stamp : item.section === 'anytime' ? item.hint || 'Whenever you need it' : item.section === 'never' ? item.hint || '' : item.opensOn ? `Arrived ${formatLong(item.opensOn)}` : ''
-  const title = item.section === 'before' && item.label === item.stamp ? (item.letter || '').split('\n')[0].slice(0, 80) || item.label : item.label
-  return (
-    <button type="button" className={`wb-row${isNew ? ' wb-row--new' : ''}`} onClick={() => onOpen(item.id)} disabled={item.empty}>
-      <div style={{ minWidth: 0 }}>
-        <p className="wb-row-title">{title}</p>
-        {sub && <p className="wb-row-sub">{sub}</p>}
-      </div>
-      {isNew ? <span className="wb-new">New</span> : <ChevronIcon />}
-    </button>
-  )
-}
-
 export function LetterSheet({ item, replies, toName, fromName, signature = null, decor = null, showPostmark = false, onClose, onReply, preview = false }) {
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [sent, setSent] = useState(0) // bumps on each reply sent, so the pelican flies off again
+  useEffect(() => {
+    if (!sent) return
+    const t = setTimeout(() => setSent(0), 2600)
+    return () => clearTimeout(t)
+  }, [sent])
 
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
@@ -321,6 +244,7 @@ export function LetterSheet({ item, replies, toName, fromName, signature = null,
     try {
       await onReply(text.trim())
       setText('')
+      setSent((n) => n + 1)
     } catch {
       setError('Couldn’t send. Check your connection and try again; your words are still here.')
     } finally {
@@ -371,7 +295,13 @@ export function LetterSheet({ item, replies, toName, fromName, signature = null,
           <textarea id="wb-reply-input" className="wb-textarea" rows={4} value={text} onChange={(e) => setText(e.target.value)} placeholder={`Write something back${fromName ? ` to ${fromName}` : ''}…`} />
           <button type="button" className="wb-btn" onClick={send} disabled={busy || !text.trim()}>{busy ? 'Sending…' : 'Send reply'}</button>
           {error && <p className="wb-error" role="alert">{error}</p>}
-          {!error && toName && <p className="wb-quiet wb-small">{fromName || 'They'} will see your reply.</p>}
+          {sent > 0 && (
+            <p className="wb-sent" role="status" key={sent}>
+              <Mascot move="fly" loop size={64} className="mascot-away" />
+              Your reply is on its way{fromName ? ` to ${fromName}` : ''}.
+            </p>
+          )}
+          {!error && !sent && toName && <p className="wb-quiet wb-small">{fromName || 'They'} will see your reply.</p>}
         </section>
         )}
       </article>
@@ -379,7 +309,7 @@ export function LetterSheet({ item, replies, toName, fromName, signature = null,
   )
 }
 
-export function Story({ box, token, today: day, onFilm = null }) {
+export function Story({ box, token, today: day }) {
   const petKey = `wya_pet_${token}`
   const [pet, setPet] = useState(() => read(petKey) || { feedCount: 0, lastFed: null })
   const [now] = useState(() => Date.now())
@@ -393,14 +323,6 @@ export function Story({ box, token, today: day, onFilm = null }) {
   const today = day || localISODate()
   return (
     <>
-      {onFilm && (
-        <section className="wb-section">
-          <button type="button" className="wb-film" onClick={onFilm}>
-            <span className="wb-film-play" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l9-5.5z" /></svg></span>
-            <span><span className="wb-row-title">Watch our film again</span><span className="wb-row-sub">The one that opened your letter box</span></span>
-          </button>
-        </section>
-      )}
       {box.decor?.song && (
         <section className="wb-section" aria-labelledby="wb-song">
           <h2 id="wb-song">Our song</h2>
@@ -438,7 +360,7 @@ export function Story({ box, token, today: day, onFilm = null }) {
           </ol>
         </section>
       )}
-      {!onFilm && !box.decor?.song && !box.partDate && !box.pet && box.timeline.length === 0 && <p className="wb-note">Nothing here yet.</p>}
+      {!box.decor?.song && !box.partDate && !box.pet && box.timeline.length === 0 && <p className="wb-note">Nothing here yet.</p>}
     </>
   )
 }
@@ -460,14 +382,6 @@ function InstallHint({ token }) {
     </aside>
   )
 }
-
-const LockIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="7" width="10" height="7" rx="1.5" /><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" /></svg>
-)
-const ChevronIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 3l5 5-5 5" /></svg>
-)
-
 
 /** The constellation of letters opened so far. */
 export function OurSky({ ids, label }) {

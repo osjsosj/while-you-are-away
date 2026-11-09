@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDraft } from '../utils/storage'
 import { recipientView, addDays } from '../utils/boxModel'
 import { useMediaUrl } from '../utils/media'
 import { daysBetween, formatLong, localISODate } from '../utils/diary'
-import { Header, Letters, LetterSheet, Seal, Story, OurSky } from './Box'
+import { LetterSheet, Seal, Story, OurSky } from './Box'
+import LetterApp from './box/LetterApp'
 import FilmPlayer from '../components/FilmPlayer'
 import { normalizeFilm } from '../utils/film'
 import { signedUrl } from '../utils/media'
@@ -26,12 +27,25 @@ export default function Preview() {
   const day = addDays(first, Math.min(offset, span))
 
   const [sealed, setSealed] = useState(true)
-  const [tab, setTab] = useState('letters')
   const [openId, setOpenId] = useState(null)
   const [opened, setOpened] = useState(() => new Set())
 
   const { box, items, film } = useMemo(() => recipientView(draft, day), [draft, day])
   const [playing, setPlaying] = useState(null)
+  // the Photos tab needs viewable URLs; the letter sheet resolves its own
+  const [photoUrls, setPhotoUrls] = useState({})
+  useEffect(() => {
+    let live = true
+    const refs = [...new Set(items.map((i) => i.photo).filter((p) => typeof p === 'string'))]
+    Promise.all(refs.map(async (r) => [r, await signedUrl(r).catch(() => null)])).then((pairs) => {
+      if (live) setPhotoUrls(Object.fromEntries(pairs))
+    })
+    return () => { live = false }
+  }, [items])
+  const shown = useMemo(
+    () => items.map((i) => (typeof i.photo === 'string' ? { ...i, photo: photoUrls[i.photo] ? { url: photoUrls[i.photo] } : undefined } : i)),
+    [items, photoUrls],
+  )
   const sealVoiceUrl = useMediaUrl(box.sealVoice || null)
   const playFilm = async () => {
     const f = normalizeFilm(film)
@@ -76,21 +90,22 @@ export default function Preview() {
       {sealed ? (
         <Seal box={box} voiceUrl={sealVoiceUrl} onOpen={() => { setSealed(false); if (film) playFilm() }} />
       ) : (
-        <div className="wb" style={box.accent ? { '--light': box.accent } : undefined}>
-          <Header box={box} today={day} offline={false} />
-          <div className="wb-tabs" role="tablist" aria-label="Sections">
-            <button type="button" role="tab" aria-selected={tab === 'letters'} className="wb-tab" onClick={() => setTab('letters')}>Letters</button>
-            <button type="button" role="tab" aria-selected={tab === 'story'} className="wb-tab" onClick={() => setTab('story')}>Our story</button>
-          </div>
-          <main className="wb-main">
-            {tab === 'letters'
-              ? items.length
-                ? <><OurSky ids={[...opened]} /><Letters items={items} openSet={opened} decor={box.decor} onOpen={(id) => { setOpenId(id); setOpened((s) => new Set(s).add(id)) }} /></>
-                : <p className="wb-note">Nothing written yet. Letters you write appear here on the day they open.</p>
-              : <Story box={box} token="preview" today={day} onFilm={film ? playFilm : null} />}
-            <p className="wb-note" style={{ marginTop: 32 }}>Letters you haven’t written yet don’t appear. Sealed ones show only their name and the day they open.</p>
-            <button type="button" className="wf-link" style={{ color: 'var(--mist-soft)' }} onClick={() => setSealed(true)}>See the opening again</button>
-          </main>
+        <div className="wb wb--app" style={box.accent ? { '--light': box.accent } : undefined}>
+          <LetterApp
+            box={box}
+            items={shown}
+            opened={[...opened]}
+            today={day}
+            onFilm={film ? playFilm : null}
+            onOpen={(id) => { setOpenId(id); setOpened((s) => new Set(s).add(id)) }}
+            story={<><OurSky ids={[...opened]} /><Story box={box} token="preview" today={day} /></>}
+            footer={(
+              <>
+                <p className="wb-note" style={{ marginTop: 32 }}>Letters you haven’t written yet don’t appear. Sealed ones show only their name and the day they open.</p>
+                <button type="button" className="wf-link" style={{ color: 'var(--mist-soft)' }} onClick={() => setSealed(true)}>See the opening again</button>
+              </>
+            )}
+          />
         </div>
       )}
 

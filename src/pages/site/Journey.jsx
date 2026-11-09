@@ -1,5 +1,34 @@
 import { Link } from 'react-router-dom'
-import useScrollScene from './useScrollScene'
+import { useState } from 'react'
+import useScrollScene, { useReducedMotion } from './useScrollScene'
+import Mascot, { Says } from '../../components/Mascot'
+
+// what Perigan says beside the sample letter, one line per chapter of the story
+const LINES = [
+  { move: 'talk', text: 'This one’s a sample. Yours would be in your own words.' },
+  { move: 'notice', text: 'You write these before you go. They won’t know.' },
+  { move: 'talk', text: 'I bring each one on its day. The last stays sealed.' },
+]
+
+/** Flies in from the right, lands on the letter, then talks the reader through the story. */
+function HeroPelican({ chapter }) {
+  const reduced = useReducedMotion()
+  const [arrived, setArrived] = useState(false)
+  if (!reduced && !arrived) {
+    return <Mascot move="flyleft" loop size={132} className="hero-pelican hero-pelican--flying" onAnimationEnd={(e) => e.animationName === 'heroFly' && setArrived(true)} />
+  }
+  return <HeroLine key={chapter} line={LINES[chapter]} />
+}
+
+/** Keyed by chapter: he says the new line once, then rests. */
+function HeroLine({ line }) {
+  return (
+    <>
+      <Mascot move={line.move} size={132} className="hero-pelican" />
+      <Says className="hero-says">{line.text}</Says>
+    </>
+  )
+}
 
 function Arrow({ down = false }) {
   return <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d={down ? 'M12 4v16m-6-6 6 6 6-6' : 'M4 12h16m-6-6 6 6-6 6'} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -7,7 +36,7 @@ function Arrow({ down = false }) {
 
 /** A single paper object stays with the reader as the story moves past it. */
 export default function Journey() {
-  const { scene } = useScrollScene()
+  const { scene, chapter } = useScrollScene()
 
   return (
     <section ref={scene} className="journey" aria-label="A letter for the time apart">
@@ -41,6 +70,7 @@ export default function Journey() {
           <svg viewBox="0 0 600 600"><ellipse cx="300" cy="300" rx="269" ry="198" transform="rotate(-32 300 300)" /><ellipse cx="300" cy="300" rx="268" ry="255" transform="rotate(34 300 300)" /><circle cx="88" cy="255" r="3" /><circle cx="491" cy="176" r="3" /><circle cx="461" cy="476" r="2" /></svg>
         </div>
         <div className="letter-scene">
+          <HeroPelican chapter={chapter} />
           <article className="sample-letter" id="sample-letter" aria-label="An illustrative sample letter from Jae to Mina">
             <div className="sample-meta"><span>Open when you can’t sleep</span><span aria-hidden="true">✦</span></div>
             <h3>Hey, you.</h3>

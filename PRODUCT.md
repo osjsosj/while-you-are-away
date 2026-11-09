@@ -31,6 +31,12 @@ Flow: landing → short interview → checkout ($24, Stripe) → AI planning con
 
 Letter box sections: Tonight, The days before, While we're apart, Things I never said, Open when…, Special days, The day we meet again. Letters can carry photos, voice notes, folded notes, stickers, stamps and postmarks. Evening diary reminders go out by email.
 
+The recipient box is an app with four sections. **Letters:** the timed letters as one path in time, with “Open when…” and “Things I never said” on their own shelves. **Photos:** every photo from opened letters, plus the opening film. **My replies:** what they wrote back, by letter. **Until we meet:** days, weeks, hours, share of the time passed, full moons left, a look back as far as the time still ahead, then the constellation, the same moon, the song, the pet and the timeline.
+
+The basics (`/interview`) are one question at a time with large choices: why you’re apart, who they are, which letters, how the days before open (only if they chose them; "all at once" unless they pick "one on each matching day"), names, dates, then a short “creating your profile” moment and the promise that the conversation matters most. The reason and the letters chosen reach the planning guide.
+
+The mascot is Perigan, a white pelican mail carrier. He offers help in a speech bubble wherever someone could use it.
+
 ## Capabilities and Constraints
 
 - React 19 + Vite SPA with Tailwind, deployed on Vercel with serverless functions in `api/`. Supabase for auth (email sign-in code), drafts, boxes and AI usage; Stripe Checkout; Anthropic API for the planning conversation and writing companion; Resend for reminder email. Installable as a PWA with a service worker.

@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { daysBetween, formatLong } from '../../utils/diary'
 import { moonOn } from '../../utils/sky'
 import Moon from '../../components/Moon'
-import Mascot from '../../components/Mascot'
+import Mascot, { Says } from '../../components/Mascot'
+import { TicketBanner } from '../../components/Decor'
 import { buildPath, currentNodeId, offsetFor, untilStats } from './journey'
 import './letterapp.css'
 
@@ -87,9 +88,23 @@ export default function LetterApp({ box, items, replies = [], opened = [], today
   )
 }
 
+/** Perigan, helping out when a screen has nothing to show yet. */
+function Guide({ children }) {
+  return (
+    <div className="la-help">
+      <Mascot move="idle" size={92} />
+      <Says>{children}</Says>
+    </div>
+  )
+}
+
 /* ---------- Letters: the path ---------- */
 
 function LettersView({ box, items, units, openSet, current, onOpen, today }) {
+  const ticket = box.decor?.ticket
+  const ticketFor = (i) => (ticket?.letterId === i.id
+    ? <button key={i.id} type="button" className="la-ticket" onClick={() => onOpen(i.id)} aria-label={`${i.label}${openSet.has(i.id) ? '' : ', new'}`}><TicketBanner ticket={{ ...ticket, title: i.label }} compact /></button>
+    : null)
   const anytime = items.filter((i) => i.section === 'anytime')
   const never = items.filter((i) => i.section === 'never')
   let index = 0
@@ -97,7 +112,7 @@ function LettersView({ box, items, units, openSet, current, onOpen, today }) {
     <>
       <h1 className="la-h1">{box.appName}</h1>
       {box.welcome && <p className="la-lede">{box.welcome}</p>}
-      {units.length === 0 && anytime.length === 0 && never.length === 0 && <p className="la-empty">Nothing has arrived yet. The first letter opens on the day you part.</p>}
+      {units.length === 0 && anytime.length === 0 && never.length === 0 && <Guide>Nothing has arrived yet. The first letter opens on the day you part.</Guide>}
       {units.map((u) => (
         <section key={u.id} className={`la-unit la-unit--${u.id}`} aria-labelledby={`la-u-${u.id}`}>
           <div className="la-banner">
@@ -118,7 +133,7 @@ function LettersView({ box, items, units, openSet, current, onOpen, today }) {
           <h2 id="la-anytime" className="la-h2">Open when…</h2>
           <p className="la-sub">For the moment it’s written for. Open these whenever you need one.</p>
           <div className="la-envelopes">
-            {anytime.map((i, k) => (
+            {anytime.map((i, k) => ticketFor(i) || (
               <button key={i.id} type="button" className={`la-env${openSet.has(i.id) ? ' is-read' : ''}`} style={{ '--d': `${k * 60}ms` }} onClick={() => onOpen(i.id)}>
                 <span className="la-env-flap" aria-hidden="true" />
                 <span className="la-env-label">{i.label}</span>
@@ -133,7 +148,7 @@ function LettersView({ box, items, units, openSet, current, onOpen, today }) {
           <h2 id="la-never" className="la-h2">Things I never said</h2>
           <p className="la-sub">Folded small, the way you’d slip a note into a pocket.</p>
           <div className="la-notes">
-            {never.map((i, k) => (
+            {never.map((i, k) => ticketFor(i) || (
               <button key={i.id} type="button" className={`la-note${openSet.has(i.id) ? ' is-read' : ''}`} style={{ '--r': `${(k % 2 ? 1 : -1) * (1.5 + (k % 3))}deg`, '--d': `${k * 70}ms` }} onClick={() => onOpen(i.id)}>
                 <span className="la-note-label">{i.label}</span>
                 <span className="la-note-state">{openSet.has(i.id) ? 'Read' : 'Unfold'}</span>
@@ -180,7 +195,12 @@ function PathNode({ node, i, read, isCurrent, onOpen, today, fromName }) {
         <span className="la-step-date">{locked && item.opensOn ? `Opens ${formatLong(item.opensOn)}` : caption}</span>
       </span>
       {peek && <span className="la-peek" role="status">{item.opensOn ? `Sealed until ${formatLong(item.opensOn)}.` : 'Sealed for now.'} {kind === 'last' ? `${fromName || 'They'}’ll be there.` : ''}</span>}
-      {isCurrent && <Mascot size={88} mood={locked ? 'idle' : 'cheer'} className={`la-mascot${off > 0 ? ' is-left' : ''}`} />}
+      {isCurrent && (
+        <div className={`la-guide${off > 0 ? ' is-left' : ''}`}>
+          <Says tail="down">{locked ? (soon === 1 ? 'Nothing to do yet. The next one opens tomorrow.' : soon ? `Nothing to do yet. The next one opens in ${soon} days.` : 'Sealed for now.') : kind === 'last' ? 'Today’s the day. This one waited for you.' : 'This one’s ready. Tap it when you are.'}</Says>
+          <Mascot size={96} move={locked ? 'doze' : kind === 'last' ? 'bow' : 'cheer'} flip={off <= 0} />
+        </div>
+      )}
     </li>
   )
 }
@@ -203,7 +223,7 @@ function PhotosView({ items, film, onOpen, onFilm, fromName }) {
         </button>
       )}
       {shots.length === 0
-        ? <p className="la-empty">No photos yet. When a letter with a photo opens, it lands here.</p>
+        ? <Guide>No photos yet. When a letter with a photo opens, it lands here.</Guide>
         : (
           <ul className="la-photos">
             {shots.map((s, k) => (
@@ -230,10 +250,10 @@ function RepliesView({ items, replies, onOpen, fromName, onGo }) {
       <h1 className="la-h1">My replies</h1>
       <p className="la-lede">What you wrote back. {fromName || 'They'} can read every one.</p>
       {sorted.length === 0 ? (
-        <div className="la-empty">
-          <p>You haven’t written back yet. Every letter has room for a reply at the bottom.</p>
+        <>
+          <Guide>You haven’t written back yet. Every letter has room for a reply at the bottom.</Guide>
           <button type="button" className="la-btn la-btn--ghost" onClick={onGo}>Go to my letters</button>
-        </div>
+        </>
       ) : (
         <ul className="la-replies">
           {sorted.map((r, k) => {
@@ -278,7 +298,10 @@ function UntilView({ box, items, today, children }) {
         <>
           <p className="la-lede">{s.mode === 'before' ? `You haven’t parted yet. ` : ''}Here is the time between now and seeing {from} again, in every unit we could think of.</p>
           <section className="la-big" aria-label="Time left">
-            <p className="la-big-num"><span className="num">{s.daysLeft}</span><span className="la-big-unit">{s.daysLeft === 1 ? 'day' : 'days'}</span></p>
+            <div className="la-big-top">
+              <p className="la-big-num"><span className="num">{s.daysLeft}</span><span className="la-big-unit">{s.daysLeft === 1 ? 'day' : 'days'}</span></p>
+              <Mascot move="flyleft" size={96} />
+            </div>
             <p className="la-big-sub">until {formatLong(box.returnDate)}</p>
             {s.elapsed !== null && (
               <div className="la-progress" role="img" aria-label={`${Math.round(s.elapsed * 100)} percent of the time apart has passed`}>

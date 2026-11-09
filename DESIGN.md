@@ -259,7 +259,7 @@ components:
 
 Someone is still thinking of you in the dark. The whole product lives at night: a deep navy sky, cool moonlit text, and a single warm amber light that marks the one thing worth doing next. Letters are the only bright, warm surfaces. They sit on the night like paper under a desk lamp. Everything else is quiet chrome that gets out of the way.
 
-Time is the material. The public site (home, services, about, contact) shows the time apart as a calendar of weeks: each day that holds a letter is lit amber, and the day you meet again is a square of letter paper. The site is set flat on midnight with tone-step surfaces, in one face, Schibsted Grotesk, with heavy 800 headlines at tight tracking. Literata appears only where a letter appears. The writing app (builder, diary, recipient box) stays on the night gradient, with glowing paper and soft translucent chrome. Motion is unhurried and turns off completely under reduced motion.
+Time is the material. The public site (home, services, about, contact) shows the time apart as a calendar of weeks: each day that holds a letter is lit amber, and the day you meet again is a square of letter paper. The site is set flat on midnight with tone-step surfaces, in one face, Schibsted Grotesk, with heavy 800 headlines at tight tracking. Literata appears only where a letter appears. The writing app (builder, diary, recipient box) stays on the night gradient, with glowing paper and soft translucent chrome. Motion is unhurried and turns off completely under reduced motion, where Perigan becomes a still frame.
 
 The letter itself is crafted and tactile: paper variants, washi tape, stamps, postmarks, pressed flowers, die-cut vinyl stickers and handwritten Caveat notes. The interface around it is soft and calm, never pushy.
 
@@ -276,7 +276,7 @@ The letter itself is crafted and tactile: paper variants, washi tape, stamps, po
 A night palette of navy, moonlit mist and cream paper, lit by one amber lamp.
 
 ### Primary
-- **Lamplight Amber** (`light`): The one warm light. The primary button, focus rings, lit letter days in the calendar, the wordmark dot, the open FAQ dot, the underline on active and highlighted links, the price figure, the switch when on, the seal, text selection. Hover brightens to **Lit Amber** (`light-hi`).
+- **Lamplight Amber** (`light`): The one warm light. The primary button, focus rings, lit letter days in the calendar, the wordmark dot, the open FAQ dot, the underline on active and highlighted links, the price figure, the switch when on, text selection. Hover brightens to **Lit Amber** (`light-hi`).
 
 ### Neutral
 - **Midnight** (`night`): The page ground on the public site and the base of every app gradient. Also the PWA theme color.
@@ -331,7 +331,7 @@ A night palette of navy, moonlit mist and cream paper, lit by one amber lamp.
 
 The public site runs edge to edge on a fluid margin, `gut` (`clamp(20px, 4.4vw, 64px)`), with sections separated by `gap` (`clamp(96px, 12vw, 176px)`). Compositions are asymmetric two-column grids on fractional tracks (5/7 for the hero, 6/6, 7/4, 5/6), collapsing to one column at 900px. The hero fills the first viewport: copy at left, the live controls and the calendar at right. The benefits section pins a letter on a full-height `night-surface` stage while the copy scrolls beside it. Services shows four real phone screens in a row that align on subgrid, two per row at 1080px, and image-beside-text at 560px. The footer is a 12-column grid of tiles with 8px gaps (6px on tablets), becoming two columns at 900px and one at 560px.
 
-The writing app is a single centered column for one hand on a phone: 720px for the builder (560px for narrow steps), 560px for the recipient box, a 20px gutter. Sticky translucent bars (navy at 82–92% alpha, 12px backdrop blur, a mist hairline) hold the step indicator and the box tabs. Fields sit 22px apart, cards pad 24px, paper pads 28px.
+The writing app is a single centered column for one hand on a phone: 720px for the builder (560px for narrow steps), a 20px gutter. The recipient box is an app shell: a 600px column on phones, with a left menu from 900px and a right rail from 1180px. Sticky translucent bars (navy at 82–92% alpha, 12px backdrop blur, a mist hairline) hold the step indicator and the box tabs. Fields sit 22px apart, cards pad 24px, paper pads 28px.
 
 Breakpoints: 1080px, 900px and 560px on the site; 900px, 720px, 640px, 560px and 420px in the app.
 
@@ -395,7 +395,7 @@ Reviews are a comment thread, not cards with stars. Each is a 16px-radius `night
 - **Site bar:** Wordmark at left (a 12px amber dot and "While You're Away" in moonlit 600, 17px), three links at right (Services, About, Contact) in 600 soft mist at 16px, 44px tall. Hover and the active page turn moonlit; the active page takes an amber underline. On phones the wordmark and links step down to 14px.
 - **Glass bar:** The site bar floats 12px from the top (8px on phones) on the page margins, 64px tall (56px on phones), 22px corners (18px). Where WebGL allows, liquid-glass-js (vendored in public/vendor/liquid-glass, MIT) turns it into a refracting glass panel over the page, set up in src/pages/site/useGlassNav.js. It is the one deliberate exception to the no-glass rule. Elsewhere, and while the glass loads, it is a flat translucent night panel (rgba(11, 20, 48, 0.86)). Links on the glass carry a soft night text-shadow for legibility.
 - **Builder top bar (app):** Sticky translucent navy, wordmark at left, step list at right (13px muted mist, the current step semibold mist).
-- **Box tabs (app):** Sticky translucent navy, 48px tabs in 15px medium muted mist. The selected tab is mist with a 2px amber underline.
+- **Box menu (app):** Four destinations: Letters, Photos, My replies, Until we meet. A 248px left menu on `night-mid` from 900px, with the glance rail (time left, next letter, tonight’s moon) added at 1180px; a four-tab bar at the foot on phones. The active item is a `night-high` fill with its label brightened, never amber.
 
 ### FAQ
 Questions are a list of 48px rows in 600 at 18px, muted mist, each led by an 8px dot. Hover and the open question turn moonlit; the open question's dot turns amber. On desktop the answer appears in a sticky pane beside the list at statement size; under 900px it opens inline beneath the question.
@@ -406,14 +406,16 @@ The footer is a grid of 14px-radius tiles, 8px apart, never a row of columns ove
 ### Letter Paper (signature)
 The letter itself: paper variants (night, scrapbook, flowers, quiet) recolor the paper, tape and postmark. A head line carries the date meta, stamp and postmark. The title and body are Literata. Decorations (tape, stamps, pressed flowers, Caveat notes on note-yellow, die-cut stickers) are rotated slightly and carry their own small drop shadows. On the site, letter fragments sit flat on paper at 14px radius with no glow.
 
-### Letter Row (signature, app)
-Each letter in the recipient's box is a 60px row: 12px radius, a faint mist fill and hairline, a Literata title over a 13px muted subline. Today's new letter becomes a paper row (cream, ink text), the only lit row in the list. Locked letters dim and take a dashed border. Rows lift 1px on hover.
+### The Path (signature, app)
+The recipient’s letters are one walk in time: the days before (nodes badged D-14 … D-1), the night you part, while apart (weeks with special days where they fall), the day we meet again, each stage under a banner in a tone step (the reunion banner is paper). Nodes are 76px circles (96px for tonight and the reunion) on a gentle S, with a 7px solid lip that presses in on tap. Read letters are paper; unread ones are paper with an amber dot; sealed ones are `night-high` with a lock. Only the letter the walk is on glows amber: the first unread one, else the one that opens soonest. Letters that open any time leave the path: “Open when…” are small envelopes, “Things I never said” are folded yellow notes.
 
 ### Guide Chat (app)
 The planning guide's messages are paper bubbles in Literata 17px with ink text, tucked to the bottom-left. The sender's messages sit on night. The composer is a 16px-radius textarea with a 52px round amber send button.
 
-### The Seal (signature, app)
-On the recipient's first open: a 96px amber wax seal with a radial gradient, an inner ring, and a slow 3s breathing glow. It's the brightest thing in the product, and it appears exactly once.
+### Perigan (signature)
+The pelican who carries the letters: eleven GIF moves in `public/mascot/` (walk, land, fly, flyleft, idle, doze, cheer, notice, talk, putdown, bow), each with a still PNG for reduced motion, placed through `src/components/Mascot.jsx`, which crops every move to the same size. He never loops in view: he rests on a still frame and breathes, then does one thing once every few seconds at an uneven interval (walking and flying across the screen are the exceptions). One per screen, and never on an open letter, in the editor or in the diary. He does a job wherever he appears: on the homepage he flies in, lands on the sample letter and talks the reader through the story as they scroll; on the recipient’s first open he is the only thing to tap, and sets the letter down; on the path he stands by the current letter; on Until we meet he sits beside the day count.
+
+**The Helping Bubble Rule.** Where someone could use a hand, Perigan says so in a navy speech bubble (`Says`): what this is, what to do, or why there is nothing yet. Say something useful or say nothing. Loading screens have no bubble.
 
 ### Motion
 The site's ease is `cubic-bezier(0.16, 1, 0.3, 1)`. The hero headline lines rise out of a mask over 900ms (the second line 110ms later); ledes, buttons and inner-page openers fade up 12px over 700ms. Sections further down rise 24px as they enter, set only by script, so nothing is hidden without it. State changes run 200ms. The app keeps `cubic-bezier(0.2, 0.7, 0.2, 1)` with 1000ms reveals and 250ms lifts.
@@ -452,3 +454,4 @@ The homepage now follows one letter through a continuous, locally hosted night s
 - Homepage-only exceptions allow a low-opacity gradient scrim for readable text over footage, a masked horizon image to bridge the recipient scene, a fine orbit around the letter, and a physical shadow beneath the sample letter and real paper. No second accent color is introduced.
 - Schibsted Grotesk, Literata and Caveat remain the brand fonts. The headline retains “Goodbyes can be prepared.” The sample letter is explicitly illustrative. Placeholder testimonials and repeated paper descriptions have been removed; no customer claims are invented.
 - The homepage files are `Home.jsx`, `Journey.jsx`, `NightSky.jsx`, `useScrollScene.js` and `home.css` under `src/pages/site/`. Rive source in `animation/perigan/` is independent and is not modified or replaced by the retired three.js experiment.
+- Perigan flies in once from the right and lands on the top edge of the sample letter; his line changes with each chapter. No envelope. See Perigan under Components.

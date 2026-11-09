@@ -79,16 +79,16 @@ export function formatLong(iso) {
 }
 
 export const UNLOCK_OPTIONS = {
-  mirror: {
-    label: 'One on each matching day',
-    detail: 'An entry you write 12 days before you part opens 12 days after. Days you didn’t write are simply skipped.',
-  },
   all: {
     label: 'All at once',
     detail: 'Every entry is there from the day you hand it over, like a book they can read at their own pace.',
   },
+  mirror: {
+    label: 'One on each matching day',
+    detail: 'An entry you write 12 days before you part opens 12 days after. Days you didn’t write are simply skipped.',
+  },
 }
 
 export function normalizeUnlock(v) {
-  return v === 'all' ? 'all' : 'mirror'
+  return v === 'mirror' ? 'mirror' : 'all'
 }

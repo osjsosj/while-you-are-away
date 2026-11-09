@@ -9,6 +9,7 @@ import { useRecorder, fmtSeconds } from '../utils/useRecorder'
 import { FILM_MAX_PHOTOS, normalizeFilm } from '../utils/film'
 import FlowFrame from '../components/FlowFrame'
 import SignInModal from '../components/SignInModal'
+import Mascot from '../components/Mascot'
 import { renderInline } from '../utils/text'
 
 /* Step 3: plan the letter box together. Photos and a voice note can be dropped in right here.
@@ -78,7 +79,7 @@ export default function AIInterview() {
           phase2Done: true,
           plan: p,
           contact: ['none', 'sometimes', 'daily'].includes(d.contact) ? d.contact : 'sometimes',
-          diaryUnlock: normalizeUnlock(d.diaryUnlock),
+          diaryUnlock: normalizeUnlock(d.diaryUnlock || prev.diaryUnlock),
         })
         setPlan(p)
       }
@@ -145,8 +146,13 @@ export default function AIInterview() {
 
   return (
     <FlowFrame step={2}>
-      <h1 className="wf-h1">Let’s plan it together.</h1>
-      <p className="wf-lede">Tell me about your goodbye. I’ll suggest a letter box that fits it, and you decide what stays.</p>
+      <div className="ai-guide">
+        <Mascot size={96} move={loading ? 'talk' : plan ? 'cheer' : 'idle'} />
+        <div>
+          <h1 className="wf-h1">Let’s plan it together.</h1>
+          <p className="wf-lede">Tell me about your goodbye. I’ll suggest a letter box that fits it, and you decide what stays.</p>
+        </div>
+      </div>
 
       {showMeter && (
         <div className="ai-meter" role="group" aria-label="How personal the letter box is">

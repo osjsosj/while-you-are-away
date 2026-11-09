@@ -1,24 +1,44 @@
-/* Mascot slot: a quiet placeholder that already moves the way the character will. */
+/* Perigan: the GIF carries the motion; this only places it. */
 
-.mascot { position: relative; display: inline-block; flex: none; }
-.mascot-slot {
-  position: absolute; inset: 6% 10% 14%;
-  border-radius: 46% 46% 40% 40%;
-  border: 2px dashed rgba(201, 208, 220, 0.6);
-  background: rgba(233, 236, 242, 0.07);
-  animation: mascotBreathe 3.6s ease-in-out infinite;
-}
-.mascot-shadow { position: absolute; left: 22%; right: 22%; bottom: 2%; height: 7%; border-radius: 50%; background: rgba(5, 10, 25, 0.45); animation: mascotShadow 3.6s ease-in-out infinite; }
-.mascot--cheer .mascot-slot { animation: mascotHop 900ms cubic-bezier(.3, .7, .3, 1) infinite; }
-.mascot--cheer .mascot-shadow { animation: mascotShadowHop 900ms cubic-bezier(.3, .7, .3, 1) infinite; }
-.mascot--think .mascot-slot { animation: mascotTilt 2.8s ease-in-out infinite; }
+.mascot { position: relative; display: inline-block; flex: none; pointer-events: none; user-select: none; }
+.mascot img { position: absolute; max-width: none; image-rendering: auto; }
+.mascot.is-flipped img { transform: scaleX(-1); }
 
-@keyframes mascotBreathe { 50% { transform: translateY(-4px); } }
-@keyframes mascotShadow { 50% { transform: scaleX(0.9); opacity: 0.7; } }
-@keyframes mascotHop { 40% { transform: translateY(-12px); } }
-@keyframes mascotShadowHop { 40% { transform: scaleX(0.7); opacity: 0.5; } }
-@keyframes mascotTilt { 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
+/* a move swapping in settles rather than snapping */
+.mascot img { animation: mascotIn 320ms cubic-bezier(0.16, 1, 0.3, 1) both, mascotBreathe 3.4s ease-in-out 320ms infinite; }
+@keyframes mascotIn { from { opacity: 0; translate: 0 6px; } }
+
+/* at rest he still breathes; in the air he hovers */
+@keyframes mascotBreathe { 50% { translate: 0 -2px; scale: 1 1.015; } }
+.mascot--fly img, .mascot--flyleft img { animation-name: mascotIn, mascotHover; animation-duration: 320ms, 2.6s; }
+@keyframes mascotHover { 50% { translate: 0 -7px; } }
+
+/* flying in from the top right and settling */
+.mascot-arrive { animation: mascotArrive 1600ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes mascotArrive { from { opacity: 0; transform: translate(220px, -160px) scale(0.7); } 60% { opacity: 1; } }
+
+/* carrying a reply off screen */
+.mascot-away { animation: mascotAway 1800ms cubic-bezier(0.55, 0, 0.75, 0.2) forwards; }
+@keyframes mascotAway { to { opacity: 0; transform: translate(320px, -260px) scale(0.6); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .mascot *, .mascot { animation: none !important; }
+  .mascot, .mascot img { animation: none !important; }
+}
+
+/* Perigan's voice: the same navy bubble everywhere he offers a hand */
+.says {
+  position: relative; margin: 0; padding: 10px 14px; border-radius: 14px;
+  background: #18234A; color: #F4F1E6;
+  font-family: 'Schibsted Grotesk', system-ui, sans-serif; font-weight: 600; font-size: 14.5px; line-height: 1.35; letter-spacing: -0.01em;
+  animation: saysIn 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.says::after { content: ''; position: absolute; width: 12px; height: 12px; background: inherit; border-radius: 2px; transform: rotate(45deg); }
+.says--left::after { left: -5px; top: 50%; margin-top: -6px; }
+.says--right::after { right: -5px; top: 50%; margin-top: -6px; }
+.says--up::after { top: -5px; left: 50%; margin-left: -6px; }
+.says--down::after { bottom: -5px; left: 50%; margin-left: -6px; }
+@keyframes saysIn { from { opacity: 0; transform: translateY(6px) scale(0.96); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .says { animation: none !important; }
 }

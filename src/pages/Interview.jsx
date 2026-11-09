@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDraft, saveDraft } from '../utils/storage'
-import { localISODate, daysBetween } from '../utils/diary'
+import { localISODate, daysBetween, UNLOCK_OPTIONS, normalizeUnlock } from '../utils/diary'
 import { SECTION_INFO } from '../utils/plan'
 import Mascot from '../components/Mascot'
 import '../styles/onboard.css'
@@ -30,10 +30,16 @@ const LETTERS = ['tonight', 'before', 'scheduled', 'never', 'anytime', 'occasion
 const LATER = 'later'
 
 const STEPS = ['reason', 'relationship', 'letters', 'names', 'dates', 'building', 'promise']
+const stepsFor = (letters) => (letters.includes('before') ? ['reason', 'relationship', 'letters', 'opening', ...STEPS.slice(3)] : STEPS)
+const UNLOCK_REPLY = {
+  all: 'Simple. They can read at their own pace.',
+  mirror: 'One at a time, then. They’ll have a reason to come back.',
+}
 const ASK = {
   reason: 'What’s taking you two apart?',
   relationship: 'Who are they to you?',
   letters: 'Which letters would you like to write?',
+  opening: 'When should they read what you write before you go?',
   names: 'What should we call you both?',
   dates: 'When do you part, and when do you meet again?',
 }
@@ -48,6 +54,7 @@ export default function Interview() {
       reasonNote: p.reasonNote || '',
       relationship: p.relationship || d.landing?.relationship || '',
       letters: Array.isArray(p.letterIds) ? p.letterIds : [],
+      unlock: normalizeUnlock(d.diaryUnlock),
       fromName: p.fromName || '',
       toName: p.toName || '',
       startDate: p.startDate || d.landing?.startDate || '',
@@ -60,7 +67,8 @@ export default function Interview() {
   const [reply, setReply] = useState('')
   const [tried, setTried] = useState(false)
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
-  const key = STEPS[step]
+  const steps = stepsFor(form.letters)
+  const key = steps[step]
 
   const today = localISODate()
   const errors = {
@@ -95,7 +103,9 @@ export default function Interview() {
         situation: [reason?.id === 'other' ? '' : reason?.label, form.reasonNote.trim()].filter(Boolean).join(': ').slice(0, 200),
         letterIds: form.letters,
         letterWishes: wishes.map((w) => SECTION_INFO[w].title),
+        diaryUnlock: wishes.includes('before') ? form.unlock : '',
       },
+      ...(wishes.includes('before') ? { diaryUnlock: form.unlock } : {}),
       phase1Done: true,
     })
   }
@@ -107,7 +117,7 @@ export default function Interview() {
     if (key === 'promise') { navigate('/paywall'); return }
     setDir(1)
     setReply('')
-    setStep((s) => Math.min(STEPS.length - 1, s + 1))
+    setStep((s) => Math.min(steps.length - 1, s + 1))
   }
   const back = () => {
     if (step === 0) return navigate('/')
@@ -128,9 +138,11 @@ export default function Interview() {
     if (e.key === 'Enter' && !e.shiftKey && e.target.tagName !== 'BUTTON' && e.target.type !== 'checkbox') { e.preventDefault(); next() }
   }
 
-  const progress = Math.min(1, step / (STEPS.length - 2))
+  const progress = Math.min(1, step / (steps.length - 2))
   const bubble = key === 'building' ? 'Creating your profile…' : key === 'promise' ? 'This isn’t just an online letter.' : reply || ASK[key]
-  const mood = key === 'building' ? 'think' : reply || key === 'promise' ? 'cheer' : 'idle'
+  // asking → talk, answered → notice, making the profile → walk, the promise → cheer (once)
+  const move = key === 'building' ? 'walk' : key === 'promise' ? 'cheer' : reply ? 'notice' : 'talk'
+  const center = key === 'building' || key === 'promise'
 
   return (
     <div className="ob" onKeyDown={onKey}>
@@ -148,7 +160,7 @@ export default function Interview() {
       <main className="ob-main">
         <div className={`ob-stage ob-stage--${dir > 0 ? 'fwd' : 'back'}`} key={key}>
           <div className={`ob-guide${key === 'building' || key === 'promise' ? ' ob-guide--center' : ''}`}>
-            <Mascot size={key === 'building' || key === 'promise' ? 136 : 96} mood={mood} />
+            <Mascot size={center ? 168 : 124} move={move} className="ob-mascot" />
             <h1 className="ob-bubble" key={bubble} aria-live="polite">{bubble}</h1>
           </div>
 
@@ -202,6 +214,14 @@ export default function Interview() {
                 </Option>
               </Options>
             </>
+          )}
+
+          {key === 'opening' && (
+            <Options>
+              {Object.entries(UNLOCK_OPTIONS).map(([id, opt]) => (
+                <Option key={id} selected={form.unlock === id} onPick={() => { set('unlock', id); setReply(UNLOCK_REPLY[id]) }} sub={opt.detail}>{opt.label}</Option>
+              ))}
+            </Options>
           )}
 
           {key === 'names' && (

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
 const QUERY = '(prefers-reduced-motion: reduce)'
 const subscribe = (listener) => {
@@ -18,6 +18,7 @@ const clamp = (n) => Math.max(0, Math.min(1, n))
 export default function useScrollScene() {
   const scene = useRef(null)
   const reduced = useReducedMotion()
+  const [chapter, setChapter] = useState(0)
 
   useEffect(() => {
     const node = scene.current
@@ -29,6 +30,7 @@ export default function useScrollScene() {
       const rect = node.getBoundingClientRect()
       const p = clamp(-rect.top / Math.max(1, rect.height - window.innerHeight))
       node.style.setProperty('--journey-progress', p.toFixed(4))
+      setChapter(p < 0.3 ? 0 : p < 0.68 ? 1 : 2)
     }
     const schedule = () => {
       if (visible && !frame) frame = requestAnimationFrame(update)
@@ -49,5 +51,5 @@ export default function useScrollScene() {
     }
   }, [reduced])
 
-  return { scene }
+  return { scene, chapter }
 }

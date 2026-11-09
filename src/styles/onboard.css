@@ -160,9 +160,15 @@
 }
 @media (min-width: 900px) {
   .ob-main { padding-top: 56px; }
-  .ob-guide:not(.ob-guide--center) { margin-left: -120px; }
+  .ob-guide:not(.ob-guide--center) { margin-left: -148px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ob *, .ob *::before, .ob *::after { animation: none !important; transition: none !important; }
+}
+
+/* the guide steps back a little on narrow phones so the bubble keeps its width */
+@media (max-width: 420px) {
+  .ob-guide:not(.ob-guide--center) { gap: 6px; }
+  .ob-guide:not(.ob-guide--center) .ob-mascot { margin: -10px -14px -10px -12px; transform: scale(0.86); }
 }

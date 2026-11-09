@@ -21,7 +21,7 @@ export function demoBox(token = 'demo') {
 
   const before = [14, 10, 7, 5, 3, 1].map((n, k) => {
     const writtenOn = addDays(part, -n)
-    const opensOn = addDays(part, n)
+    const opensOn = fresh ? addDays(part, n) : null // demo-new shows sealed entries (the "matching day" setting)
     return {
       id: `d:${k}`,
       section: 'before',

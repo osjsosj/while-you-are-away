@@ -39,13 +39,16 @@ export function buildPath(items, box) {
   return units
 }
 
-/** The node the walk is on: the first letter that is open and unread, else the next one still sealed. */
+/**
+ * The node the walk is on: the first letter that is open and unread, else the one that opens soonest.
+ * Soonest, not next on the path: a diary entry from D-14 can open after one from D-1.
+ */
 export function currentNodeId(units, openSet) {
   const nodes = units.flatMap((u) => u.nodes)
   const fresh = nodes.find((n) => n.item.open && !n.item.empty && !openSet.has(n.item.id))
   if (fresh) return fresh.item.id
-  const next = nodes.find((n) => !n.item.open)
-  return next ? next.item.id : null
+  const sealed = nodes.filter((n) => !n.item.open).sort((a, b) => (a.item.opensOn || '9999').localeCompare(b.item.opensOn || '9999'))
+  return sealed.length ? sealed[0].item.id : null
 }
 
 /** Sideways offset for the i-th node, in units of the node size: a gentle S that never repeats a column twice. */

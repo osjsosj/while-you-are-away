@@ -176,12 +176,8 @@
   animation: laPeek 260ms var(--ease) both;
 }
 @keyframes laPeek { from { opacity: 0; transform: translateY(-6px) scale(0.96); } }
-
-.la-mascot { position: absolute; top: 24px; left: calc(50% + 70px); pointer-events: none; animation: laMascot 700ms var(--ease) 300ms both; }
-.la-mascot.is-left { left: auto; right: calc(50% + 70px); transform: scaleX(-1); }
 .la-step--big .la-mascot { top: 36px; left: calc(50% + 80px); }
 .la-step--big .la-mascot.is-left { left: auto; right: calc(50% + 80px); }
-@keyframes laMascot { from { opacity: 0; translate: 0 16px; } }
 
 /* ---------- shelves: open when…, never said ---------- */
 
@@ -343,7 +339,6 @@
 @media (max-width: 380px) {
   .la { --node: 68px; }
   .la-step { transform: translateX(calc(var(--x) * 64px)); }
-  .la-mascot { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -358,3 +353,36 @@
 .la-step--fresh:not(.is-current) { --face: var(--paper); --lip: var(--paper-lip); --glyph: var(--ink); }
 .la-step--fresh:not(.is-current) .la-node::after { content: ''; position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--lamp); box-shadow: 0 0 0 3px var(--night); }
 
+/* Perigan beside the letter the walk is on; his bubble replaces the little callout */
+.la-step.is-current { margin-top: 64px; }
+.la-step.is-current .la-callout { display: none; }
+.la-guide { position: absolute; z-index: 4; top: -14px; left: calc(50% + 62px); width: 96px; pointer-events: none; animation: laRise 700ms var(--ease) 300ms both; }
+.la-guide .says { position: absolute; right: -6px; bottom: calc(100% - 2px); width: 164px; font-size: 13.5px; }
+.la-guide .says::after { left: auto; right: 42px; margin: 0; }
+.la-guide.is-left { left: auto; right: calc(50% + 62px); }
+.la-guide.is-left .says { right: auto; left: -6px; }
+.la-guide.is-left .says::after { left: 42px; right: auto; }
+.la-step--big .la-guide { top: -4px; left: calc(50% + 76px); }
+.la-step--big .la-guide.is-left { left: auto; right: calc(50% + 76px); }
+@media (max-width: 380px) {
+  .la-guide { display: none; }
+  .la-step.is-current { margin-top: 0; }
+  .la-step.is-current .la-callout { display: block; }
+}
+
+/* when a screen is empty he says why, and what comes next */
+.la-help { display: flex; align-items: center; gap: 12px; margin-top: 28px; }
+.la-help .says { flex: 1; }
+
+.la-big-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+.la-ticket { grid-column: 1 / -1; padding: 0; border: none; background: none; cursor: pointer; text-align: left; transition: transform 200ms ease; }
+.la-ticket:hover { transform: translateY(-2px); }
+
+/* the "keep it close" hint clears the tab bar on phones */
+@media (max-width: 899px) {
+  .wb--app .wb-hint { bottom: calc(82px + env(safe-area-inset-bottom)); z-index: 31; }
+}
+
+/* in the sender's preview the day slider owns the top of the screen */
+.wp-bar ~ .wb--app .la-top { position: static; }

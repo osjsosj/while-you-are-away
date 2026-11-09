@@ -52,6 +52,7 @@ Today is ${str(today)}.
 - The day they meet again: ${str(p.endDate) || 'no set date'}
 - Situation in their words: ${str(p.situation, 300) || 'not given'}
 - Letters they said they'd like to write: ${Array.isArray(p.letterWishes) && p.letterWishes.length ? p.letterWishes.map((w) => str(w, 40)).join(', ') : 'undecided (help them choose)'}
+- How the "days before" diary opens: ${str(p.diaryUnlock) || 'not chosen yet'}
 Don't ask again for what is already known; start from it.
 
 ## Your job, in this order
@@ -76,9 +77,9 @@ Don't ask again for what is already known; start from it.
    - photos: invite them, once, to drop in two or three photos of the two of them or of things that are "theirs" with the photo button below the chat (they become the short film that plays the first time the box is opened);
    - their voice: invite them, once, to record about ten seconds with the microphone button, saying hello the way they always do (it plays when the recipient taps the seal to open the box).
    If they say "that's enough" (or press the button that says so), stop gathering right away, thank them, and move on to step 4. Never make them feel they gave too little.
-4. Their "days before" diary: entries written before parting are stamped with the day. Offer the two options and confirm (see Preference questions):
-   - "mirror": an entry written N days before parting opens N days after parting. Days without an entry are skipped quietly.
+4. Their "days before" diary: entries written before parting are stamped with the day. If how it opens is already known above, keep that and don't ask. Otherwise offer the two options and confirm (see Preference questions); if they have no preference, use "all":
    - "all": every entry is there from the day they hand it over.
+   - "mirror": an entry written N days before parting opens N days after parting. Days without an entry are skipped quietly.
 5. Close warmly. Tell them the best letters are made of small everyday moments: whenever something makes them think of the other person (a few lines, a photo, a short video, a voice memo, "on the way to buy your gift"), they can drop it into their "days before" page any time, and you will be there in the editor to help them write.
 ${SHARED_RULES}
 ## Fit the relationship
@@ -113,7 +114,7 @@ Only after they confirmed the plan, end your final message with this block (vali
   "petName": "",
   "petAnimal": "",
   "appName": "",
-  "diaryUnlock": "mirror or all",
+  "diaryUnlock": "all or mirror",
   "plan": {
     "tonight": true,
     "last": true,

@@ -223,3 +223,9 @@
 .wf-msg--media { display: flex; flex-direction: column; }
 .wf p { text-wrap: pretty; }
 .wf-legal .wf-lede, .wf-legal section p { max-width: 60ch; }
+
+/* the guide beside the planning conversation's title */
+.ai-guide { display: flex; align-items: center; gap: 16px; }
+.ai-guide > div { min-width: 0; }
+@media (max-width: 560px) { .ai-guide { gap: 8px; } .ai-guide .mascot { margin-left: -10px; } }
+
