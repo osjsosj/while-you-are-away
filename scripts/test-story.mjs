@@ -86,5 +86,24 @@ test('a story from the AI goes into the draft: about kept, letters made, pins on
   assert.equal(draftWithStory(draft, { memories: [] }), null, 'an empty story changes nothing')
 })
 
+test('the box look: colors from pinned moments, stamps only for letters already open, no trace', () => {
+  const { plan, pins } = applyStoryToPlan(basePlan, story)
+  const stew = Object.keys(pins).find((id) => pins[id][0].text === '엄마 김치찌개')
+  const airport = Object.keys(pins).find((id) => pins[id][0].text === '인천공항 배웅')
+  const draft = {
+    phase1: { fromName: '지수', toName: '엄마', relationship: 'A parent', startDate: '2026-12-20', endDate: '2027-06-20' },
+    plan, story: SAMPLE_STORY, decor: { style: 'flowers' },
+    capsuleData: { [stew]: { letter: '엄마 맛', pins: pins[stew] }, [airport]: { letter: '게이트 앞', pins: pins[airport] }, t0: { letter: '오늘 밤' } },
+  }
+  const look = recipientView(draft, '2027-01-10').box.look
+  assert.ok(look.theme['--lamp'] && look.theme['--night'], 'theme variables')
+  assert.ok(!('trace' in look), 'which fact made which choice stays with the sender')
+  assert.equal(look.typeKey, 'warm', 'a parent gets the warm pairing')
+  const openIds = recipientView(draft, '2027-01-10').items.filter((i) => i.open).map((i) => i.id)
+  const expect = [stew, airport].filter((id) => openIds.includes(id)).length
+  assert.equal(look.stamps.length, expect, 'a stamp for each open letter with a pinned moment, none for sealed ones')
+  assert.equal(recipientView({ ...draft, story: null }, '2027-01-10').box.look, null)
+})
+
 console.log(failed ? `\n${failed} failed` : '\nall passed')
 process.exit(failed ? 1 : 0)

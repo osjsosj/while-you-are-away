@@ -13,6 +13,7 @@ import { postmarkLetterId } from '../utils/decor'
 import LetterPaper from '../components/LetterPaper'
 import { Motif } from '../components/Decor'
 import LetterApp from './box/LetterApp'
+import { storyLook, useStoryFonts } from '../components/storyLook'
 import Mascot, { Says } from '../components/Mascot'
 import { loadMove } from '../utils/mascot'
 import './box.css'
@@ -97,6 +98,7 @@ export default function Box() {
   useEffect(() => {
     if (data?.box) document.title = data.box.appName
   }, [data])
+  useStoryFonts(data?.box?.look?.typeKey)
 
   if (status === 'missing') return <Message title="This letter box isn’t here" body="The link may be incomplete. Ask the person who sent it for the full link." />
   if (!data) {
@@ -132,6 +134,7 @@ export default function Box() {
   return (
     <div className="wb wb--app" style={box.accent ? { '--light': box.accent } : undefined}>
       <LetterApp
+        look={storyLook(box)}
         box={box}
         items={items}
         replies={replies}

@@ -458,3 +458,13 @@
 @media (min-width: 900px) {
   .wb--app:has(.wb-hint) .la-today { bottom: 100px; }
 }
+
+/* dressed from their story (utils/design/boxLook.js): the theme sets the variables above on .la */
+.la--story .la-h1, .la--story .la-banner h2 { font-family: var(--serif); letter-spacing: -0.02em; }
+.la-hero { margin: -8px 0 22px; padding: 14px 14px 12px; border-radius: 18px; background: var(--night-high); }
+.la-hero-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.la-hero-row .dl-pattern { max-width: 62%; height: auto; }
+.la-hero-stamps { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 10px; }
+.la-hero-cap { margin: 14px 0 0; text-align: center; font-size: 13px; color: var(--mist-muted); }
+.la .dl-stamp { transform: rotate(var(--tilt)); filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.22)); }
+.la .dl-seal { flex: none; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.25)); }

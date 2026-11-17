@@ -9,6 +9,7 @@ import { normalizeFilm } from './film.js'
 import { cleanSignature } from './sky.js'
 import { normalizeDecor, activeDecor, stickersFor } from './decor.js'
 import { cleanPins } from './story.js'
+import { boxLook } from './design/boxLook.js'
 
 export function addDays(iso, n) {
   const [y, m, d] = iso.split('-').map(Number)
@@ -63,7 +64,8 @@ export function recipientView(draft, today) {
   const phase2 = draft.phase2 || {}
   const config = draft.generatedConfig || {}
   const decor = activeDecor(normalizeDecor(draft.decor || { style: 'night' }, ticketLetterIds(draft)))
-  const items = allItems(draft).filter((it) => isWritten(it.content)).map((it) => {
+  const written = allItems(draft).filter((it) => isWritten(it.content))
+  const items = written.map((it) => {
     const open = !it.opensOn || it.opensOn <= today
     const base = { id: it.id, section: it.section, label: it.label, hint: it.hint || '', emoji: it.emoji || '', opensOn: it.opensOn, open }
     if (it.section === 'before') Object.assign(base, { stamp: it.stamp, date: it.date, writtenOn: it.writtenOn })
@@ -103,6 +105,8 @@ export function recipientView(draft, today) {
       pet: buildPetConfig(phase2),
       signature: cleanSignature(draft.signature),
       decor,
+      // colors, stamps and the months pattern from their story; only from what the sender put on letters
+      look: boxLook(draft, written, (it) => !it.opensOn || it.opensOn <= today),
       sealVoice: typeof draft.sealVoice === 'string' && /^(media:|data:)/.test(draft.sealVoice) && !(draft.decor && draft.decor.off && draft.decor.off.sealVoice) ? draft.sealVoice : null,
       timeline: (phase2.timeline || []).filter((t) => t && t.label).map((t) => ({ date: t.date || '', label: t.label, emoji: t.emoji || '' })),
     },

@@ -102,7 +102,7 @@ function Phone({ sample, variant }) {
         opened={opened}
         today={today}
         onOpen={open}
-        look={{ hero: <Hero spec={spec} story={sample.story} />, pathArt: spec.stamps.map((s) => s.sticker) }}
+        look={{ theme: appTheme(spec), hero: <Hero spec={spec} story={sample.story} />, pathArt: spec.stamps.map((s) => s.sticker) }}
       />
       {item && (
         <div className="lp-reader" role="dialog" aria-modal="true" aria-label={item.label} onClick={(e) => e.target === e.currentTarget && setOpenId(null)}>

@@ -17,7 +17,7 @@ const TABS = [
   { id: 'until', label: 'Until we meet', Icon: MoonIcon },
 ]
 
-/* `look` (optional) dresses the box from the senders' story: { hero: a node shown above the path, pathArt: sticker ids set beside the path }. */
+/* `look` (optional) dresses the box from the senders' story: { theme: CSS variables set on the app root, hero: a node shown above the path, pathArt: sticker ids set beside the path }. */
 export default function LetterApp({ box, items, replies = [], opened = [], today, onOpen, offline = false, film = null, onFilm = null, story = null, footer = null, look = null }) {
   const [tab, setTab] = useState('letters')
   const openSet = useMemo(() => new Set(opened), [opened])
@@ -32,7 +32,7 @@ export default function LetterApp({ box, items, replies = [], opened = [], today
   }
 
   return (
-    <div className="la">
+    <div className={`la${look?.theme ? ' la--story' : ''}`} style={look?.theme}>
       <aside className="la-side" aria-label="Letter box">
         <div className="la-side-in">
         <div className="la-brand">

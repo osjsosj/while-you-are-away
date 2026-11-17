@@ -6,6 +6,7 @@ import { useMediaUrl } from '../utils/media'
 import { daysBetween, formatLong, localISODate } from '../utils/diary'
 import { LetterSheet, Seal, Story, OurSky } from './Box'
 import LetterApp from './box/LetterApp'
+import { storyLook, useStoryFonts } from '../components/storyLook'
 import FilmPlayer from '../components/FilmPlayer'
 import { normalizeFilm } from '../utils/film'
 import { signedUrl } from '../utils/media'
@@ -31,6 +32,7 @@ export default function Preview() {
   const [opened, setOpened] = useState(() => new Set())
 
   const { box, items, film } = useMemo(() => recipientView(draft, day), [draft, day])
+  useStoryFonts(box.look?.typeKey)
   const [playing, setPlaying] = useState(null)
   // the Photos tab needs viewable URLs; the letter sheet resolves its own
   const [photoUrls, setPhotoUrls] = useState({})
@@ -92,6 +94,7 @@ export default function Preview() {
       ) : (
         <div className="wb wb--app" style={box.accent ? { '--light': box.accent } : undefined}>
           <LetterApp
+            look={storyLook(box)}
             box={box}
             items={shown}
             opened={[...opened]}
