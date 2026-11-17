@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "test": "node scripts/test-chat.mjs && node scripts/test-design.mjs && node scripts/test-journey.mjs && node scripts/test-story.mjs",
+    "test:chat": "node scripts/test-chat.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
