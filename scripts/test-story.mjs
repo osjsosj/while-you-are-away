@@ -1,7 +1,7 @@
 /* Checks story.js and the box rules around it: findings, letters made in advance, pins,
  * and that unwritten letters never reach the recipient. Run: node scripts/test-story.mjs */
 import assert from 'node:assert/strict'
-import { applyStoryToPlan, cleanPins, draftWithStory, letterFromFinding, normalizeStory, statFacts, storyFindings } from '../src/utils/story.js'
+import { applyStoryToPlan, cleanPins, draftWithStory, storyFromDraft, letterFromFinding, normalizeStory, statFacts, storyFindings } from '../src/utils/story.js'
 import { normalizePlan } from '../src/utils/plan.js'
 import { recipientView } from '../src/utils/boxModel.js'
 import { SAMPLE_STORY } from '../src/pages/lab/sampleStory.js'
@@ -103,6 +103,42 @@ test('the box look: colors from pinned moments, stamps only for letters already 
   const expect = [stew, airport].filter((id) => openIds.includes(id)).length
   assert.equal(look.stamps.length, expect, 'a stamp for each open letter with a pinned moment, none for sealed ones')
   assert.equal(recipientView({ ...draft, story: null }, '2027-01-10').box.look, null)
+})
+
+const TALK = {
+  timeline: [{ date: '2023-06-04', label: '공항에서 배웅한 날' }, { date: '2022-10-03', label: '첫 가족 여행' }],
+  places: [{ name: '제주', date: '2022-10-03' }, { name: '한강 공원', date: '' }],
+  jokes: '엄마의 펭귄 춤',
+  nicknames: '우리 딸, 엄마',
+  shared: '귤, 김치찌개',
+}
+
+test('the planning talk becomes findings: days and places as moments, the joke as a saying', () => {
+  const st = storyFromDraft({ phase2: TALK })
+  assert.equal(st.hasChat, false)
+  assert.deepEqual(st.memories.map((m) => m.title), ['공항에서 배웅한 날', '첫 가족 여행', '제주', '한강 공원'])
+  assert.ok(st.memories.every((m) => m.from === 'talk'))
+  assert.equal(st.catchphrases[0].text, '엄마의 펭귄 춤')
+  const joke = storyFindings(st).find((g) => g.id === 'sayings').items[0]
+  assert.equal(joke.sub, 'Your running joke')
+  assert.equal(letterFromFinding(joke).label, 'Open when you need a laugh')
+})
+
+test('with a chat too: chat findings first, a talk moment on the same day is kept once', () => {
+  const st = storyFromDraft({ story: SAMPLE_STORY, phase2: TALK })
+  assert.equal(st.hasChat, true)
+  const titles = st.memories.map((m) => m.title)
+  assert.ok(titles.includes('인천공항 배웅') && !titles.includes('공항에서 배웅한 날'), 'same day as the chat airport moment')
+  assert.ok(titles.includes('첫 가족 여행'))
+})
+
+test('without a chat, what they said is theirs still colors the box', () => {
+  const plain = recipientView({ phase1: { fromName: '지수', toName: '엄마' }, plan: basePlan, capsuleData: { t0: { letter: 'x' } } }, '2027-01-10').box.look
+  assert.equal(plain, null, 'nothing known: the usual look')
+  const look = recipientView({ phase1: { fromName: '지수', toName: '엄마', relationship: 'A parent' }, phase2: TALK, plan: basePlan, capsuleData: { t0: { letter: 'x' } } }, '2027-01-10').box.look
+  assert.ok(look && look.theme['--lamp'], 'a theme from the talk alone')
+  assert.equal(look.seal.text, '우리 딸', 'the seal says what they call each other')
+  assert.equal(look.stamps.length, 0, 'no stamps until a moment is on an open letter')
 })
 
 console.log(failed ? `\n${failed} failed` : '\nall passed')

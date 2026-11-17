@@ -2,20 +2,21 @@
  * boxLook.js — the recipient box dressed from the senders' story (see storyDesign.js).
  *
  * What the recipient can see is only ever built from what the sender chose:
- *  - colors come from the findings pinned on letters the sender wrote (abstract: a tint, not words)
+ *  - colors come from the findings pinned on letters the sender wrote, and the things they told the
+ *    planning guide are theirs (abstract: a tint, not words)
  *  - stamps and path stickers come only from moments pinned on letters already open, so they
  *    arrive one by one as letters open, never ahead of them
  *  - the pattern is their months of messages, which the recipient was half of
  * The trace (which fact made which choice) stays with the sender. Pure: runs on the server too.
  */
 import { designFromStory, appTheme } from './storyDesign.js'
-import { normalizeStory } from '../story.js'
+import { storyFromDraft } from '../story.js'
 
 const RELATIONSHIP = { 'a partner': 'partner', 'a parent': 'parent', 'a child': 'child', 'a friend': 'friend' }
 
 /** The story storyDesign expects, from a draft and the letters that will be shown. */
 export function designStory(draft, items) {
-  const story = normalizeStory(draft.story)
+  const story = storyFromDraft(draft) // the chat story and the planning talk together
   if (!story) return null
   const p1 = draft.phase1 || {}
   const pinsOf = (list) => list.flatMap((it) => (Array.isArray(it.content?.pins) ? it.content.pins : []))
@@ -29,10 +30,12 @@ export function designStory(draft, items) {
     to: p1.toName || '',
     relationship: RELATIONSHIP[String(p1.relationship || '').toLowerCase()] || 'friend',
     mood: draft.decor?.style || draft.generatedConfig?.style || 'night',
-    nicknames: [],
+    // what they call each other, for the seal: the first name of the ones they gave, if it's short
+    nicknames: [String(story.callEachOther || '').split(/[,·/]| and |과 |와 /)[0].trim()].filter((n) => n && [...n].length <= 10),
     catchphrases: story.catchphrases.filter((c) => quoteIds.has(c.id)),
     memories: story.memories.filter((m) => memIds.has(m.id)),
     partings: story.partings,
+    colorWords: story.colorWords,
     stats: story.stats || {},
     letters: [],
   }

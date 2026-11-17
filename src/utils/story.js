@@ -16,6 +16,7 @@
  */
 
 import { getPlan, normalizePlan } from './plan.js'
+import { stickersFor } from './decor.js'
 
 const str = (v, n) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, n) : '')
 const isISO = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s)
@@ -33,6 +34,53 @@ export function normalizeStory(raw) {
     stats: raw.stats && typeof raw.stats === 'object' ? raw.stats : null,
   }
   return story.memories.length || story.catchphrases.length || story.partings.length || story.stats ? story : null
+}
+
+/**
+ * What the sender told the planning guide, in the same shape as a chat story: the dates and places
+ * they named become moments, a running joke becomes something they say. Each finding is marked
+ * `from: 'talk'`. Not turned into letters automatically: the planning talk already shaped the plan.
+ */
+export function storyFromTalk(phase2) {
+  const p2 = phase2 && typeof phase2 === 'object' ? phase2 : {}
+  const memories = []
+  const seen = new Set()
+  const add = (m) => {
+    const k = `${m.title}|${m.date}`.toLowerCase()
+    if (!m.title || seen.has(k)) return
+    seen.add(k)
+    memories.push({ ...m, sticker: stickersFor(`${m.title} ${m.place}`, 1)[0] || '', prompt: m.date ? 'What do you remember most about that day?' : 'What do you remember most about it?', from: 'talk' })
+  }
+  ;(Array.isArray(p2.timeline) ? p2.timeline : []).forEach((t, i) => t && add({ id: `talk-t${i}`, title: str(t.label, 80), date: iso(t.date), place: '' }))
+  ;(Array.isArray(p2.places) ? p2.places : []).forEach((pl, i) => pl && add({ id: `talk-p${i}`, title: str(pl.name, 80), date: iso(pl.date), place: str(pl.name, 40) }))
+  const joke = str(p2.jokes, 120)
+  const catchphrases = joke && joke.length <= 80 ? [{ id: 'talk-joke', who: '', text: joke, from: 'talk' }] : []
+  return { memories, catchphrases, callEachOther: str(p2.nicknames || p2.relationshipWord, 80) }
+}
+
+/**
+ * Everything we know about the two of them: the chat story (if any) and the planning talk, merged.
+ * A moment the talk names on the same day as one from the chat is kept once (the chat's).
+ * `colorWords` are the things they said are theirs, which may tint the box but never show as words.
+ */
+export function storyFromDraft(draft = {}) {
+  const chat = normalizeStory(draft.story)
+  const talk = storyFromTalk(draft.phase2)
+  const p2 = draft.phase2 || {}
+  const chatDays = new Set((chat?.memories || []).map((m) => m.date).filter(Boolean))
+  const chatTitles = new Set((chat?.memories || []).map((m) => m.title.toLowerCase()))
+  const fromTalk = talk.memories.filter((m) => !(m.date && chatDays.has(m.date)) && !chatTitles.has(m.title.toLowerCase()))
+  const merged = {
+    about: chat?.about || '',
+    callEachOther: chat?.callEachOther || talk.callEachOther,
+    memories: [...(chat?.memories || []), ...fromTalk],
+    catchphrases: [...(chat?.catchphrases || []), ...talk.catchphrases],
+    partings: chat?.partings || [],
+    stats: chat?.stats || null,
+    hasChat: !!chat,
+    colorWords: [p2.shared, p2.symbols, p2.special, p2.transport, p2.song].map((x) => str(x, 200)).filter(Boolean),
+  }
+  return merged.memories.length || merged.catchphrases.length || merged.partings.length || merged.stats || merged.colorWords.length ? merged : null
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -72,12 +120,12 @@ export function storyFindings(story) {
     {
       id: 'moments',
       title: 'Moments',
-      items: story.memories.map((m) => ({ key: `memory:${m.id}`, title: m.title, sub: [m.place, shortDate(m.date)].filter(Boolean).join(' · '), prompt: m.prompt, sticker: m.sticker, pin: { kind: 'memory', ref: m.id, text: m.title, sub: [m.place, shortDate(m.date)].filter(Boolean).join(' · ') } })),
+      items: story.memories.map((m) => ({ from: m.from || 'chat', key: `memory:${m.id}`, title: m.title, sub: [m.place, shortDate(m.date)].filter(Boolean).join(' · '), prompt: m.prompt, sticker: m.sticker, pin: { kind: 'memory', ref: m.id, text: m.title, sub: [m.place, shortDate(m.date)].filter(Boolean).join(' · ') } })),
     },
     {
       id: 'sayings',
       title: 'Things you always say',
-      items: story.catchphrases.map((c) => ({ key: `quote:${c.id}`, title: `“${c.text}”`, sub: c.who ? `${c.who} says this a lot` : '', pin: { kind: 'quote', ref: c.id, text: c.text, sub: c.who } })),
+      items: story.catchphrases.map((c) => ({ from: c.from || 'chat', key: `quote:${c.id}`, title: `“${c.text}”`, sub: c.who ? `${c.who} says this a lot` : c.from === 'talk' ? 'Your running joke' : '', pin: { kind: 'quote', ref: c.id, text: c.text, sub: c.who } })),
     },
     {
       id: 'goodbyes',
@@ -93,9 +141,22 @@ export function storyFindings(story) {
   return groups.filter((g) => g.items.length)
 }
 
+const GROUP_WORDS = {
+  moments: ['moment', 'moments'],
+  sayings: ['thing you always say', 'things you always say'],
+  goodbyes: ['goodbye before this one', 'goodbyes before this one'],
+  numbers: ['number worth keeping', 'numbers worth keeping'],
+}
+/** "1 moment", "3 things you always say". */
+export function groupCount(g) {
+  const w = GROUP_WORDS[g.id]
+  return `${g.items.length} ${w ? w[g.items.length === 1 ? 0 : 1] : g.title.toLowerCase()}`
+}
+
 /** The letter a finding would start: which section, a title, and a question to start from. */
 export function letterFromFinding(item) {
   const k = item.pin.kind
+  if (k === 'quote' && item.from === 'talk') return { list: 'anytime', label: `Open when you need a laugh`, hint: `Your joke, “${item.pin.text}”: where did it start?`.slice(0, 120) }
   if (k === 'quote') return { list: 'anytime', label: `Open when you need to hear “${item.pin.text}”`.slice(0, 80), hint: 'Why do those words matter between you?' }
   if (k === 'parting') return { list: 'neverSaid', label: `The last time we said goodbye`, hint: `${item.pin.sub ? `${item.pin.sub}. ` : ''}What do you remember, and what do you wish you’d said?`.slice(0, 120) }
   if (k === 'stat') return { list: 'neverSaid', label: item.pin.text.replace(/^“|”$/g, '').slice(0, 80), hint: 'What’s behind this number?' }

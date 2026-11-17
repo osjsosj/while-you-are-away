@@ -5,7 +5,7 @@ import Mascot from '../components/Mascot'
 import { getDraft, saveDraft } from '../utils/storage'
 import { chatStats, parseChatAsync, pickExcerpts, readChatFile, suggestRoles, withRoles } from '../utils/chat'
 import { clearLocalChat, loadLocalChat, saveLocalChat } from '../utils/chat/local'
-import { draftWithStory, normalizeStory, shortDate, statFacts, storyFindings } from '../utils/story'
+import { draftWithStory, groupCount, normalizeStory, shortDate, statFacts, storyFindings } from '../utils/story'
 import { AIUnavailableError, PaymentRequiredError, findStory } from '../utils/aiService'
 import { track } from '../utils/track'
 import '../styles/chats.css'
@@ -46,13 +46,6 @@ const ERRORS = {
   zip_unsupported: 'That’s a .zip. Open it on your phone or computer and pick the .txt inside.',
   empty: 'We couldn’t find messages in that. Check it’s the exported chat (a .txt or .csv), or try Paste.',
   read: 'We couldn’t read that file. Try exporting it again.',
-}
-
-const GROUP_LABEL = {
-  moments: ['moment', 'moments'],
-  sayings: ['thing you always say', 'things you always say'],
-  goodbyes: ['goodbye before this one', 'goodbyes before this one'],
-  numbers: ['number worth keeping', 'numbers worth keeping'],
 }
 
 const ROLE_LABEL = (toName) => [['me', 'Me'], ['them', toName || 'Them'], ['other', 'Someone else']]
@@ -266,7 +259,7 @@ export default function ChatImport() {
             <h1 className="wf-h1" tabIndex={-1} ref={headRef}>Here’s what we found</h1>
             {found.about && <p className="wf-lede">{found.about}</p>}
             <ul className="ci-found">
-              {groups.map((g) => <li key={g.id} className="wf-card"><span className="ci-found-n">{g.items.length}</span> {GROUP_LABEL[g.id]?.[g.items.length === 1 ? 0 : 1] || g.title.toLowerCase()}</li>)}
+              {groups.map((g) => <li key={g.id} className="wf-card"><span className="ci-found-n">{g.items.length}</span> {groupCount(g).replace(/^\d+ /, '')}</li>)}
             </ul>
             <p className="wf-note ci-note">The chat itself has been removed from this device. Only what we found is kept with your letter box.</p>
             <button type="button" className="wf-btn wf-btn--block" onClick={() => navigate(getDraft().plan ? '/editor' : '/ai-interview')}>{getDraft().plan ? 'Open the editor' : 'Back to planning'}</button>

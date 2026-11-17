@@ -14,7 +14,7 @@ import { uploadMedia, NeedSignInError, useMediaUrl } from '../utils/media'
 import { useRecorder, fmtSeconds } from '../utils/useRecorder'
 import { STYLES, TICKETS, stickerId, stickerLabel, stickersFor } from '../utils/decor'
 import { buildSummary, isFilled } from '../utils/summary'
-import { cleanPins, draftWithStory, letterFromFinding, normalizeStory } from '../utils/story'
+import { cleanPins, draftWithStory, letterFromFinding, storyFindings, storyFromDraft } from '../utils/story'
 import { ChatInvite, FindingsPanel, PinList, StoryEntry } from '../components/StoryFinds'
 import { loadLocalChat } from '../utils/chat/local'
 import '../styles/editor.css'
@@ -62,7 +62,8 @@ export default function Editor() {
   const summary = useCallback(() => buildSummary(getDraft()), [])
 
   // what we found in their chats: letters made from it in advance, and pins on letters
-  const story = useMemo(() => normalizeStory(draft.story), [draft.story])
+  // the chat story and what they told the planning guide, together
+  const story = useMemo(() => storyFromDraft(draft), [draft])
   const takeStory = (raw) => {
     const patch = draftWithStory(getDraft(), raw)
     if (patch) update(patch)
@@ -112,14 +113,13 @@ export default function Editor() {
           <p className="wf-note">{filled} of {slots.length} letters written. Write in any order; nothing has to be finished today.</p>
         </div>
 
-        {story
-          ? <StoryEntry story={story} onOpen={() => setFinds({ target: null })} />
-          : (
-            <>
-              <ChatInvite ready={chatWaiting} onOpen={() => navigate('/chats')} />
-              {import.meta.env.DEV && <button type="button" className="we-add" style={{ marginBottom: 24 }} onClick={loadSampleStory}>Dev only: load a sample chat story</button>}
-            </>
-          )}
+        {story && <StoryEntry story={story} onOpen={() => setFinds({ target: null })} />}
+        {!story?.hasChat && (
+          <>
+            <ChatInvite ready={chatWaiting} onOpen={() => navigate('/chats')} />
+            {import.meta.env.DEV && <button type="button" className="we-add" style={{ marginBottom: 24 }} onClick={loadSampleStory}>Dev only: load a sample chat story</button>}
+          </>
+        )}
 
         <DecorStrip decor={draft.decor} onEdit={() => navigate('/generate')} />
 
@@ -194,7 +194,8 @@ export default function Editor() {
           onPlan={setPlan}
           onAsk={() => { setOpenId(null); askAbout(current) }}
           onClose={() => setOpenId(null)}
-          onFromStory={story ? () => setFinds({ target: current.id }) : null}
+          onFromStory={storyFindings(story).length ? () => setFinds({ target: current.id }) : null}
+          fromChat={!!story?.hasChat}
           onUnpin={(pin) => unpinFrom(current.id, pin)}
         />
       )}
@@ -349,7 +350,7 @@ function MissingSections({ plan, p1, onPlan }) {
   )
 }
 
-function LetterSheet({ slot, content, plan, toName, onChange, onPlan, onAsk, onClose, onFromStory, onUnpin }) {
+function LetterSheet({ slot, content, plan, toName, onChange, onPlan, onAsk, onClose, onFromStory, fromChat = true, onUnpin }) {
   const listKey = ADDABLE[slot.section]
   const item = listKey ? plan[listKey].find((x) => x.id === slot.id) : null
   const [letter, setLetter] = useState(content.letter || '')
@@ -409,7 +410,7 @@ function LetterSheet({ slot, content, plan, toName, onChange, onPlan, onAsk, onC
         )}
         {slot.hint && <p className="we-hint">{slot.hint}</p>}
         <PinList pins={content.pins} onRemove={onUnpin} />
-        {onFromStory && <button type="button" className="we-from-story" onClick={onFromStory}>+ Add something from your chats</button>}
+        {onFromStory && <button type="button" className="we-from-story" onClick={onFromStory}>{fromChat ? '+ Add something from your chats' : '+ Add something from your story'}</button>}
 
         <label htmlFor="we-letter" className="wf-sr">Your letter</label>
         <textarea

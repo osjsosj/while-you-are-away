@@ -88,6 +88,7 @@ function colorAnchors(story) {
     ...(story.memories || []).map((m) => [m.title, m.place, ...(m.things || []), m.transport].filter(Boolean).join(' · ')),
     ...(story.catchphrases || []).map((c) => c.text),
     ...(story.partings || []).map((p) => `${p.place} ${p.what}`),
+    ...(story.colorWords || []), // things they said are theirs: a tint, never shown as words
   ].filter(Boolean)
   const counts = new Map()
   for (const t of texts) {

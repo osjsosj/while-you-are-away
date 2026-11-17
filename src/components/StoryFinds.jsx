@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Motif } from './Decor'
-import { MAX_PINS, storyFindings } from '../utils/story'
+import { MAX_PINS, groupCount, storyFindings } from '../utils/story'
 
 /*
  * "From your chats" in the editor: what we found about the two of them, laid out so the sender can
@@ -19,8 +19,8 @@ export function StoryEntry({ story, onOpen }) {
   return (
     <button type="button" className="we-story" onClick={onOpen}>
       <span className="we-story-text">
-        <span className="we-story-title">What we found in your chats</span>
-        <span className="we-story-sub">{groups.map((g) => `${g.items.length} ${g.title.toLowerCase()}`).join(' · ')}. Read through it; something might be worth a letter.</span>
+        <span className="we-story-title">{story.hasChat ? 'What we found in your chats' : 'What you told us'}</span>
+        <span className="we-story-sub">{groups.map(groupCount).join(' · ')}{story.hasChat ? '' : ', from your planning talk'}. Read through it; something might be worth a letter.</span>
       </span>
       <span className="we-story-go" aria-hidden="true">Look</span>
     </button>
@@ -77,10 +77,12 @@ export function FindingsPanel({ story, target, pinnedOn, letterFor, onPin, onUnp
       <section className="we-find" tabIndex={-1} ref={ref}>
         <header className="we-find-head">
           <div>
-            <h2 id="we-find-title" className="we-find-h">{target ? `For “${target.label}”` : 'What we found in your chats'}</h2>
+            <h2 id="we-find-title" className="we-find-h">{target ? `For “${target.label}”` : story.hasChat ? 'What we found in your chats' : 'What you told us'}</h2>
             <p className="we-find-lede">{target
               ? `Tap Add to put a piece beside this letter (up to ${MAX_PINS}). It sits next to your words; it doesn’t write them.`
-              : `${story.about ? `${story.about} ` : ''}Things from your messages you may not remember. Start a letter from any of them.`}</p>
+              : story.hasChat
+                ? `${story.about ? `${story.about} ` : ''}Things from your messages and your planning talk. Start a letter from any of them.`
+                : 'The days, places and jokes you shared with the planning guide. Start a letter from any of them.'}</p>
           </div>
           <button type="button" className="we-icon-btn we-find-close" onClick={onClose} aria-label="Close">
             <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 3l10 10M13 3L3 13" /></svg>
@@ -101,7 +103,7 @@ export function FindingsPanel({ story, target, pinnedOn, letterFor, onPin, onUnp
                     <div className="we-find-top">
                       {it.sticker ? <Motif id={it.sticker} size={34} /> : <span className="we-find-mark" aria-hidden="true">{KIND_MARK[it.pin.kind]}</span>}
                       <div className="we-find-text">
-                        <span className="we-find-kind">{KIND_NAME[it.pin.kind]}</span>
+                        <span className="we-find-kind">{KIND_NAME[it.pin.kind]}{it.from === 'talk' ? ' · from your planning talk' : ''}</span>
                         <span className="we-find-title">{it.title}</span>
                         {it.sub && <span className="we-find-sub">{it.sub}</span>}
                         {it.prompt && <span className="we-find-prompt">{it.prompt}</span>}
@@ -125,7 +127,7 @@ export function FindingsPanel({ story, target, pinnedOn, letterFor, onPin, onUnp
             </ul>
           </div>
         ))}
-        <p className="we-find-foot">Found by reading your messages. If something isn’t right, leave it out; nothing here goes in the box unless you put it on a letter.</p>
+        <p className="we-find-foot">{story.hasChat ? 'Found by reading your messages and from what you told the planning guide.' : 'From what you told the planning guide.'} If something isn’t right, leave it out; nothing here goes in the box unless you put it on a letter.</p>
       </section>
     </div>
   )
