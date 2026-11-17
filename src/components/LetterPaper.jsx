@@ -19,7 +19,7 @@ function paragraphs(text) {
 
 export default function LetterPaper({
   decor, title, titleId, meta, prompt, letter, photoUrl, videoUrl, voiceUrl, fromName,
-  signature, note, showPostmark = false, isTicket = false, textSizeControl = true, celebrate = false, stickers = [],
+  signature, note, showPostmark = false, isTicket = false, textSizeControl = true, celebrate = false, stickers = [], pins = [],
 }) {
   const d = decor || { style: 'night', motifs: [], postmark: null, ticket: null, tape: true }
   const [size, setSize] = useState(readSize)
@@ -64,6 +64,7 @@ export default function LetterPaper({
 
       <h2 className="lp-title" id={titleId}>{title}</h2>
       {prompt && <p className="lp-prompt">{prompt}</p>}
+      <Pins pins={pins} />
 
       {textSizeControl && chars > 400 && (
         <div className="lp-size" role="group" aria-label="Text size">
@@ -107,5 +108,26 @@ export default function LetterPaper({
         </button>
       )}
     </div>
+  )
+}
+
+/* Pieces of their story the sender set beside this letter: a moment, a thing someone always says,
+   an earlier goodbye, a number from their messages. They sit above the words, never inside them. */
+function Pins({ pins }) {
+  if (!pins?.length) return null
+  return (
+    <ul className="lp-pins" aria-label="From your story">
+      {pins.map((p) => (
+        <li key={`${p.kind}:${p.ref}`} className={`lp-pin lp-pin--${p.kind}`}>
+          {p.kind === 'quote' ? (
+            <><span className="lp-pin-main">“{p.text}”</span>{p.sub && <span className="lp-pin-sub">{p.sub}</span>}</>
+          ) : p.kind === 'stat' ? (
+            <><span className="lp-pin-num">{p.text}</span>{p.sub && <span className="lp-pin-sub">{p.sub}</span>}</>
+          ) : (
+            <><span className="lp-pin-main">{p.text}</span>{p.sub && <span className="lp-pin-sub">{p.sub}</span>}</>
+          )}
+        </li>
+      ))}
+    </ul>
   )
 }

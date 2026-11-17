@@ -8,6 +8,7 @@ import { getPlan, planSlots } from './plan.js'
 import { normalizeFilm } from './film.js'
 import { cleanSignature } from './sky.js'
 import { normalizeDecor, activeDecor, stickersFor } from './decor.js'
+import { cleanPins } from './story.js'
 
 export function addDays(iso, n) {
   const [y, m, d] = iso.split('-').map(Number)
@@ -50,6 +51,9 @@ export function allItems(draft) {
 
 const MEDIA_FIELDS = ['photo', 'voice', 'video']
 
+/** A letter counts once it has words or media. Unwritten letters never go in the box, sealed or open. */
+export const isWritten = (c = {}) => !!((typeof c.letter === 'string' && c.letter.trim()) || MEDIA_FIELDS.some((f) => c[f]))
+
 /**
  * The recipient's view for `today` (their local date). Locked items keep only their label and date.
  * Returns media refs that the caller turns into signed URLs.
@@ -59,7 +63,7 @@ export function recipientView(draft, today) {
   const phase2 = draft.phase2 || {}
   const config = draft.generatedConfig || {}
   const decor = activeDecor(normalizeDecor(draft.decor || { style: 'night' }, ticketLetterIds(draft)))
-  const items = allItems(draft).map((it) => {
+  const items = allItems(draft).filter((it) => isWritten(it.content)).map((it) => {
     const open = !it.opensOn || it.opensOn <= today
     const base = { id: it.id, section: it.section, label: it.label, hint: it.hint || '', emoji: it.emoji || '', opensOn: it.opensOn, open }
     if (it.section === 'before') Object.assign(base, { stamp: it.stamp, date: it.date, writtenOn: it.writtenOn })
@@ -67,6 +71,9 @@ export function recipientView(draft, today) {
     const c = it.content || {}
     const out = { ...base, letter: c.letter || '', prompt: c.prompt || '', note: typeof c.note === 'string' ? c.note.slice(0, 240) : '' }
     for (const f of MEDIA_FIELDS) if (c[f]) out[f] = c[f]
+    // pieces of their story the sender set beside this letter
+    const pins = cleanPins(c.pins).filter((pin) => pin.text !== it.label) // a letter started from a moment already carries it as its title
+    if (pins.length) out.pins = pins
     out.empty = !out.letter && !MEDIA_FIELDS.some((f) => out[f])
     // a sticker or two picked from what this letter actually says (never invented: words must appear in it)
     if (decor.letterStickers && decor.style !== 'quiet' && out.letter) {
@@ -75,7 +82,7 @@ export function recipientView(draft, today) {
     }
     return out
   })
-  // letters the sender never wrote stay hidden; sealed ones keep only their label and date
+  // letters the sender never wrote are already left out; sealed ones keep only their label and date
   const visible = items.filter((it) => (it.open ? !it.empty : true))
 
   // the film opens with the first letters (the day they part); before that only its existence is known

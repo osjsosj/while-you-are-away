@@ -103,6 +103,12 @@ export default function Paywall() {
         </p>
       </form>
 
+      <div className="wf-card" style={{ marginTop: 28, padding: 20 }}>
+        <p style={{ fontFamily: 'var(--serif)', fontSize: 19, lineHeight: 1.3, color: '#F4F1E6', marginBottom: 6 }}>Curious what your chats hold?</p>
+        <p className="wf-note" style={{ marginBottom: 12 }}>Drop in a KakaoTalk, WhatsApp or iMessage chat and see your numbers for free: the first message, the late nights, the hours on the phone. Counted on your phone; nothing is sent.</p>
+        <button type="button" className="wf-btn wf-btn--ghost wf-btn--small" onClick={() => navigate('/chats')}>See your chat in numbers</button>
+      </div>
+
       <button type="button" className="wf-link" style={{ marginTop: 16 }} onClick={() => navigate('/interview')}>Change the basics</button>
     </FlowFrame>
   )

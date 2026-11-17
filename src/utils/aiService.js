@@ -90,3 +90,15 @@ export function extractComplete(text) {
     return null
   }
 }
+
+/**
+ * Reads excerpts of their chat and returns the story (moments, sayings, earlier goodbyes).
+ * `excerpts` come from pickExcerpts(); `stats` were counted in the browser; `names` = { me, them }.
+ * Throws PaymentRequiredError before checkout, AIUnavailableError(429) after three readings.
+ */
+export async function findStory({ excerpts, stats, names }) {
+  const small = { ...(stats || {}) }
+  delete small.byMonth // the month-by-month counts aren't needed to find moments
+  const text = await callClaude({ kind: 'chat', excerpts, stats: small, names })
+  return JSON.parse(text)
+}

@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { track, installClickTracking } from './utils/track'
 import { hydrateFromDB } from './utils/storage'
@@ -12,11 +12,16 @@ import Paywall from './pages/Paywall'
 import AIInterview from './pages/AIInterview'
 import AIGenerate from './pages/AIGenerate'
 import Editor from './pages/Editor'
+import ChatImport from './pages/ChatImport'
 import Preview from './pages/Preview'
 import Export from './pages/Export'
 import AuthCallback from './pages/AuthCallback'
 import Diary from './pages/Diary'
 import Box from './pages/Box'
+
+// design lab: only in local development, never in the built site
+const DesignLab = import.meta.env.DEV ? lazy(() => import('./pages/lab/DesignLab')) : null
+const LabPhone = import.meta.env.DEV ? lazy(() => import('./pages/lab/LabPhone')) : null
 
 /* Page views on every route change. Recipient boxes (/b/...) are reported by the box itself, without a visitor id. */
 function Tracker() {
@@ -44,6 +49,7 @@ export default function App() {
         <Route path="/ai-interview" element={<AIInterview />} />
         <Route path="/generate" element={<AIGenerate />} />
         <Route path="/editor" element={<Editor />} />
+        <Route path="/chats" element={<ChatImport />} />
         <Route path="/diary" element={<Diary />} />
         <Route path="/b/:token" element={<Box />} />
         <Route path="/preview" element={<Preview />} />
@@ -52,6 +58,8 @@ export default function App() {
         <Route path="/terms" element={<Legal doc="terms" />} />
         <Route path="/privacy" element={<Legal doc="privacy" />} />
         <Route path="/refunds" element={<Legal doc="refunds" />} />
+        {DesignLab && <Route path="/lab/design" element={<Suspense fallback={null}><DesignLab /></Suspense>} />}
+        {LabPhone && <Route path="/lab/phone/:key" element={<Suspense fallback={null}><LabPhone /></Suspense>} />}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>

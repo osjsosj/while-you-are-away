@@ -51,6 +51,35 @@ export function currentNodeId(units, openSet) {
   return sealed.length ? sealed[0].item.id : null
 }
 
+/**
+ * What one unit of the path shows, so a box with a hundred letters still opens near today.
+ * Rows are { node } or { fold: { key, kind: 'unit' | 'read' | 'sealed', nodes } }.
+ *  - a unit that is all read (3+ letters, not holding today's) folds to one row
+ *  - a long run of read letters before today's folds, keeping the last two
+ *  - a long run of sealed letters folds after the next three
+ * `expanded` holds fold keys the reader opened.
+ */
+export function foldUnit(unit, openSet, current, expanded = new Set()) {
+  const nodes = unit.nodes
+  const read = (n) => openSet.has(n.item.id)
+  const ci = nodes.findIndex((n) => n.item.id === current)
+  const fold = (kind, list) => ({ fold: { key: `${unit.id}:${kind}`, kind, nodes: list } })
+  if (ci < 0 && nodes.length >= 3 && nodes.every(read) && !expanded.has(`${unit.id}:unit`)) return [fold('unit', nodes)]
+
+  const rows = []
+  let start = 0
+  if (ci > 4 && nodes.slice(0, ci - 2).every((n) => read(n) || !n.item.open) && !expanded.has(`${unit.id}:read`)) {
+    rows.push(fold('read', nodes.slice(0, ci - 2)))
+    start = ci - 2
+  }
+  let end = nodes.length
+  const firstSealed = nodes.findIndex((n, k) => k >= start && !n.item.open)
+  if (firstSealed >= 0 && nodes.length - (firstSealed + 3) >= 3 && !expanded.has(`${unit.id}:sealed`)) end = firstSealed + 3
+  for (const n of nodes.slice(start, end)) rows.push({ node: n })
+  if (end < nodes.length) rows.push(fold('sealed', nodes.slice(end)))
+  return rows
+}
+
 /** Sideways offset for the i-th node, in units of the node size: a gentle S that never repeats a column twice. */
 const WAVE = [0, -0.55, -0.9, -0.55, 0, 0.55, 0.9, 0.55]
 export const offsetFor = (i) => WAVE[i % WAVE.length]

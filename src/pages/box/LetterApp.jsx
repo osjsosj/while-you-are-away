@@ -3,8 +3,8 @@ import { daysBetween, formatLong } from '../../utils/diary'
 import { moonOn } from '../../utils/sky'
 import Moon from '../../components/Moon'
 import Mascot, { Says } from '../../components/Mascot'
-import { TicketBanner } from '../../components/Decor'
-import { buildPath, currentNodeId, offsetFor, untilStats } from './journey'
+import { Motif, TicketBanner } from '../../components/Decor'
+import { buildPath, currentNodeId, foldUnit, offsetFor, untilStats } from './journey'
 import './letterapp.css'
 
 /* The recipient's letter box as an app: a menu (Letters, Photos, My replies, Until we meet) around
@@ -17,7 +17,8 @@ const TABS = [
   { id: 'until', label: 'Until we meet', Icon: MoonIcon },
 ]
 
-export default function LetterApp({ box, items, replies = [], opened = [], today, onOpen, offline = false, film = null, onFilm = null, story = null, footer = null }) {
+/* `look` (optional) dresses the box from the senders' story: { hero: a node shown above the path, pathArt: sticker ids set beside the path }. */
+export default function LetterApp({ box, items, replies = [], opened = [], today, onOpen, offline = false, film = null, onFilm = null, story = null, footer = null, look = null }) {
   const [tab, setTab] = useState('letters')
   const openSet = useMemo(() => new Set(opened), [opened])
   const units = useMemo(() => buildPath(items, box), [items, box])
@@ -62,7 +63,7 @@ export default function LetterApp({ box, items, replies = [], opened = [], today
       <main className="la-main" ref={main}>
         {offline && <p className="la-offline">Offline. Showing what was saved on this phone.</p>}
         <div className="la-view" key={tab}>
-          {tab === 'letters' && <LettersView box={box} items={items} units={units} openSet={openSet} current={current} onOpen={onOpen} today={today} />}
+          {tab === 'letters' && <LettersView box={box} items={items} units={units} openSet={openSet} current={current} onOpen={onOpen} today={today} look={look} />}
           {tab === 'photos' && <PhotosView items={items} film={film} onOpen={onOpen} onFilm={onFilm} fromName={box.fromName} />}
           {tab === 'replies' && <RepliesView items={items} replies={replies} onOpen={onOpen} fromName={box.fromName} onGo={() => go('letters')} />}
           {tab === 'until' && <UntilView box={box} items={items} today={today}>{story}</UntilView>}
@@ -100,36 +101,87 @@ function Guide({ children }) {
 
 /* ---------- Letters: the path ---------- */
 
-function LettersView({ box, items, units, openSet, current, onOpen, today }) {
+const TOPIC_LABELS = { before: 'Days before', tonight: 'Tonight', apart: 'While apart', last: 'Reunion', anytime: 'Open when', never: 'Never said' }
+
+const reduceMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
+/** Bring today's letter to the middle of the screen. */
+function scrollToCurrent(smooth = true) {
+  const el = document.querySelector('.la-step.is-current')
+  el?.scrollIntoView?.({ block: 'center', behavior: smooth && !reduceMotion() ? 'smooth' : 'auto' })
+}
+
+function LettersView({ box, items, units, openSet, current, onOpen, today, look }) {
+  const [expanded, setExpanded] = useState(() => new Set())
+  const [active, setActive] = useState(null)
+  const [away, setAway] = useState(null) // 'up' | 'down' when today's letter is off screen
   const ticket = box.decor?.ticket
   const ticketFor = (i) => (ticket?.letterId === i.id
     ? <button key={i.id} type="button" className="la-ticket" onClick={() => onOpen(i.id)} aria-label={`${i.label}${openSet.has(i.id) ? '' : ', new'}`}><TicketBanner ticket={{ ...ticket, title: i.label }} compact /></button>
     : null)
   const anytime = items.filter((i) => i.section === 'anytime')
   const never = items.filter((i) => i.section === 'never')
+  const topics = [...units.map((u) => u.id), ...(anytime.length ? ['anytime'] : []), ...(never.length ? ['never'] : [])]
+  const open = (key) => setExpanded((s) => new Set(s).add(key))
+
+  // land on today's letter, if it is below the first screen
+  useEffect(() => {
+    const el = document.querySelector('.la-step.is-current')
+    if (el && el.getBoundingClientRect().top > window.innerHeight * 0.7) scrollToCurrent(false)
+  }, [])
+
+  // which topic is on screen, and whether today's letter is
+  useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined') return undefined
+    const seen = new Map()
+    const topicIO = new IntersectionObserver((entries) => {
+      for (const e of entries) seen.set(e.target.dataset.topic, e.isIntersecting ? e.boundingClientRect.top : null)
+      const visible = [...seen].filter(([, top]) => top !== null).sort((a, b) => a[1] - b[1])
+      if (visible.length) setActive(visible[0][0])
+    }, { rootMargin: '-120px 0px -55% 0px' })
+    document.querySelectorAll('[data-topic]').forEach((el) => topicIO.observe(el))
+    const el = document.querySelector('.la-step.is-current')
+    const nowIO = el && new IntersectionObserver(([e]) => setAway(e.isIntersecting ? null : e.boundingClientRect.top < 0 ? 'up' : 'down'))
+    if (el) nowIO.observe(el)
+    return () => { topicIO.disconnect(); nowIO?.disconnect() }
+  }, [current, expanded, topics.length])
+
+  const jump = (t) => document.getElementById(`la-topic-${t}`)?.scrollIntoView?.({ block: 'start', behavior: reduceMotion() ? 'auto' : 'smooth' })
+
   let index = 0
   return (
     <>
+      {look?.hero}
       <h1 className="la-h1">{box.appName}</h1>
       {box.welcome && <p className="la-lede">{box.welcome}</p>}
+      {topics.length > 1 && (
+        <nav className="la-topics" aria-label="Jump to">
+          {topics.map((t) => (
+            <button key={t} type="button" className="la-topic" aria-current={active === t ? 'true' : undefined} onClick={() => jump(t)}>{TOPIC_LABELS[t]}</button>
+          ))}
+        </nav>
+      )}
       {units.length === 0 && anytime.length === 0 && never.length === 0 && <Guide>Nothing has arrived yet. The first letter opens on the day you part.</Guide>}
       {units.map((u) => (
-        <section key={u.id} className={`la-unit la-unit--${u.id}`} aria-labelledby={`la-u-${u.id}`}>
+        <section key={u.id} id={`la-topic-${u.id}`} data-topic={u.id} className={`la-unit la-unit--${u.id}`} aria-labelledby={`la-u-${u.id}`}>
           <div className="la-banner">
             <h2 id={`la-u-${u.id}`}>{u.title}</h2>
             <p>{u.sub}</p>
             <span className="la-banner-count">{u.nodes.filter((n) => openSet.has(n.item.id)).length} of {u.nodes.length} read</span>
           </div>
           <ol className="la-path">
-            {u.nodes.map((n) => {
+            {foldUnit(u, openSet, current, expanded).map((row) => {
+              if (row.fold) return <FoldRow key={row.fold.key} fold={row.fold} onOpen={() => open(row.fold.key)} />
+              const n = row.node
               const i = index++
-              return <PathNode key={n.item.id} node={n} i={i} read={openSet.has(n.item.id)} isCurrent={current === n.item.id} onOpen={onOpen} today={today} fromName={box.fromName} />
+              const art = look?.pathArt?.length && i % 3 === 1 && current !== n.item.id ? look.pathArt[Math.floor(i / 3) % look.pathArt.length] : null
+              return <PathNode key={n.item.id} node={n} i={i} read={openSet.has(n.item.id)} isCurrent={current === n.item.id} onOpen={onOpen} today={today} fromName={box.fromName} art={art} />
             })}
           </ol>
         </section>
       ))}
       {anytime.length > 0 && (
-        <section className="la-shelf" aria-labelledby="la-anytime">
+        <section id="la-topic-anytime" data-topic="anytime" className="la-shelf" aria-labelledby="la-anytime">
           <h2 id="la-anytime" className="la-h2">Open when…</h2>
           <p className="la-sub">For the moment it’s written for. Open these whenever you need one.</p>
           <div className="la-envelopes">
@@ -144,7 +196,7 @@ function LettersView({ box, items, units, openSet, current, onOpen, today }) {
         </section>
       )}
       {never.length > 0 && (
-        <section className="la-shelf" aria-labelledby="la-never">
+        <section id="la-topic-never" data-topic="never" className="la-shelf" aria-labelledby="la-never">
           <h2 id="la-never" className="la-h2">Things I never said</h2>
           <p className="la-sub">Folded small, the way you’d slip a note into a pocket.</p>
           <div className="la-notes">
@@ -157,11 +209,35 @@ function LettersView({ box, items, units, openSet, current, onOpen, today }) {
           </div>
         </section>
       )}
+      {away && (
+        <button type="button" className="la-today" onClick={() => scrollToCurrent(true)}>
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: away === 'up' ? 'rotate(180deg)' : undefined }}><path d="M8 3v10M3.5 8.5L8 13l4.5-4.5" /></svg>
+          Today’s letter
+        </button>
+      )}
     </>
   )
 }
 
-function PathNode({ node, i, read, isCurrent, onOpen, today, fromName }) {
+/** A folded stretch of the path: letters already read, or ones still sealed. Tap to show them. */
+function FoldRow({ fold, onOpen }) {
+  const n = fold.nodes.length
+  const last = fold.nodes[n - 1]?.item
+  const text = fold.kind === 'sealed'
+    ? `${n} more sealed${last?.opensOn ? ` · the last opens ${formatLong(last.opensOn)}` : ''}`
+    : fold.kind === 'unit' ? `${n} letters · all read` : `${n} letters already read`
+  return (
+    <li className={`la-fold la-fold--${fold.kind}`}>
+      <button type="button" className="la-fold-btn" aria-expanded="false" onClick={onOpen}>
+        <span className="la-fold-dots" aria-hidden="true"><i /><i /><i /></span>
+        <span className="la-fold-text">{text}</span>
+        <span className="la-fold-show">Show</span>
+      </button>
+    </li>
+  )
+}
+
+function PathNode({ node, i, read, isCurrent, onOpen, today, fromName, art = null }) {
   const { item, kind, badge, caption } = node
   const [peek, setPeek] = useState(false)
   useEffect(() => {
@@ -185,6 +261,7 @@ function PathNode({ node, i, read, isCurrent, onOpen, today, fromName }) {
       {isCurrent && (
         <span className="la-callout" aria-hidden="true">{locked ? (soon === 1 ? 'Tomorrow' : soon ? `In ${soon} days` : 'Soon') : 'Open'}</span>
       )}
+      {art && <Motif id={art} size={52} className={`la-step-art ${off > 0 ? 'is-left' : 'is-right'}`} tilt={off > 0 ? 8 : -8} />}
       <button type="button" className="la-node" aria-label={label} onClick={() => (locked ? setPeek(true) : onOpen(item.id))} disabled={item.empty}>
         <span className="la-node-face" aria-hidden="true">
           {locked ? <LockGlyph big={big} kind={kind} /> : kind === 'before' ? <span className="la-node-d">{badge}</span> : kind === 'occasion' ? <GiftGlyph /> : kind === 'last' ? <HeartGlyph /> : read ? <CheckGlyph /> : <EnvelopeGlyph />}

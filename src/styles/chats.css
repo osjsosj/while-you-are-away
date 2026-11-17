@@ -1,0 +1,49 @@
+/* "Bring in your chats": file or paste, who is who, the free numbers, then the reading. Scoped under .ci, inside .wf. */
+
+.ci { display: flex; flex-direction: column; }
+.ci .wf-h1 { outline: none; }
+
+.ci-perigan { display: flex; align-items: flex-end; gap: 10px; margin: 0 0 24px; }
+.ci-perigan > :first-child { flex: none; }
+.ci-bubble { position: relative; padding: 12px 14px; border-radius: 14px 14px 14px 4px; background: #F4F1E6; color: var(--ink); font-size: 15px; line-height: 1.45; }
+
+.ci-sources { margin-bottom: 14px; }
+.ci-guide { margin-bottom: 20px; padding: 18px 20px; }
+.ci-steps { margin: 0 0 10px; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; list-style: decimal; font-size: 15px; line-height: 1.5; color: var(--mist); word-break: keep-all; overflow-wrap: anywhere; }
+.ci-steps li::marker { color: var(--light); font-weight: 600; }
+.ci-steps:last-child { margin-bottom: 0; }
+.ci-paste { min-height: 160px; margin: 8px 0 14px; resize: vertical; font-size: 16px; line-height: 1.45; }
+.ci-fine { color: var(--mist-muted); text-align: left; }
+.ci-back { align-self: center; margin-top: 10px; }
+
+.ci-wait { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 40px 0; text-align: center; }
+
+.ci-who { list-style: none; padding: 0; margin: 0 0 16px; display: flex; flex-direction: column; gap: 10px; }
+.ci-person { padding: 16px; }
+.ci-person-name { margin-bottom: 10px; font-size: 17px; font-weight: 600; overflow-wrap: anywhere; }
+.ci-roles { display: flex; flex-wrap: wrap; gap: 8px; }
+.ci-roles .wf-pill { flex: 1 1 auto; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ci-who + .wf-note { margin-bottom: 12px; }
+
+.ci-facts { list-style: none; padding: 0; margin: 0 0 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.ci-fact { display: flex; flex-direction: column; gap: 4px; padding: 16px; border-radius: 12px; background: rgba(233, 236, 242, 0.05); border: 1px solid var(--line); min-width: 0; }
+.ci-fact-big { font-family: var(--serif); font-size: 26px; line-height: 1.15; color: #F4F1E6; word-break: keep-all; overflow-wrap: anywhere; }
+.ci-fact-sub { font-size: 14px; line-height: 1.4; color: var(--mist-muted); }
+
+.ci-next { padding: 22px; }
+.ci-next-h { margin-bottom: 8px; font-family: var(--serif); font-size: 21px; line-height: 1.25; }
+.ci-next-p { margin-bottom: 16px; font-size: 15px; line-height: 1.55; color: var(--ink-soft); }
+.ci-next .wf-note { margin-top: 10px; }
+
+.ci-found { list-style: none; padding: 0; margin: 0 0 16px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.ci-found .wf-card { padding: 14px 16px; font-size: 15px; line-height: 1.35; }
+.ci-found-n { display: block; font-family: var(--serif); font-size: 28px; color: #F4F1E6; }
+.ci-note { margin-bottom: 18px; }
+
+@media (max-width: 360px) {
+  .ci .wf-h1 { font-size: 32px; }
+  .ci-facts { grid-template-columns: 1fr 1fr; }
+  .ci-fact { padding: 12px; }
+  .ci-fact-big { font-size: 22px; }
+  .ci-next { padding: 18px; }
+}

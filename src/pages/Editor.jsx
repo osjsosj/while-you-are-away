@@ -14,6 +14,9 @@ import { uploadMedia, NeedSignInError, useMediaUrl } from '../utils/media'
 import { useRecorder, fmtSeconds } from '../utils/useRecorder'
 import { STYLES, TICKETS, stickerId, stickerLabel, stickersFor } from '../utils/decor'
 import { buildSummary, isFilled } from '../utils/summary'
+import { cleanPins, draftWithStory, letterFromFinding, normalizeStory } from '../utils/story'
+import { ChatInvite, FindingsPanel, PinList, StoryEntry } from '../components/StoryFinds'
+import { loadLocalChat } from '../utils/chat/local'
 import '../styles/editor.css'
 import './diary.css'
 
@@ -29,10 +32,16 @@ const ADD_PLACEHOLDER = {
 
 export default function Editor() {
   const navigate = useNavigate()
-  const [draft, setDraft] = useState(() => getDraft())
+  const [draft, setDraft] = useState(() => {
+    // a story found before the box had a plan: make its letters now, once
+    const d = getDraft()
+    if (d.storyPending) saveDraft({ ...(draftWithStory(d, d.story) || {}), storyPending: false })
+    return getDraft()
+  })
   const [openId, setOpenId] = useState(null)
   const [companionOpen, setCompanionOpen] = useState(false)
   const [seed, setSeed] = useState('')
+  const [finds, setFinds] = useState(null) // null, or { target: a letter id or null }
 
   const update = (patch) => {
     saveDraft(patch)
@@ -41,7 +50,7 @@ export default function Editor() {
 
   const p1 = draft.phase1 || {}
   const plan = useMemo(() => getPlan(draft), [draft])
-  const caps = draft.capsuleData || {}
+  const caps = useMemo(() => draft.capsuleData || {}, [draft.capsuleData])
   const slots = useMemo(() => planSlots(plan, p1.startDate, p1.endDate), [plan, p1.startDate, p1.endDate])
   const filled = slots.filter((s) => isFilled(caps[s.id])).length
   const diary = Array.isArray(draft.diary) ? draft.diary : []
@@ -51,6 +60,35 @@ export default function Editor() {
   const setCap = (id, patch) => update({ capsuleData: { ...(getDraft().capsuleData || {}), [id]: { ...(getDraft().capsuleData?.[id] || {}), ...patch } } })
 
   const summary = useCallback(() => buildSummary(getDraft()), [])
+
+  // what we found in their chats: letters made from it in advance, and pins on letters
+  const story = useMemo(() => normalizeStory(draft.story), [draft.story])
+  const takeStory = (raw) => {
+    const patch = draftWithStory(getDraft(), raw)
+    if (patch) update(patch)
+  }
+  const chatWaiting = useMemo(() => !!loadLocalChat(), [])
+  const loadSampleStory = async () => {
+    const { SAMPLE_STORY } = await import('./lab/sampleStory')
+    takeStory(SAMPLE_STORY)
+  }
+  const pinnedOn = useMemo(() => {
+    const out = {}
+    for (const sl of slots) for (const pin of caps[sl.id]?.pins || []) (out[`${pin.kind}:${pin.ref}`] ||= []).push(sl.label)
+    return out
+  }, [slots, caps])
+  const letterFor = useMemo(() => Object.fromEntries([...plan.neverSaid, ...plan.anytime].filter((x) => x.from).map((x) => [x.from, { id: x.id, label: x.label }])), [plan])
+  const pinTo = (id, pin) => setCap(id, { pins: cleanPins([...(getDraft().capsuleData?.[id]?.pins || []), pin]) })
+  const unpinFrom = (id, pin) => setCap(id, { pins: (getDraft().capsuleData?.[id]?.pins || []).filter((x) => !(x.kind === pin.kind && x.ref === pin.ref)) })
+  const startFrom = (item) => {
+    const l = letterFromFinding(item)
+    const id = `${l.list === 'anytime' ? 's' : 'n'}st${Date.now().toString(36)}`
+    const now = getPlan(getDraft())
+    update({ plan: normalizePlan({ ...now, [l.list]: [...now[l.list], { id, label: l.label, hint: l.hint, from: item.key }] }) })
+    setCap(id, { pins: [item.pin] })
+    setFinds(null)
+    setOpenId(id)
+  }
   const askAbout = (slot) => {
     setSeed(`Can you help me with “${slot.label}”? `)
     setCompanionOpen(true)
@@ -73,6 +111,15 @@ export default function Editor() {
           <div className="we-progress-bar"><span style={{ transform: `scaleX(${slots.length ? filled / slots.length : 0})` }} /></div>
           <p className="wf-note">{filled} of {slots.length} letters written. Write in any order; nothing has to be finished today.</p>
         </div>
+
+        {story
+          ? <StoryEntry story={story} onOpen={() => setFinds({ target: null })} />
+          : (
+            <>
+              <ChatInvite ready={chatWaiting} onOpen={() => navigate('/chats')} />
+              {import.meta.env.DEV && <button type="button" className="we-add" style={{ marginBottom: 24 }} onClick={loadSampleStory}>Dev only: load a sample chat story</button>}
+            </>
+          )}
 
         <DecorStrip decor={draft.decor} onEdit={() => navigate('/generate')} />
 
@@ -147,6 +194,22 @@ export default function Editor() {
           onPlan={setPlan}
           onAsk={() => { setOpenId(null); askAbout(current) }}
           onClose={() => setOpenId(null)}
+          onFromStory={story ? () => setFinds({ target: current.id }) : null}
+          onUnpin={(pin) => unpinFrom(current.id, pin)}
+        />
+      )}
+
+      {finds && story && (
+        <FindingsPanel
+          story={story}
+          target={finds.target ? { id: finds.target, label: slots.find((x) => x.id === finds.target)?.label || 'this letter', pins: caps[finds.target]?.pins || [] } : null}
+          pinnedOn={pinnedOn}
+          letterFor={letterFor}
+          onPin={(pin) => pinTo(finds.target, pin)}
+          onUnpin={(pin) => unpinFrom(finds.target, pin)}
+          onStart={startFrom}
+          onOpenLetter={(id) => { setFinds(null); setOpenId(id) }}
+          onClose={() => setFinds(null)}
         />
       )}
     </FlowFrame>
@@ -286,7 +349,7 @@ function MissingSections({ plan, p1, onPlan }) {
   )
 }
 
-function LetterSheet({ slot, content, plan, toName, onChange, onPlan, onAsk, onClose }) {
+function LetterSheet({ slot, content, plan, toName, onChange, onPlan, onAsk, onClose, onFromStory, onUnpin }) {
   const listKey = ADDABLE[slot.section]
   const item = listKey ? plan[listKey].find((x) => x.id === slot.id) : null
   const [letter, setLetter] = useState(content.letter || '')
@@ -345,6 +408,8 @@ function LetterSheet({ slot, content, plan, toName, onChange, onPlan, onAsk, onC
           <h2 id="we-sheet-title" className="we-sheet-h">{slot.label}</h2>
         )}
         {slot.hint && <p className="we-hint">{slot.hint}</p>}
+        <PinList pins={content.pins} onRemove={onUnpin} />
+        {onFromStory && <button type="button" className="we-from-story" onClick={onFromStory}>+ Add something from your chats</button>}
 
         <label htmlFor="we-letter" className="wf-sr">Your letter</label>
         <textarea

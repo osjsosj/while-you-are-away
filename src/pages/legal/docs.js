@@ -58,6 +58,7 @@ export const DOCS = {
       ['What we collect', [
         'From you (the sender): your email address; the names, dates and answers you give while planning; your letters, photos, videos, voice notes and signature; the planning and writing-companion conversations; and your payment status from Stripe (not your card number).',
         'From your recipient: the replies they write and which letters they’ve opened, with the date. We don’t ask recipients to create an account or give their email.',
+        'Chats you bring in (optional): if you add an exported chat, it is read and counted in your own browser. The numbers and a selection of messages (not the whole chat) stay in your browser’s local storage until you ask us to find moments in it, or remove it. When you do, that selection and the numbers are sent through our server to our AI provider, once, to find shared moments, things you often say and earlier goodbyes. We keep what it finds with your letter box (it can appear on a letter only if you put it there), and remove the chat from your browser. We don’t store the chat itself on our servers. Only bring in a chat between you and your recipient.',
         'Technical data: our hosting provider keeps standard server logs (such as IP address, browser type and time of request) for security and troubleshooting. Your draft is also saved in your own browser’s local storage so you don’t lose work.',
         'Usage data: we count which pages and buttons people use, from first visit to finished letter box, so we can find where people get stuck. Each event has a page name, the date, and a random visitor ID stored in your browser. It never contains your name, email, letters or recipient link. We also keep which site or campaign sent you.',
       ]],
@@ -66,7 +67,7 @@ export const DOCS = {
         'We don’t sell your information, we don’t use it for advertising, and we don’t read your letters except when you ask us to help with a problem or when we must to investigate abuse or comply with the law.',
       ]],
       ['Who else processes it', [
-        'Stripe (payments) · Supabase (database, sign-in and file storage) · Vercel (hosting) · Anthropic (the AI guide; the planning and companion conversations and a short summary of your letter box are sent to generate replies) · Resend (sending email).',
+        'Stripe (payments) · Supabase (database, sign-in and file storage) · Vercel (hosting) · Anthropic (the AI guide; the planning and companion conversations, a short summary of your letter box, and, if you bring in a chat, the selection of messages described above are sent to generate replies) · Resend (sending email).',
         'Each processes data only to provide its part of the service to us.',
       ]],
       ['Cookies, tracking and “Do Not Track”', [

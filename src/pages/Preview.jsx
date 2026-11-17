@@ -101,7 +101,7 @@ export default function Preview() {
             story={<><OurSky ids={[...opened]} /><Story box={box} token="preview" today={day} /></>}
             footer={(
               <>
-                <p className="wb-note" style={{ marginTop: 32 }}>Letters you haven’t written yet don’t appear. Sealed ones show only their name and the day they open.</p>
+                <p className="wb-note" style={{ marginTop: 32 }}>Letters you haven’t written yet stay in your draft and don’t go in the box. Sealed ones show only their name and the day they open.</p>
                 <button type="button" className="wf-link" style={{ color: 'var(--mist-soft)' }} onClick={() => setSealed(true)}>See the opening again</button>
               </>
             )}

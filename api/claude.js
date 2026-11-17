@@ -1,11 +1,13 @@
 import { isPaid, db } from './_lib/server.js'
-import { STICKERS, STICKER_IDS } from '../src/utils/stickers.js'
+import { STICKER_LIBRARY, chatRequest, readChatReply } from './_lib/chatStory.js'
+import { STICKER_IDS } from '../src/utils/stickers.js'
 
 /**
  * /api/claude — the only way the app talks to Claude.
  *  - the API key, models, prompts and token limits live here, never in the browser
  *  - every call needs a paid Stripe checkout session
- *  kinds: 'interview' (planning conversation), 'theme' (names + welcome line), 'companion' (help while writing)
+ *  kinds: 'interview' (planning conversation), 'theme' (names + welcome line), 'companion' (help while writing),
+ *         'chat' (reads excerpts of their chat and finds moments, sayings and earlier goodbyes to write from)
  */
 
 const MODELS = {
@@ -19,6 +21,9 @@ const MAX_CONTENT_CHARS = 4000
 const MAX_PAYLOAD_CHARS = 20000
 const MAX_SUMMARY_CHARS = 9000
 const COMPANION_CAP = 300 // companion messages per letter box
+const CHAT_CAP = 3 // chat readings per letter box (a second try, or a different chat)
+const MAX_EXCERPT_CHARS = 70000 // the browser sends at most ~60k; a little room for names
+const MAX_STATS_CHARS = 6000
 
 const str = (v, n = 200) => (typeof v === 'string' || typeof v === 'number' ? String(v).slice(0, n) : '')
 
@@ -161,13 +166,6 @@ const DESIGN_TOOL = {
   },
 }
 
-/* The sticker library, written once so it stays in the prompt cache: "id" or "id (other words people use)". */
-const STICKER_LIBRARY = STICKER_IDS.map((id) => {
-  const [label, words] = STICKERS[id]
-  const extra = words.split(' ').filter((w) => !label.split(' ').includes(w))
-  return extra.length ? `${id} (${extra.join(' ')})` : id
-}).join('\n')
-
 const DESIGN_SYSTEM = `You design how a letter box looks. Someone is preparing letters for a person they are about to part from. From what they told the guide, choose a name, a first line, a paper style and a few decorations. Stickers come ONLY from the sticker library below, by exact id; you never invent new ones. The words of the letters are never yours: you only dress them.
 
 Rules:
@@ -205,14 +203,14 @@ function cleanMessages(messages) {
 
 const isoToday = (d) => (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : new Date().toISOString().slice(0, 10))
 
-/** Count companion messages per paid session; returns false once the cap is reached. Fails open if the table is missing. */
-async function withinCompanionCap(sessionId) {
+/** Count uses per paid session (companion messages, or chat readings under "<id>:chat"); false once the cap is reached. Fails open if the table is missing. */
+async function withinCap(key, cap) {
   try {
-    const { data, error } = await db().from('ai_usage').select('messages').eq('session_id', sessionId).maybeSingle()
+    const { data, error } = await db().from('ai_usage').select('messages').eq('session_id', key).maybeSingle()
     if (error) throw error
     const used = data?.messages || 0
-    if (used >= COMPANION_CAP) return false
-    await db().from('ai_usage').upsert({ session_id: sessionId, messages: used + 1, updated_at: new Date().toISOString() }, { onConflict: 'session_id' })
+    if (used >= cap) return false
+    await db().from('ai_usage').upsert({ session_id: key, messages: used + 1, updated_at: new Date().toISOString() }, { onConflict: 'session_id' })
     return true
   } catch (err) {
     console.warn('ai_usage unavailable:', err?.message || err)
@@ -250,11 +248,11 @@ async function imageBlocks(req, refs, max) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { kind, sessionId, messages, phase1, allData, summary, today, images } = req.body || {}
+  const { kind, sessionId, messages, phase1, allData, summary, today, images, excerpts, stats, names } = req.body || {}
   if (!(await isPaid(sessionId))) return res.status(402).json({ error: 'payment_required' })
 
   // Photos the sender added, so the guide and the designer can actually see them (only the sender's own files).
-  const photoBlocks = await imageBlocks(req, images, kind === 'theme' ? 4 : 1)
+  const photoBlocks = kind === 'chat' ? [] : await imageBlocks(req, images, kind === 'theme' ? 4 : 1)
 
   let body
   if (kind === 'interview') {
@@ -269,7 +267,7 @@ export default async function handler(req, res) {
   } else if (kind === 'companion') {
     const clean = cleanMessages(messages)
     if (!clean) return res.status(400).json({ error: 'invalid_messages' })
-    if (!(await withinCompanionCap(sessionId))) return res.status(429).json({ error: 'cap_reached' })
+    if (!(await withinCap(sessionId, COMPANION_CAP))) return res.status(429).json({ error: 'cap_reached' })
     const sum = typeof summary === 'string' ? summary.slice(0, MAX_SUMMARY_CHARS) : ''
     body = { model: MODELS.companion, max_tokens: 700, cache_control: { type: 'ephemeral' }, system: COMPANION_SYSTEM(sum, isoToday(today)), messages: clean }
   } else if (kind === 'theme') {
@@ -279,11 +277,20 @@ export default async function handler(req, res) {
       model: MODELS.theme,
       max_tokens: 1200,
       tools: [DESIGN_TOOL],
-      tool_choice: { type: 'tool', name: DESIGN_TOOL.name },
+      // Sonnet 5.5 rejects a forced tool choice (400); the prompt asks for the tool, and a text JSON reply still parses
+      tool_choice: { type: 'auto' },
       // the rules and the sticker library are the same for everyone: cached across all senders
       system: [{ type: 'text', text: DESIGN_SYSTEM, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: [...photoBlocks, { type: 'text', text: `Data: ${data}` + (photoBlocks.length ? `\n\nThe ${photoBlocks.length} photo(s) above are ones the sender added. Look at what is in them (places, food, animals, season, light, mood) and let them guide the stickers and the paper. Never describe or guess anything about the people's bodies or identities.` : '') }] }],
     }
+  } else if (kind === 'chat') {
+    const text = typeof excerpts === 'string' ? excerpts.trim() : ''
+    if (!text) return res.status(400).json({ error: 'invalid_excerpts' })
+    if (text.length > MAX_EXCERPT_CHARS) return res.status(413).json({ error: 'too_large' })
+    const st = JSON.stringify(stats ?? {})
+    if (st.length > MAX_STATS_CHARS) return res.status(413).json({ error: 'too_large' })
+    if (!(await withinCap(`${sessionId}:chat`, CHAT_CAP))) return res.status(429).json({ error: 'cap_reached' })
+    body = chatRequest({ excerpts: text, statsJson: st, names, today: isoToday(today) })
   } else {
     return res.status(400).json({ error: 'invalid_kind' })
   }
@@ -291,13 +298,23 @@ export default async function handler(req, res) {
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        ...(body.fallbacks ? { 'anthropic-beta': 'server-side-fallback-2026-07-01' } : {}),
+      },
       body: JSON.stringify(body),
     })
     const data = await r.json()
     if (!r.ok) {
       console.error('Anthropic error:', r.status, data?.error?.message)
       return res.status(502).json({ error: 'upstream_error' })
+    }
+    if (data.stop_reason === 'refusal') return res.status(502).json({ error: 'refused' })
+    if (kind === 'chat') {
+      const out = readChatReply(data)
+      return out.story ? res.status(200).json({ text: JSON.stringify(out.story) }) : res.status(502).json({ error: out.error })
     }
     const tool = data.content?.find((b) => b.type === 'tool_use')
     const text = tool ? JSON.stringify(tool.input) : data.content?.find((b) => b.type === 'text')?.text || ''

@@ -206,7 +206,7 @@ function Readiness({ draft, onEdit, live = false }) {
   const film = normalizeFilm(draft.film)
   const moments = (Array.isArray(draft.diary) ? draft.diary : []).length
   const rows = [
-    [`${written} of ${slots.length} letters written`, written === slots.length ? 'done' : written ? 'some' : 'none'],
+    [`${written} of ${slots.length} letters written${written < slots.length ? `; the other ${slots.length - written} stay in your draft until you write them` : ''}`, written === slots.length ? 'done' : written ? 'some' : 'none'],
     tonight && [isFilled(caps[tonight.id]) ? 'Tonight’s letter is ready' : 'Tonight’s letter isn’t written yet', isFilled(caps[tonight.id]) ? 'done' : 'none'],
     [film.photos.length ? `First-night film: ${film.photos.length} ${film.photos.length === 1 ? 'photo' : 'photos'}${film.voice ? ' and your voice' : ''}` : 'No first-night film', film.photos.length ? 'done' : 'none'],
     [moments ? `${moments} ${moments === 1 ? 'moment' : 'moments'} from the days before` : 'No moments from the days before yet', moments ? 'done' : 'none'],

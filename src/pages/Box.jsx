@@ -278,6 +278,7 @@ export function LetterSheet({ item, replies, toName, fromName, signature = null,
           prompt={item.prompt}
           letter={item.letter}
           stickers={item.stickers || []}
+          pins={item.pins || []}
           photoUrl={item.photo?.url}
           videoUrl={item.video?.url}
           voiceUrl={item.voice?.url}

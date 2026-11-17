@@ -33,7 +33,7 @@ function list(arr, prefix) {
       let id = typeof x.id === 'string' && x.id.startsWith(prefix) ? x.id : `${prefix}${i}`
       while (used.has(id)) id = `${prefix}${i}-${used.size}`
       used.add(id)
-      return { id, label: clean(x.label), hint: clean(x.hint, 120), ...(isISO(x.date) ? { date: x.date } : {}) }
+      return { id, label: clean(x.label), hint: clean(x.hint, 120), ...(isISO(x.date) ? { date: x.date } : {}), ...(clean(x.from, 60) ? { from: clean(x.from, 60) } : {}) }
     })
 }
 
