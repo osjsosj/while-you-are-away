@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { toName, fromName, email } = req.body
+    const { toName, fromName, email, anonId } = req.body
     const origin = req.headers.origin || process.env.SITE_URL || 'http://localhost:5173'
 
     const session = await stripe.checkout.sessions.create({
@@ -35,6 +35,8 @@ export default async function handler(req, res) {
         fromName: fromName || '',
         toName: toName || '',
         email: email || '',
+        // random visitor id (no personal data), so the payment can be tied back to the funnel
+        anon_id: /^[a-f0-9-]{16,40}$/.test(anonId || '') ? anonId : '',
       },
     })
 

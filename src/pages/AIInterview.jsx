@@ -1,3 +1,4 @@
+import { track } from '../utils/track'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDraft, saveDraft } from '../utils/storage'
@@ -82,6 +83,7 @@ export default function AIInterview() {
           diaryUnlock: normalizeUnlock(d.diaryUnlock || prev.diaryUnlock),
         })
         setPlan(p)
+        track('plan_ready')
       }
     } catch (err) {
       if (err instanceof PaymentRequiredError) return navigate('/paywall')
@@ -94,6 +96,7 @@ export default function AIInterview() {
   useEffect(() => {
     if (messages.length === 0) {
       // first visit: the guide opens the conversation
+      track('ai_start')
       // eslint-disable-next-line react-hooks/set-state-in-effect
       ask([])
     }

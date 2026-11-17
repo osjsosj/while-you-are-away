@@ -1,3 +1,4 @@
+import { track } from '../../utils/track'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { clearDraft, saveDraft } from '../../utils/storage'
@@ -36,6 +37,7 @@ function Timeline() {
   const begin = () => {
     clearDraft()
     saveDraft({ landing: { startDate: part } })
+    track('cta_start', { where: 'home_timeline' })
     navigate('/interview')
   }
   return (
@@ -125,7 +127,7 @@ export default function Home() {
         <div className="handover-copy" data-rise><p className="scene-label">One link. All the things you wanted to say.</p><h2 className="ws-h2" id="handover-title">They open it on their phone.<br />They feel you there.</h2><p>No app to install. Letters to open, even offline.<br />A reply waiting when they want to write back.</p><Link to="/services" className="ws-link">Everything in their letter box <span aria-hidden="true">↗</span></Link></div>
       </section>
       <Faq />
-      <section className="home-close" aria-labelledby="close-title" data-rise><p className="scene-label">Leave the light on.</p><h2 id="close-title">You don’t have to<br />find all the words tonight.</h2><p>You only have to start before the day comes.</p><Link to="/interview" className="ws-btn">Start your letter box <span aria-hidden="true">↗</span></Link><p className="ws-small">$24, paid once. A whole letter box. No subscription.</p></section>
+      <section className="home-close" aria-labelledby="close-title" data-rise><p className="scene-label">Leave the light on.</p><h2 id="close-title">You don’t have to<br />find all the words tonight.</h2><p>You only have to start before the day comes.</p><Link to="/interview" className="ws-btn" data-track="cta_start" data-track-where="home_close">Start your letter box <span aria-hidden="true">↗</span></Link><p className="ws-small">$24, paid once. A whole letter box. No subscription.</p></section>
     </SiteLayout>
   )
 }

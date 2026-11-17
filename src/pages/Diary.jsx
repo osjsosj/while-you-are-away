@@ -1,3 +1,4 @@
+import { track } from '../utils/track'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDraft, saveDraft, hydrateFromDB } from '../utils/storage'
@@ -65,6 +66,7 @@ export default function Diary() {
 
   const saveEntry = () => {
     if (!canSave) return
+    track('diary_entry')
     const now = new Date()
     const entry = {
       id: newId(),

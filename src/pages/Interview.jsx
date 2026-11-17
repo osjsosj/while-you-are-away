@@ -1,3 +1,4 @@
+import { track } from '../utils/track'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDraft, saveDraft } from '../utils/storage'
@@ -113,7 +114,8 @@ export default function Interview() {
   const next = () => {
     if (!ready) { setTried(true); return }
     setTried(false)
-    if (key === 'dates') save()
+    track('interview_step', { step: String(key) })
+    if (key === 'dates') { save(); track('interview_done') }
     if (key === 'promise') { navigate('/paywall'); return }
     setDir(1)
     setReply('')

@@ -1,3 +1,4 @@
+import { track } from '../utils/track'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import QRCode from 'qrcode'
@@ -80,6 +81,7 @@ export default function Export() {
       const { token } = await res.json()
       setLink(`${window.location.origin}/b/${token}`)
       setStage('live')
+      track('link_made')
     } catch (err) {
       setStage('ready')
       if (err instanceof NeedSignInError) setNeedSignIn(true)
@@ -90,6 +92,7 @@ export default function Export() {
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(link)
+      track('link_copied')
       setCopied(true)
       setTimeout(() => setCopied(false), 2500)
     } catch {
@@ -99,6 +102,7 @@ export default function Export() {
 
   const share = async () => {
     try {
+      track('link_shared')
       await navigator.share({ title: draft.generatedConfig?.chosenName || 'Your letter box', text: `For ${toName}`, url: link })
     } catch { /* closed the share sheet */ }
   }

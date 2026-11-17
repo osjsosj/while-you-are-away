@@ -1,3 +1,4 @@
+import { track } from '../utils/track'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDraft, saveDraft } from '../utils/storage'
@@ -113,6 +114,7 @@ export default function AIGenerate() {
       decorRecommended: recommended,
       accent: STYLES[decor.style].accent,
     })
+    track('box_dressed')
     navigate('/editor')
   }
 

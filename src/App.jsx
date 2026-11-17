@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { track, installClickTracking } from './utils/track'
 import { hydrateFromDB } from './utils/storage'
 import Legal from './pages/Legal'
 import Home from './pages/site/Home'
@@ -17,6 +18,14 @@ import AuthCallback from './pages/AuthCallback'
 import Diary from './pages/Diary'
 import Box from './pages/Box'
 
+/* Page views on every route change. Recipient boxes (/b/...) are reported by the box itself, without a visitor id. */
+function Tracker() {
+  const { pathname } = useLocation()
+  useEffect(() => { installClickTracking() }, [])
+  useEffect(() => { if (!pathname.startsWith('/b/')) track('page_view') }, [pathname])
+  return null
+}
+
 export default function App() {
   useEffect(() => {
     hydrateFromDB()
@@ -24,6 +33,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <Tracker />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/services" element={<Services />} />

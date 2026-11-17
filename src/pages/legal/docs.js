@@ -4,7 +4,7 @@
  */
 export const CONTACT = 'hello@getwhileyouareaway.com'
 export const OPERATOR = 'Sangjin Ouh'
-export const EFFECTIVE = 'October 28, 2026'
+export const EFFECTIVE = 'November 10, 2026'
 export const PRICE = '$24'
 
 export const DOCS = {
@@ -59,6 +59,7 @@ export const DOCS = {
         'From you (the sender): your email address; the names, dates and answers you give while planning; your letters, photos, videos, voice notes and signature; the planning and writing-companion conversations; and your payment status from Stripe (not your card number).',
         'From your recipient: the replies they write and which letters they’ve opened, with the date. We don’t ask recipients to create an account or give their email.',
         'Technical data: our hosting provider keeps standard server logs (such as IP address, browser type and time of request) for security and troubleshooting. Your draft is also saved in your own browser’s local storage so you don’t lose work.',
+        'Usage data: we count which pages and buttons people use, from first visit to finished letter box, so we can find where people get stuck. Each event has a page name, the date, and a random visitor ID stored in your browser. It never contains your name, email, letters or recipient link. We also keep which site or campaign sent you.',
       ]],
       ['How we use it', [
         'Only to run the service: to save your letter box, show it to your recipient on the right days, send you the emails you asked for (sign-in codes, evening writing questions you opted into, a reminder on the day you part), generate the AI guide’s replies, process payment, prevent abuse and fix problems.',
@@ -69,7 +70,8 @@ export const DOCS = {
         'Each processes data only to provide its part of the service to us.',
       ]],
       ['Cookies, tracking and “Do Not Track”', [
-        'We don’t use advertising or analytics trackers, and we don’t let other parties collect information about your activity across other websites. We use your browser’s local storage to keep your draft and the recipient’s view working offline. Because we don’t track you across sites, we treat every visitor the same whether or not their browser sends a “Do Not Track” signal.',
+        'We don’t use advertising trackers, and we don’t let other parties collect information about your activity across other websites. We run our own simple usage counts, stored in our own database and not shared with an analytics or advertising company. We use your browser’s local storage for your draft, for the recipient’s offline view, and for the random visitor ID behind those counts.',
+        'If your browser sends a “Do Not Track” or Global Privacy Control signal, we turn the usage counts off for you. Recipients opening a letter box are counted only as “a box was opened” or “a reply was sent”, with no visitor ID. Payments and refunds are recorded by our server from Stripe’s notifications.',
       ]],
       ['How long we keep it', [
         'We keep your letter box for as long as described in our Terms (at least one year after the day you meet again). You can ask us to delete your account and everything in it at any time by writing to us; we’ll do it within 30 days. Payment records are kept by Stripe as the law requires.',

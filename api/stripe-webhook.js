@@ -1,4 +1,5 @@
 import Stripe from 'stripe'
+import { db } from './_lib/server.js'
 
 /**
  * Stripe 웹훅 — 결제 완료 기록용
@@ -12,6 +13,18 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
 export const config = {
   api: { bodyParser: false },
+}
+
+/** Funnel event for the payment dashboard. No names, emails or card data; a failure here never fails the webhook. */
+async function record(name, anonId, props) {
+  try {
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) return
+    const anon = /^[a-f0-9-]{16,40}$/.test(anonId || '') ? anonId : null
+    const { error } = await db().from('events').insert({ name, anon_id: anon, path: '/stripe', props })
+    if (error) console.warn('event insert', error.message)
+  } catch (err) {
+    console.warn('event insert', err?.message)
+  }
 }
 
 export default async function handler(req, res) {
@@ -41,6 +54,15 @@ export default async function handler(req, res) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object
     console.log('Payment completed:', session.id, session.amount_total, session.currency)
+    await record('payment_completed', session.metadata?.anon_id, {
+      kind: session.payment_status === 'no_payment_required' ? 'free_code' : 'paid',
+      amount: session.amount_total,
+    })
+  }
+
+  // Needs the charge.refunded event enabled on the Stripe webhook endpoint.
+  if (event.type === 'charge.refunded') {
+    await record('refunded', null, { amount: event.data.object.amount_refunded })
   }
 
   res.status(200).json({ received: true })

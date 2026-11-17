@@ -1,3 +1,4 @@
+import { track, trackingId } from '../utils/track'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDraft, saveDraft } from '../utils/storage'
@@ -30,10 +31,11 @@ export default function Paywall() {
     setLoading(true)
     setError('')
     try {
+      track('checkout_start')
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fromName: p.fromName || 'Someone', toName: p.toName || 'Someone special', email: email.trim() }),
+        body: JSON.stringify({ fromName: p.fromName || 'Someone', toName: p.toName || 'Someone special', email: email.trim(), anonId: trackingId() }),
       })
       const data = await res.json()
       if (!data.url) throw new Error()

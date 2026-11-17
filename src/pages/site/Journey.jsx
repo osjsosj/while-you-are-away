@@ -45,7 +45,7 @@ export default function Journey() {
           <p className="scene-label"><span />For the time apart</p>
           <h1 className="journey-title"><span>Goodbyes</span>{' '}<span>can be</span>{' '}<span>prepared.</span></h1>
           <p className="journey-lede">Write to them before you leave.<br />Be there, a little, even when you can’t.</p>
-          <Link to="/interview" className="ws-btn">Start your letter box<Arrow /></Link>
+          <Link to="/interview" className="ws-btn" data-track="cta_start" data-track-where="journey">Start your letter box<Arrow /></Link>
           <p className="ws-small">$24 once · full refund within 14 days</p>
           <a className="journey-scroll" href="#before-you-go"><Arrow down />Follow a letter</a>
         </div>

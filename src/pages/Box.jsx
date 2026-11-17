@@ -1,3 +1,4 @@
+import { track } from '../utils/track'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { localISODate, formatLong } from '../utils/diary'
@@ -83,6 +84,13 @@ export default function Box() {
   const [playing, setPlaying] = useState(false)
   const [filmSeen, setFilmSeen] = useState(() => !!read(`wya_film_${token}`))
 
+  const reported = useRef(false)
+  useEffect(() => {
+    if (status === 'live' && !reported.current) {
+      reported.current = true
+      track('box_opened', {}, { anon: false }) // recipients are counted, never identified
+    }
+  }, [status])
   useEffect(() => {
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {})
   }, [])
@@ -149,6 +157,7 @@ export default function Box() {
           onReply={async (body) => {
             const { reply } = await post({ action: 'reply', itemId: current.id, body })
             patch((d) => ({ ...d, replies: [...(d.replies || []), reply] }))
+            track('reply_sent', {}, { anon: false })
           }}
         />
       )}
