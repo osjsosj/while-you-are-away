@@ -1,4 +1,4 @@
-import { useCallback, useDeferredValue, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDraft, saveDraft } from '../utils/storage'
 import { getPlan, normalizePlan, planSlots, SCHEDULES, SECTION_INFO, suggestedCount } from '../utils/plan'
@@ -14,7 +14,10 @@ import { uploadMedia, NeedSignInError, useMediaUrl } from '../utils/media'
 import { useRecorder, fmtSeconds } from '../utils/useRecorder'
 import { STYLES, TICKETS, stickerId, stickerLabel, stickersFor } from '../utils/decor'
 import { buildSummary, isFilled } from '../utils/summary'
-import { cleanPins, draftWithStory, letterFromFinding, storyFindings, storyFromDraft } from '../utils/story'
+import { cleanPins, draftWithStory, letterFromFinding, storyFindings, storyFromDraft, stickersToDraw } from '../utils/story'
+import { allItems, isWritten } from '../utils/boxModel'
+import { explainLook } from '../utils/design/boxLook'
+import { drawSticker, PaymentRequiredError, SignInRequiredError } from '../utils/aiService'
 import { ChatInvite, FindingsPanel, PinList, StoryEntry } from '../components/StoryFinds'
 import { loadLocalChat } from '../utils/chat/local'
 import DesignWhy from '../components/DesignWhy'
@@ -65,6 +68,32 @@ export default function Editor() {
   // what we found in their chats: letters made from it in advance, and pins on letters
   // the chat story and what they told the planning guide, together
   const story = useMemo(() => storyFromDraft(draft), [draft])
+
+  // moments the sticker library had nothing for: draw one each, in this box's art style (a few per visit)
+  const drawing = useRef(false)
+  useEffect(() => {
+    const todo = stickersToDraw(story, getDraft().drawTried || [])
+    if (!todo.length || drawing.current) return
+    drawing.current = true
+    const written = allItems(getDraft()).filter((it) => isWritten(it.content))
+    const art = explainLook(getDraft(), written)?.look?.art || 'flat'
+    ;(async () => {
+      for (const t of todo) {
+        const d = getDraft()
+        const tried = [...(d.drawTried || []), t.id]
+        try {
+          const { id } = await drawSticker(t.subject, art)
+          saveDraft({ drawTried: tried, drawnStickers: { ...(d.drawnStickers || {}), [t.id]: id } })
+        } catch (err) {
+          // signed out or out of free drawings: stop for now and try again next visit
+          if (err instanceof SignInRequiredError || err instanceof PaymentRequiredError) break
+          saveDraft({ drawTried: tried })
+        }
+        setDraft(getDraft())
+      }
+      drawing.current = false
+    })()
+  }, [story])
   const takeStory = (raw) => {
     const patch = draftWithStory(getDraft(), raw)
     if (patch) update(patch)

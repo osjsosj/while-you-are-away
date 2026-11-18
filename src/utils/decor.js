@@ -18,6 +18,7 @@ export const LEGACY_MOTIFS = {
 export function stickerId(id) {
   if (typeof id !== 'string') return null
   if (STICKERS[id]) return id
+  if (/^x-[a-f0-9]{12}$/.test(id)) return id // drawn when the library had nothing for it
   const mapped = LEGACY_MOTIFS[id]
   return mapped && STICKERS[mapped] ? mapped : null
 }

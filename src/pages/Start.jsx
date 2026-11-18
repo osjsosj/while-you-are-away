@@ -5,20 +5,21 @@ import Mascot from '../components/Mascot'
 import { supabase, getUser } from '../utils/supabase'
 import { hydrateFromDB, saveDraft, getDraft } from '../utils/storage'
 import { track } from '../utils/track'
+import { PROVIDER, hereProviders } from '../utils/signIn'
 import '../styles/start.css'
 
 /*
  * Sign in before planning. It keeps the letters safe on any device, and it is what lets the AI guide
  * be free until handover: every AI call is counted per account (api/_lib/access.js).
- * Google and Kakao first; an emailed code for anyone without either.
+ * Kakao, Google and Apple in Korea; Google and Apple elsewhere; an emailed code for anyone without them.
  */
 
-const PROVIDERS = [
-  { id: 'kakao', label: 'Continue with Kakao' },
-  { id: 'google', label: 'Continue with Google' },
-]
-
 function ProviderMark({ id }) {
+  if (id === 'apple') {
+    return (
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.37 12.6c-.02-2.2 1.8-3.26 1.88-3.31-1.03-1.5-2.62-1.7-3.18-1.73-1.35-.14-2.64.8-3.33.8-.69 0-1.74-.78-2.86-.76-1.47.02-2.83.86-3.59 2.17-1.53 2.66-.39 6.6 1.1 8.75.73 1.05 1.6 2.24 2.73 2.2 1.1-.05 1.51-.71 2.84-.71 1.32 0 1.7.71 2.86.69 1.18-.02 1.93-1.07 2.65-2.13.84-1.22 1.18-2.4 1.2-2.46-.03-.01-2.3-.88-2.32-3.5zM14.2 6.12c.6-.73 1.01-1.75.9-2.76-.87.04-1.92.58-2.54 1.31-.56.64-1.05 1.68-.92 2.67.97.08 1.96-.49 2.56-1.22z" /></svg>
+    )
+  }
   if (id === 'kakao') {
     return (
       <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="#191919" d="M12 3C6.48 3 2 6.48 2 10.78c0 2.76 1.84 5.18 4.62 6.56l-.94 3.44c-.08.3.26.54.52.37l4.1-2.72c.55.07 1.12.11 1.7.11 5.52 0 10-3.48 10-7.76S17.52 3 12 3z" /></svg>
@@ -39,6 +40,7 @@ export default function Start() {
   const [params] = useSearchParams()
   const next = /^\/[a-z-]*$/.test(params.get('next') || '') ? params.get('next') : '/ai-interview'
   const p1 = getDraft().phase1 || {}
+  const [providers] = useState(hereProviders)
   const [mode, setMode] = useState('choose') // choose | email | code
   const [email, setEmail] = useState(() => getDraft().email || '')
   const [code, setCode] = useState('')
@@ -63,7 +65,7 @@ export default function Start() {
     })
     if (err) {
       setBusy('')
-      setError(`${provider === 'kakao' ? 'Kakao' : 'Google'} sign-in isn’t available right now. Try another way below.`)
+      setError(`${PROVIDER[provider]?.name || 'That'} sign-in isn’t available right now. Try another way below.`)
     }
   }
 
@@ -107,7 +109,7 @@ export default function Start() {
 
         {mode === 'choose' && (
           <div className="st-buttons">
-            {PROVIDERS.map((pv) => (
+            {providers.map((pv) => (
               <button key={pv.id} type="button" className={`st-btn st-btn--${pv.id}`} onClick={() => social(pv.id)} disabled={!!busy}>
                 <ProviderMark id={pv.id} />
                 <span>{busy === pv.id ? 'Opening…' : pv.label}</span>

@@ -6,8 +6,8 @@ import { db, isPaid } from './server.js'
 
 export const LIMITS = {
   // per account before paying, per paid letter box after
-  free: { interview: 120, theme: 6, companion: 40, chat: 1 },
-  paid: { interview: 400, theme: 20, companion: 300, chat: 3 },
+  free: { interview: 120, theme: 6, companion: 40, chat: 1, sticker: 8 },
+  paid: { interview: 400, theme: 20, companion: 300, chat: 3, sticker: 30 },
 }
 export const PER_ADDRESS_PER_DAY = 300 // AI calls from one network address in a day, across accounts
 export const NEW_ACCOUNTS_PER_ADDRESS = 4 // free accounts that may use the AI from one address in a day

@@ -1,7 +1,7 @@
 /* Checks story.js and the box rules around it: findings, letters made in advance, pins,
  * and that unwritten letters never reach the recipient. Run: node scripts/test-story.mjs */
 import assert from 'node:assert/strict'
-import { applyStoryToPlan, cleanPins, draftWithStory, storyFromDraft, letterFromFinding, normalizeStory, statFacts, storyFindings } from '../src/utils/story.js'
+import { applyStoryToPlan, cleanPins, draftWithStory, storyFromDraft, stickersToDraw, letterFromFinding, normalizeStory, statFacts, storyFindings } from '../src/utils/story.js'
 import { normalizePlan } from '../src/utils/plan.js'
 import { recipientView } from '../src/utils/boxModel.js'
 import { SAMPLE_STORY } from '../src/pages/lab/sampleStory.js'
@@ -139,6 +139,18 @@ test('without a chat, what they said is theirs still colors the box', () => {
   assert.ok(look && look.theme['--lamp'], 'a theme from the talk alone')
   assert.equal(look.seal.text, '우리 딸', 'the seal says what they call each other')
   assert.equal(look.stamps.length, 0, 'no stamps until a moment is on an open letter')
+})
+
+test('moments with no sticker get one drawn, once, and it shows everywhere', () => {
+  const draft = { phase2: { timeline: [{ date: '2022-10-03', label: '할머니 댁 감나무' }] } }
+  const st = storyFromDraft(draft)
+  const todo = stickersToDraw(st)
+  assert.deepEqual(todo, [{ id: 'talk-t0', subject: '할머니 댁 감나무' }])
+  const drawn = storyFromDraft({ ...draft, drawnStickers: { 'talk-t0': 'x-0123456789ab' }, drawTried: ['talk-t0'] })
+  assert.equal(drawn.memories[0].sticker, 'x-0123456789ab')
+  assert.deepEqual(stickersToDraw(drawn, ['talk-t0']), [], 'nothing left to draw')
+  assert.deepEqual(stickersToDraw(st, ['talk-t0']), [], 'a failed try is not repeated')
+  assert.equal(storyFromDraft({ ...draft, drawnStickers: { 'talk-t0': '<svg>' } }).memories[0].sticker, '', 'only real drawn ids')
 })
 
 console.log(failed ? `\n${failed} failed` : '\nall passed')

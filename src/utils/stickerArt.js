@@ -10,6 +10,7 @@ export const StickerArtContext = createContext('flat')
 const missing = Object.fromEntries(Object.entries(STICKER_MISSING).map(([k, v]) => [k, new Set(v)]))
 
 export function stickerSrc(id, art = 'flat') {
+  if (/^x-[a-f0-9]{12}$/.test(id)) return `/api/sticker?id=${id}` // drawn for a box (api/sticker.js)
   if (art && art !== 'flat' && STICKER_STYLES.includes(art) && !missing[art]?.has(id)) return `/stickers/${art}/${id}.svg`
   return `/stickers/${id}.svg`
 }

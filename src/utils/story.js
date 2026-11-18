@@ -70,10 +70,13 @@ export function storyFromDraft(draft = {}) {
   const chatDays = new Set((chat?.memories || []).map((m) => m.date).filter(Boolean))
   const chatTitles = new Set((chat?.memories || []).map((m) => m.title.toLowerCase()))
   const fromTalk = talk.memories.filter((m) => !(m.date && chatDays.has(m.date)) && !chatTitles.has(m.title.toLowerCase()))
+  // stickers drawn for moments the library had nothing for (see drawSticker)
+  const drawn = draft.drawnStickers && typeof draft.drawnStickers === 'object' ? draft.drawnStickers : {}
+  const withDrawn = (m) => (m.sticker || !/^x-[a-f0-9]{12}$/.test(drawn[m.id] || '') ? m : { ...m, sticker: drawn[m.id] })
   const merged = {
     about: chat?.about || '',
     callEachOther: chat?.callEachOther || talk.callEachOther,
-    memories: [...(chat?.memories || []), ...fromTalk],
+    memories: [...(chat?.memories || []), ...fromTalk].map(withDrawn),
     catchphrases: [...(chat?.catchphrases || []), ...talk.catchphrases],
     partings: chat?.partings || [],
     stats: chat?.stats || null,
@@ -139,6 +142,13 @@ export function storyFindings(story) {
     },
   ]
   return groups.filter((g) => g.items.length)
+}
+
+/** Moments that still have no sticker and haven't been tried yet: what to ask the AI to draw. */
+export function stickersToDraw(story, tried = [], max = 3) {
+  if (!story) return []
+  const skip = new Set(tried)
+  return story.memories.filter((m) => !m.sticker && !skip.has(m.id)).slice(0, max).map((m) => ({ id: m.id, subject: [m.title, m.place].filter(Boolean).join(', ') }))
 }
 
 /**

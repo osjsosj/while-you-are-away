@@ -22,3 +22,5 @@
 .st-back { align-self: center; }
 .st-fine { margin-top: 22px; font-size: 13px; line-height: 1.5; color: var(--mist-muted); }
 .st-fine a { color: inherit; }
+/* Apple's own button: black with a white mark */
+.st-btn--apple { background: #000000; color: #FFFFFF; }

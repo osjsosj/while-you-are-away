@@ -111,3 +111,26 @@ export async function findStory({ excerpts, stats, names }) {
   const text = await callClaude({ kind: 'chat', excerpts, stats: small, names })
   return JSON.parse(text)
 }
+
+/**
+ * A sticker the library doesn't have, drawn once in the box's art style and kept for everyone.
+ * Returns { id, label }; the id ("x-…") works anywhere a sticker id does.
+ */
+export async function drawSticker(subject, art = 'flat') {
+  const sessionId = getDraft().paymentSessionId || ''
+  let res
+  try {
+    let auth = {}
+    try {
+      const token = supabase ? (await supabase.auth.getSession()).data?.session?.access_token : null
+      if (token) auth = { Authorization: `Bearer ${token}` }
+    } catch { /* not signed in */ }
+    res = await fetch('/api/sticker', { method: 'POST', headers: { 'Content-Type': 'application/json', ...auth }, body: JSON.stringify({ subject, art, sessionId }) })
+  } catch {
+    throw new AIUnavailableError(0)
+  }
+  if (res.status === 401) throw new SignInRequiredError()
+  if (res.status === 402) throw new PaymentRequiredError()
+  if (!res.ok) throw new AIUnavailableError(res.status)
+  return res.json()
+}
