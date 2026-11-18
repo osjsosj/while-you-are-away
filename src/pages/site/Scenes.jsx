@@ -92,10 +92,39 @@ export function Opening() {
           <Phone className="sc-open-phone" ref={phone}>
             <img src="/site/shots/box.webp" width="390" height="844" alt="Mina’s letter box on her phone: a seal with their initials, rings of their months of messages, stamps of two moments, and a pelican pointing at the letter that’s ready." fetchpriority="high" />
           </Phone>
-          <p className="sc-open-caption" aria-hidden={reduced ? undefined : 'true'}>This is what they open.<span>A letter box on their phone, dressed in your story.</span></p>
         </div>
+        <Now />
       </div>
     </section>
+  )
+}
+
+/* Bits of one (made-up) couple's story, drifting in around the line, like the chat bubbles on a live service page. */
+const FRAGMENTS = [
+  { text: 'Bikes on the Han River', kind: 'moment', at: .70 },
+  { text: '“Text me when you’re home”', kind: 'saying', at: .74 },
+  { text: '4:12 a.m.', kind: 'number', at: .78 },
+  { text: 'Her first snow in Seoul', kind: 'moment', at: .82 },
+  { text: '“Did you eat?”', kind: 'saying', at: .86 },
+  { text: 'Lisbon, January 8', kind: 'goodbye', at: .9 },
+]
+
+/** After their box fills the screen: what the service is doing, right now, over letters rising into the night. */
+function Now() {
+  return (
+    <div className="sc-now">
+      <img className="sc-now-bg" src="/site/now/letters.webp" width="1376" height="768" alt="" loading="lazy" />
+      <div className="sc-now-copy">
+        <p className="sc-now-title">
+          <span className="sc-now-l1">While You’re Away is, right now,</span>
+          <span className="sc-now-l2">listening to someone’s story</span>
+          <span className="sc-now-l3">and making a better letter.</span>
+        </p>
+      </div>
+      <ul className="sc-now-bits" aria-hidden="true">
+        {FRAGMENTS.map((f, i) => <li key={f.text} className={`sc-bit sc-bit--${f.kind} sc-bit--${i}`} style={{ '--at': f.at }}>{f.text}</li>)}
+      </ul>
+    </div>
   )
 }
 
@@ -168,6 +197,40 @@ export function Flow() {
         <Phone className="sc-flow-phone">
           {FLOW.map((f, i) => <img key={f.shot} src={`/site/shots/${f.shot}.webp`} width="390" height="844" alt={i === step ? f.alt : ''} aria-hidden={i === step ? undefined : 'true'} className={i === step ? 'is-on' : i < step ? 'is-past' : ''} loading={i ? 'lazy' : undefined} />)}
         </Phone>
+      </div>
+    </section>
+  )
+}
+
+const MORE = [
+  { to: '/services', name: 'Services', line: 'Everything in a letter box: seven kinds of letter, paper from your story, and what $9.99 covers.', img: '/site/shots/letter.webp', phone: true, alt: 'A letter on paper made from their story.' },
+  { to: '/about', name: 'About', line: 'Why this exists: the letters Jin wrote through his own goodbyes.', img: '/site/platform-dusk.jpg', alt: 'A train platform at dusk.' },
+  { to: '/contact', name: 'Contact', line: 'A question before you start, or help after. A person reads every message.', img: '/site/letter-1864.jpg', alt: 'An old handwritten letter.' },
+]
+
+/** Services, About and Contact pass through the screen one at a time; each one opens its page. */
+export function More() {
+  const [step, setStep] = useState(0)
+  const { ref, reduced } = useProgress((p) => setStep(Math.min(MORE.length - 1, Math.floor(p * MORE.length * 0.999))))
+  return (
+    <section ref={ref} className={`sc-more${reduced ? ' is-still' : ''}`} style={{ '--count': MORE.length }} aria-labelledby="more-title">
+      <div className="sc-more-pin">
+        <h2 id="more-title" className="ws-sr">More about While You’re Away</h2>
+        {MORE.map((m, i) => (
+          <Link key={m.to} to={m.to} className={`sc-card${i === step ? ' is-on' : i < step ? ' is-past' : ''}`} data-track="more_open" data-track-where={m.name.toLowerCase()}>
+            <span className="sc-card-media" aria-hidden={m.phone ? 'true' : undefined}>
+              {m.phone
+                ? <Phone className="sc-card-phone"><img src={m.img} width="390" height="844" alt="" loading="lazy" /></Phone>
+                : <img src={m.img} alt={m.alt} loading="lazy" />}
+            </span>
+            <span className="sc-card-text">
+              <span className="sc-card-name">{m.name}</span>
+              <span className="sc-card-line">{m.line}</span>
+              <span className="sc-card-go">Open {m.name}<Arrow /></span>
+            </span>
+          </Link>
+        ))}
+        <div className="sc-more-dots" aria-hidden="true">{MORE.map((m, i) => <span key={m.to} className={i === step ? 'is-on' : ''} />)}</div>
       </div>
     </section>
   )
