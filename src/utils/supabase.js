@@ -58,3 +58,13 @@ export async function saveDraftToDB(userId, draft) {
   if (error) console.warn('saveDraftToDB', error.message)
   return error || null
 }
+
+/** `Authorization` header with the signed-in user's token, or {} when signed out. */
+export async function authHeader() {
+  try {
+    const token = supabase ? (await supabase.auth.getSession()).data?.session?.access_token : null
+    return token ? { Authorization: `Bearer ${token}` } : {}
+  } catch {
+    return {}
+  }
+}

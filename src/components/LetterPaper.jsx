@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Motif, Stamp, Postmark, TicketBanner } from './Decor'
+import { paperVars } from '../utils/design/paperStyle'
 import '../styles/decor.css'
 
 /*
@@ -19,7 +20,7 @@ function paragraphs(text) {
 
 export default function LetterPaper({
   decor, title, titleId, meta, prompt, letter, photoUrl, videoUrl, voiceUrl, fromName,
-  signature, note, showPostmark = false, isTicket = false, textSizeControl = true, celebrate = false, stickers = [], pins = [],
+  signature, note, showPostmark = false, isTicket = false, textSizeControl = true, celebrate = false, stickers = [], pins = [], paper = null,
 }) {
   const d = decor || { style: 'night', motifs: [], postmark: null, ticket: null, tape: true }
   const [size, setSize] = useState(readSize)
@@ -41,7 +42,7 @@ export default function LetterPaper({
   )
 
   return (
-    <div className={`lp lp--${d.style} lp--${layout}`} style={{ '--lp-size': `${size}px` }}>
+    <div className={`lp lp--${d.style} lp--${layout}${paper ? ` lp--story lp--lines-${paper.lines}` : ''}`} style={{ '--lp-size': `${size}px`, ...paperVars(paper) }}>
       {celebrate && (
         <div className="lp-pop" aria-hidden="true">
           <Motif id="birthday-cake" size={64} className="lp-pop-cake" />

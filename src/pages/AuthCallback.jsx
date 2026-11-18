@@ -4,10 +4,12 @@ import { supabase } from '../utils/supabase'
 import { hydrateFromDB, saveDraft, getDraft } from '../utils/storage'
 import { CenterPage, Mark } from '../components/FlowFrame'
 
-/* After checkout (or a sign-in link): remember the payment, sign in with an emailed code, continue. */
+/* After checkout, a Kakao/Google sign-in, or a sign-in link: remember the payment, make sure they're signed in, continue. */
 
 function nextPath(isPayment) {
-  if (isPayment) return '/ai-interview'
+  if (isPayment) return '/export' // paying is the last step before their link
+  const asked = new URLSearchParams(window.location.search).get('next') || ''
+  if (/^\/[a-z-]*$/.test(asked)) return asked // back from Kakao or Google sign-in
   const d = getDraft()
   if (d.generatedConfig?.chosenName) return '/editor'
   if (d.phase2Done) return '/generate'
@@ -128,7 +130,7 @@ export default function AuthCallback() {
       <CenterPage>
         <Mark size={48} />
         <h1 className="wf-h1">{isPayment ? 'You’re all set.' : 'Signed in.'}</h1>
-        <p className="wf-lede">{isPayment ? 'Let’s plan the letter box together.' : 'Taking you back to your letter box.'}</p>
+        <p className="wf-lede">{isPayment ? 'Now let’s make their link.' : 'Taking you back to your letter box.'}</p>
       </CenterPage>
     )
   }

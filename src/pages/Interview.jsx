@@ -8,7 +8,7 @@ import Mascot from '../components/Mascot'
 import '../styles/onboard.css'
 
 /* Step 1: the basics, one tap at a time. The guide asks, you pick, it answers back.
-   Everything else is planned together in the AI conversation after checkout. */
+   Everything else is planned together in the AI conversation after signing in. */
 
 const REASONS = [
   { id: 'military', label: 'Military service or training', reply: 'That’s a long stretch with little contact. Letters will matter.', Icon: IconBoot },
@@ -116,7 +116,7 @@ export default function Interview() {
     setTried(false)
     track('interview_step', { step: String(key) })
     if (key === 'dates') { save(); track('interview_done') }
-    if (key === 'promise') { navigate('/paywall'); return }
+    if (key === 'promise') { navigate('/start'); return }
     setDir(1)
     setReply('')
     setStep((s) => Math.min(steps.length - 1, s + 1))

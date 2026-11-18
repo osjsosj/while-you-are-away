@@ -13,6 +13,7 @@ import AIInterview from './pages/AIInterview'
 import AIGenerate from './pages/AIGenerate'
 import Editor from './pages/Editor'
 import ChatImport from './pages/ChatImport'
+import Start from './pages/Start'
 import Preview from './pages/Preview'
 import Export from './pages/Export'
 import AuthCallback from './pages/AuthCallback'
@@ -45,6 +46,7 @@ export default function App() {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/interview" element={<Interview />} />
+        <Route path="/start" element={<Start />} />
         <Route path="/paywall" element={<Paywall />} />
         <Route path="/ai-interview" element={<AIInterview />} />
         <Route path="/generate" element={<AIGenerate />} />

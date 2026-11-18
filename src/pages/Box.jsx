@@ -14,6 +14,8 @@ import LetterPaper from '../components/LetterPaper'
 import { Motif } from '../components/Decor'
 import LetterApp from './box/LetterApp'
 import { storyLook, useStoryFonts } from '../components/storyLook'
+import { sheetStyle } from '../utils/design/paperStyle'
+import { StickerArtContext } from '../utils/stickerArt'
 import Mascot, { Says } from '../components/Mascot'
 import { loadMove } from '../utils/mascot'
 import './box.css'
@@ -155,6 +157,8 @@ export default function Box() {
           fromName={box.fromName}
           signature={box.signature}
           decor={box.decor}
+          paper={box.look?.paper || null}
+          art={box.look?.art}
           showPostmark={current.id === postmarkLetterId(items)}
           onClose={() => setOpenId(null)}
           onReply={async (body) => {
@@ -230,7 +234,16 @@ const SECTION_TITLES = {
   last: 'The day we meet again',
 }
 
-export function LetterSheet({ item, replies, toName, fromName, signature = null, decor = null, showPostmark = false, onClose, onReply, preview = false }) {
+/** One open letter, its stickers drawn in the box's art style. */
+export function LetterSheet({ art = 'flat', ...props }) {
+  return (
+    <StickerArtContext.Provider value={art || 'flat'}>
+      <LetterSheetBody {...props} />
+    </StickerArtContext.Provider>
+  )
+}
+
+function LetterSheetBody({ item, replies, toName, fromName, signature = null, decor = null, paper = null, showPostmark = false, onClose, onReply, preview = false }) {
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -269,12 +282,13 @@ export function LetterSheet({ item, replies, toName, fromName, signature = null,
 
   return (
     <div className="wb-sheet-wrap" role="dialog" aria-modal="true" aria-labelledby="wb-sheet-title" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <article className={`wb-sheet wb-sheet--${style}`}>
+      <article className={`wb-sheet wb-sheet--${style}${paper ? ' wb-sheet--story' : ''}`} style={sheetStyle(paper)}>
         <button type="button" className="wb-close" onClick={onClose} aria-label="Close letter">
           <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 3l10 10M13 3L3 13" /></svg>
         </button>
         <LetterPaper
           decor={decor}
+          paper={paper}
           title={item.label}
           titleId="wb-sheet-title"
           meta={meta}

@@ -2,7 +2,7 @@ import { track } from '../utils/track'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDraft, saveDraft, hydrateFromDB } from '../utils/storage'
-import { supabase, getUser } from '../utils/supabase'
+import { supabase, getUser, authHeader } from '../utils/supabase'
 import { localISODate, promptFor, stampFor, daysBetween, formatLong, UNLOCK_OPTIONS, normalizeUnlock } from '../utils/diary'
 import MomentMedia, { MomentMediaView } from '../components/MomentMedia'
 import './diary.css'
@@ -310,10 +310,10 @@ function Reminders({ initialEmail, enabled, partDate, daysLeft, toName, sessionI
     try {
       const res = await fetch('/api/reminder', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(await authHeader()) },
         body: JSON.stringify({ sessionId, email: email.trim(), partDate, toName, enabled: nextEnabled }),
       })
-      if (res.status === 402) throw new Error('Reminders start after checkout. Finish payment, then turn them on here.')
+      if (res.status === 401) throw new Error('Sign in first, so the questions know where to go.')
       if (!res.ok) throw new Error('Couldn’t save your reminder setting. Try again in a moment.')
       onSaved(email.trim(), nextEnabled)
     } catch (err) {

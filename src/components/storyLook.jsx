@@ -27,6 +27,7 @@ export function storyLook(box) {
   if (!look?.theme) return null
   return {
     theme: look.theme,
+    art: look.art,
     hero: <StoryHero look={look} fromName={box.fromName} toName={box.toName} />,
     pathArt: look.stamps.map((s) => s.sticker).filter(Boolean),
   }

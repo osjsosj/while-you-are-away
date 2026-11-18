@@ -2,7 +2,7 @@ import { track } from '../utils/track'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDraft, saveDraft } from '../utils/storage'
-import { generateLetterboxConfig, PaymentRequiredError } from '../utils/aiService'
+import { generateLetterboxConfig, PaymentRequiredError, SignInRequiredError } from '../utils/aiService'
 import { STYLES, STYLE_IDS, TICKETS, normalizeDecor, fallbackDecor, activeDecor, stickerLabel } from '../utils/decor'
 import { getPlan } from '../utils/plan'
 import { ticketLetterIds } from '../utils/boxModel'
@@ -89,7 +89,8 @@ export default function AIGenerate() {
     generateLetterboxConfig(designInput(d), (d.film?.photos || []).map((x) => x.photo).filter(Boolean).slice(0, 4))
       .then(apply)
       .catch((err) => {
-        if (err instanceof PaymentRequiredError) return navigate('/paywall')
+        if (err instanceof SignInRequiredError) return navigate('/start')
+      if (err instanceof PaymentRequiredError) return navigate('/paywall?reason=limit')
         apply(null)
       })
       .finally(() => live && setLoading(false))

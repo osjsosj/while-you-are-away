@@ -1,6 +1,7 @@
 import { Motif, Postmark, TicketBanner } from '../../components/Decor'
 import { hash, mix, letterLayout } from '../../utils/design/storyDesign'
 import { ChatPattern, Seal, StoryStamp } from '../../components/StoryArt'
+import { GRAIN, STAINS } from '../../utils/design/paperStyle'
 
 export { ChatPattern, Seal, StoryStamp }
 
@@ -23,14 +24,6 @@ function edgePath(edge, key) {
   for (let i = n - 1; i >= 0; i--) pts.push(`${(i / n) * 100}% ${100 - (edge === 'torn' ? (i % 2 ? 1.2 : 3.4) * r() + 0.4 : r() * amp)}%`)
   for (let i = n - 1; i > 0; i--) pts.push(`${r() * amp}% ${(i / n) * 100}%`)
   return `polygon(${pts.join(',')})`
-}
-
-const GRAIN = `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 .35  0 0 0 0 .28  0 0 0 0 .2  0 0 0 .9 0"/></filter><rect width="160" height="160" filter="url(#n)"/></svg>')}")`
-
-const STAINS = {
-  coffee: 'radial-gradient(circle at 84% 92%, transparent 0 46px, rgba(122,82,54,.22) 47px 50px, rgba(122,82,54,.06) 51px 56px, transparent 57px)',
-  tea: 'radial-gradient(circle at 84% 92%, transparent 0 44px, rgba(110,140,70,.2) 45px 48px, transparent 49px)',
-  rain: 'radial-gradient(circle at 18% 78%, rgba(90,110,140,.14) 0 9px, transparent 10px), radial-gradient(circle at 27% 88%, rgba(90,110,140,.12) 0 6px, transparent 7px), radial-gradient(circle at 80% 20%, rgba(90,110,140,.1) 0 8px, transparent 9px)',
 }
 
 /** The paper itself: tint, age, stain, edge. Ruled lines live on the text block so they meet the words. */

@@ -5,14 +5,13 @@ import { getDraft, saveDraft } from '../utils/storage'
 import { daysBetween, formatLong } from '../utils/diary'
 import FlowFrame from '../components/FlowFrame'
 
-/* Step 2: checkout. One payment unlocks the AI planning conversation and the whole letter box. */
+/* The last step: checkout at handover. Planning and writing were free; paying makes their link and raises the AI limits. */
 
 const INCLUDED = [
-  ['A planning conversation', 'We talk through your goodbye and shape the letter box around it.'],
-  ['A companion while you write', 'Help finding the words, whenever you get stuck. The words stay yours.'],
-  ['Every kind of letter', 'Tonight, while you’re apart, open when…, special days, the day you meet again.'],
-  ['The days before', 'Collect moments, photos and voice notes before you part, each stamped with its day.'],
   ['Their private letter box', 'A link that opens on their phone, works offline, and brings their replies back to you.'],
+  ['Every letter, on its day', 'Tonight, while you’re apart, open when…, special days, the day you meet again.'],
+  ['Keep writing after', 'Anything you add later shows up in their box, for as long as you’re apart.'],
+  ['More help while you write', 'Many more companion messages, and up to three readings of your chats.'],
 ]
 
 export default function Paywall() {
@@ -22,12 +21,13 @@ export default function Paywall() {
   const [email, setEmail] = useState(draft.email || '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const limit = new URLSearchParams(window.location.search).get('reason') === 'limit'
 
   const days = p.startDate && p.endDate ? daysBetween(p.startDate, p.endDate) : null
 
   const pay = async (e) => {
     e.preventDefault()
-    if (!/^\S+@\S+\.\S+$/.test(email.trim())) return setError('Enter the email address you’d like the receipt and sign-in code sent to.')
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) return setError('Enter the email address you’d like the receipt sent to.')
     setLoading(true)
     setError('')
     try {
@@ -48,9 +48,11 @@ export default function Paywall() {
   }
 
   return (
-    <FlowFrame step={1} narrow>
-      <h1 className="wf-h1">Almost there.</h1>
-      <p className="wf-lede">One payment, and we’ll plan {p.toName ? `${p.toName}’s` : 'their'} letter box together.</p>
+    <FlowFrame step={4} narrow>
+      <h1 className="wf-h1">{limit ? 'You’ve used the free help.' : 'Ready to hand it over.'}</h1>
+      <p className="wf-lede">{limit
+        ? `Everything you wrote is saved. One payment makes ${p.toName ? `${p.toName}’s` : 'their'} link and gives you much more help from the guide.`
+        : `One payment, and ${p.toName ? `${p.toName}’s` : 'their'} letter box gets its own private link.`}</p>
 
       {p.toName && (
         <dl className="wf-card wf-summary" style={{ marginBottom: 28 }}>
@@ -82,7 +84,7 @@ export default function Paywall() {
         </p>
         <p className="wf-note" style={{ marginBottom: 20 }}>No subscription. Full refund within 14 days, for any reason. Have a code? Add it on the next page.</p>
         <label className="wf-label" htmlFor="p-email" style={{ color: 'var(--ink)' }}>Your email</label>
-        <p className="wf-help" style={{ color: 'var(--ink-muted)' }}>For your receipt and a sign-in code, so you can keep writing from any device.</p>
+        <p className="wf-help" style={{ color: 'var(--ink-muted)' }}>For your receipt.</p>
         <input
           id="p-email"
           type="email"
@@ -103,13 +105,7 @@ export default function Paywall() {
         </p>
       </form>
 
-      <div className="wf-card" style={{ marginTop: 28, padding: 20 }}>
-        <p style={{ fontFamily: 'var(--serif)', fontSize: 19, lineHeight: 1.3, color: '#F4F1E6', marginBottom: 6 }}>Curious what your chats hold?</p>
-        <p className="wf-note" style={{ marginBottom: 12 }}>Drop in a KakaoTalk, WhatsApp or iMessage chat and see your numbers for free: the first message, the late nights, the hours on the phone. Counted on your phone; nothing is sent.</p>
-        <button type="button" className="wf-btn wf-btn--ghost wf-btn--small" onClick={() => navigate('/chats')}>See your chat in numbers</button>
-      </div>
-
-      <button type="button" className="wf-link" style={{ marginTop: 16 }} onClick={() => navigate('/interview')}>Change the basics</button>
+      <button type="button" className="wf-link" style={{ marginTop: 16 }} onClick={() => navigate('/editor')}>Back to your letters</button>
     </FlowFrame>
   )
 }

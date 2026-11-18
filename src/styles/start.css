@@ -1,0 +1,24 @@
+/* Sign in before planning: Kakao, Google, or an emailed code. Scoped under .st, inside .wf. */
+
+.st { display: flex; flex-direction: column; }
+.st-perigan { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 24px; }
+.st-perigan > :first-child { flex: none; }
+.st-bubble { padding: 12px 14px; border-radius: 14px 14px 14px 4px; background: #F4F1E6; color: var(--ink); font-size: 15px; line-height: 1.45; }
+
+.st-buttons { display: flex; flex-direction: column; gap: 10px; }
+.st-btn { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 12px 18px; border-radius: 12px; border: 1px solid transparent; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 160ms var(--ease), filter 160ms ease; }
+.st-btn:hover:not(:disabled) { filter: brightness(1.04); }
+.st-btn:active:not(:disabled) { transform: scale(0.98); }
+.st-btn:disabled { opacity: 0.6; cursor: default; }
+.st-btn svg { flex: none; }
+/* Kakao's own button colours (yellow, black at 85%) */
+.st-btn--kakao { background: #FEE500; color: rgba(0, 0, 0, 0.85); }
+.st-btn--google { background: #FFFFFF; color: #1F1F1F; border-color: #DADCE0; }
+.st-btn--email { background: transparent; color: var(--mist); border-color: rgba(233, 236, 242, 0.3); }
+
+.st-form { display: flex; flex-direction: column; gap: 10px; }
+.st-form .wf-input { margin-bottom: 4px; }
+.st-code { font-size: 22px; letter-spacing: 0.3em; text-align: center; }
+.st-back { align-self: center; }
+.st-fine { margin-top: 22px; font-size: 13px; line-height: 1.5; color: var(--mist-muted); }
+.st-fine a { color: inherit; }

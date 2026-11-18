@@ -1,3 +1,4 @@
+import { StickerArtContext } from '../../utils/stickerArt'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { daysBetween, formatLong } from '../../utils/diary'
 import { moonOn } from '../../utils/sky'
@@ -18,7 +19,16 @@ const TABS = [
 ]
 
 /* `look` (optional) dresses the box from the senders' story: { theme: CSS variables set on the app root, hero: a node shown above the path, pathArt: sticker ids set beside the path }. */
-export default function LetterApp({ box, items, replies = [], opened = [], today, onOpen, offline = false, film = null, onFilm = null, story = null, footer = null, look = null }) {
+/** Draws every sticker in the box's art style (look.art). */
+export default function LetterApp(props) {
+  return (
+    <StickerArtContext.Provider value={props.look?.art || 'flat'}>
+      <LetterAppBody {...props} />
+    </StickerArtContext.Provider>
+  )
+}
+
+function LetterAppBody({ box, items, replies = [], opened = [], today, onOpen, offline = false, film = null, onFilm = null, story = null, footer = null, look = null }) {
   const [tab, setTab] = useState('letters')
   const openSet = useMemo(() => new Set(opened), [opened])
   const units = useMemo(() => buildPath(items, box), [items, box])

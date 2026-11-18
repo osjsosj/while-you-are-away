@@ -123,3 +123,15 @@
 .lp-pin--memory .lp-pin-main::before { content: '◆ '; font-size: 11px; vertical-align: 2px; color: var(--lp-soft); }
 .lp-pin--parting { border-left: 0; background: transparent; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--lp-ink) 30%, transparent); }
 .lp--quiet .lp-pin { transform: none; box-shadow: none; }
+
+/* paper drawn from their story (utils/design/paperStyle.js): faces, ruling, grain */
+.lp--story .lp-title { font-family: var(--lp-title-face, 'Literata', Georgia, serif); }
+.lp--story .lp-body { font-family: var(--lp-body-face, 'Literata', Georgia, serif); }
+.lp--story .lp-sign { font-family: var(--lp-hand-face, 'Literata', Georgia, serif); font-style: normal; font-size: 24px; }
+.lp--story.lp--postcard .lp-body { font-family: var(--lp-hand-face, 'Literata', Georgia, serif); font-size: calc(var(--lp-size, 18px) * 1.25); }
+.lp--lines-ruled .lp-body, .lp--lines-ruled-tight .lp-body {
+  background-image: repeating-linear-gradient(to bottom, transparent 0 calc(1.75em - 1px), var(--lp-line) calc(1.75em - 1px) 1.75em);
+  background-position: 0 -0.32em;
+}
+.wb-sheet--story { position: relative; isolation: isolate; }
+.wb-sheet--story::after { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background-image: var(--sheet-grain-img); opacity: calc(var(--sheet-grain, 0.2) * 0.5); mix-blend-mode: multiply; pointer-events: none; }

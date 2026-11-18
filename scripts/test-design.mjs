@@ -2,6 +2,7 @@
  * "dress it again" keeps what comes from the story, and text always reads on the paper.
  * Run: node scripts/test-design.mjs */
 import assert from 'node:assert/strict'
+import { stickerSrc } from '../src/utils/stickerArt.js'
 import { designFromStory, contrast } from '../src/utils/design/storyDesign.js'
 import { SAMPLES } from '../src/pages/lab/samples.js'
 
@@ -32,6 +33,13 @@ test('dressing again keeps what comes from the story', () => {
 
 test('ink always reads on the paper (7:1 or better)', () => {
   for (const d of specs) assert.ok(contrast(d.palette.ink, d.palette.paper) >= 7, `${d.palette.ink} on ${d.palette.paper}`)
+})
+
+test('each box draws its stickers in one art style, and it can change', () => {
+  for (const d of specs) assert.ok(['flat', 'color', 'noto', 'twemoji'].includes(d.art), d.art)
+  assert.equal(stickerSrc('tangerine', 'noto'), '/stickers/noto/tangerine.svg')
+  assert.equal(stickerSrc('blackbird', 'noto'), '/stickers/blackbird.svg', 'a subject the style lacks falls back to flat')
+  assert.equal(stickerSrc('tangerine'), '/stickers/tangerine.svg')
 })
 
 test('every choice is traced to the story', () => {

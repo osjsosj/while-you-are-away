@@ -1,10 +1,17 @@
+import { useContext } from 'react'
 import { TICKETS, postmarkDate, stickerId, stickerLabel } from '../utils/decor'
+import { StickerArtContext, stickerSrc } from '../utils/stickerArt'
 
 /* The pieces that dress a letter. Stickers are Fluent Emoji (MIT) cut out like vinyl stickers;
    stamps, postmarks, tickets and tape are drawn here. */
-const src = (id) => `/stickers/${id}.svg`
+// each box draws its stickers in its own art style (flat, color, noto, twemoji); see utils/stickerArt.js
+const useSrc = () => {
+  const art = useContext(StickerArtContext)
+  return (id) => stickerSrc(id, art)
+}
 
 export function Motif({ id, size = 48, className = '', style, label, tilt = 0 }) {
+  const src = useSrc()
   const sid = stickerId(id)
   if (!sid) return null
   return (
@@ -16,6 +23,7 @@ export function Motif({ id, size = 48, className = '', style, label, tilt = 0 })
 
 /** A perforated postage stamp with a sticker in it. */
 export function Stamp({ id, text = '', size = 56 }) {
+  const src = useSrc()
   const sid = stickerId(id)
   if (!sid) return null
   return (
@@ -83,7 +91,7 @@ export function StyleSwatch({ style }) {
       <rect x="34" y="12" width="82" height="76" fill={paper} />
       {style === 'scrapbook' && (<><rect x="42" y="20" width="34" height="28" fill="#fff" transform="rotate(-6 59 34)" /><rect x="44" y="22" width="30" height="19" fill="#E7A99A" transform="rotate(-6 59 34)" /><rect x="50" y="15" width="22" height="7" fill="rgba(240,178,96,.85)" transform="rotate(4 61 18)" /></>)}
       {style === 'night' && <circle cx="104" cy="24" r="5" fill="#F0B341" />}
-      {style === 'flowers' && <image href={src('blossom')} x="94" y="15" width="20" height="20" />}
+      {style === 'flowers' && <image href={stickerSrc('blossom')} x="94" y="15" width="20" height="20" />}
       <g fill={style === 'night' ? '#5A6070' : '#8A7A66'} opacity=".45">
         {(style === 'scrapbook' ? [58, 66, 74] : [36, 46, 56, 66, 74]).map((y, i) => <rect key={y} x="44" y={y} width={[58, 50, 62, 44, 54][i]} height="2" />)}
       </g>

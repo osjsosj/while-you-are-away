@@ -75,7 +75,8 @@ export default function Export() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` },
         body: JSON.stringify({ action: 'publish' }),
       })
-      if (res.status === 402) throw new Error('This letter box hasn’t been paid for yet. Finish checkout first.')
+      // paying happens here, at handover: off to checkout, then straight back to make the link
+      if (res.status === 402) { navigate('/paywall'); return }
       if (res.status === 401) throw new NeedSignInError()
       if (!res.ok) throw new Error('Couldn’t create the link. Try again in a moment.')
       const { token } = await res.json()
@@ -127,7 +128,7 @@ export default function Export() {
             </ul>
             <Readiness draft={draft} onEdit={() => navigate('/editor')} />
             <button type="button" className="wh-btn" onClick={publish} disabled={stage === 'publishing'}>
-              {stage === 'publishing' ? 'Making the link…' : 'Make their link'}
+              {stage === 'publishing' ? 'Making the link…' : draft.paymentSessionId ? 'Make their link' : 'Make their link · $24'}
             </button>
           </>
         )}

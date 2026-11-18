@@ -141,6 +141,25 @@ export function storyFindings(story) {
   return groups.filter((g) => g.items.length)
 }
 
+/**
+ * A short plain-text brief of the chat story for the planning guide, so it can ask about what is
+ * really there ("you always say 도착하면 전화해"). Chat findings only; at most `max` characters.
+ */
+export function storyBrief(story, max = 1500) {
+  if (!story?.hasChat) return ''
+  const lines = []
+  if (story.about) lines.push(`About them: ${story.about}`)
+  if (story.callEachOther) lines.push(`They call each other: ${story.callEachOther}`)
+  const chat = (list) => list.filter((x) => (x.from || 'chat') === 'chat')
+  for (const m of chat(story.memories)) lines.push(`Moment: ${m.title}${m.date ? ` (${m.date})` : ''}${m.place ? `, ${m.place}` : ''}`)
+  for (const c of chat(story.catchphrases)) lines.push(`Always says${c.who ? ` (${c.who})` : ''}: "${c.text}"`)
+  for (const p of story.partings) lines.push(`Earlier goodbye: ${p.what || 'a goodbye'}${p.date ? ` on ${p.date}` : ''}${p.place ? ` at ${p.place}` : ''}${p.back ? `, back ${p.back}` : ''}`)
+  const out = []
+  let n = 0
+  for (const l of lines) { if (n + l.length + 1 > max) break; out.push(l); n += l.length + 1 }
+  return out.join('\n')
+}
+
 const GROUP_WORDS = {
   moments: ['moment', 'moments'],
   sayings: ['thing you always say', 'things you always say'],

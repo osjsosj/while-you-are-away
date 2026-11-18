@@ -229,3 +229,9 @@
 .ai-guide > div { min-width: 0; }
 @media (max-width: 560px) { .ai-guide { gap: 8px; } .ai-guide .mascot { margin-left: -10px; } }
 
+
+/* planning: the offer to read their chat before the first question */
+.ai-chat-offer { margin: 0 0 20px; padding: 18px 20px; }
+.ai-chat-offer-h { margin-bottom: 6px; font-family: var(--serif); font-size: 19px; line-height: 1.3; color: #F4F1E6; }
+.ai-chat-offer-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.ai-chat-offer-btns .wf-btn { flex: 1 1 140px; }

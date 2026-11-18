@@ -1,7 +1,8 @@
 import { isPaid, db, escapeHtml, isEmail, isISODate, siteUrl, usEveningDate } from './_lib/server.js'
+import { userOf } from './_lib/access.js'
 
 /**
- * POST /api/reminder            turn evening questions on or off (needs a paid checkout session)
+ * POST /api/reminder            turn evening questions on or off (a signed-in account, or a paid checkout session)
  * GET|POST /api/reminder?unsubscribe=<token>   one-click unsubscribe from the email footer
  */
 export default async function handler(req, res) {
@@ -10,8 +11,12 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { sessionId, email, partDate, toName, enabled } = req.body || {}
-  if (!(await isPaid(sessionId))) return res.status(402).json({ error: 'payment_required' })
+  const { email, partDate, toName, enabled } = req.body || {}
+  // the questions are for the days before parting, which come before handover: signing in is enough
+  const paid = await isPaid(req.body?.sessionId)
+  const user = paid ? null : await userOf(req)
+  if (!paid && !user) return res.status(401).json({ error: 'sign_in_required' })
+  const sessionId = paid ? req.body.sessionId : `user:${user.id}`
 
   const on = enabled !== false
   if (on) {

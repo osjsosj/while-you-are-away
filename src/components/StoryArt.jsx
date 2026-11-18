@@ -1,4 +1,6 @@
+import { useContext } from 'react'
 import { hash, mix } from '../utils/design/storyDesign'
+import { StickerArtContext, stickerSrc } from '../utils/stickerArt'
 
 /*
  * Pieces drawn from the senders' story: their months as a pattern, a stamp per moment, a seal.
@@ -59,12 +61,13 @@ export function ChatPattern({ spec, size = 180, light = false }) {
 }
 
 export function StoryStamp({ stamp, size = 70 }) {
+  const art = useContext(StickerArtContext)
   return (
     <svg className="dl-stamp" viewBox="0 0 60 74" width={size} height={size * 1.23} style={{ '--tilt': `${stamp.tilt}deg` }} aria-hidden="true">
       <rect x="3" y="3" width="54" height="68" fill={stamp.color} />
       <rect x="3" y="3" width="54" height="68" fill="none" stroke="#fff" strokeWidth="4" strokeDasharray="0.1 5.9" strokeLinecap="round" />
       <rect x="8" y="8" width="44" height="46" fill="#FFFCF4" />
-      <image href={`/stickers/${stamp.sticker}.svg`} x="14" y="12" width="32" height="32" />
+      <image href={stickerSrc(stamp.sticker, art)} x="14" y="12" width="32" height="32" />
       {stamp.date && <text x="30" y="51" textAnchor="middle" fontSize="5.4" fontWeight="600" fill="#6B5B45" fontFamily="'IBM Plex Sans KR', sans-serif">{stamp.date.replace(/-/g, '.')}</text>}
       <text x="30" y="65" textAnchor="middle" fontSize="7" fontWeight="700" fill="#fff" fontFamily="'Gowun Dodum', sans-serif">{stamp.text.slice(0, 9)}</text>
     </svg>

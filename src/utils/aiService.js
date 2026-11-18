@@ -1,6 +1,7 @@
 /**
  * aiService.js — every Claude call goes through /api/claude.
- * The key and prompts live on the server; a paid Stripe session id authorizes the call.
+ * The key and prompts live on the server. A signed-in account is enough (with free limits);
+ * a paid letter box raises them. See api/_lib/access.js.
  */
 import { getDraft } from './storage'
 import { supabase } from './supabase'
@@ -13,6 +14,13 @@ export class PaymentRequiredError extends Error {
   }
 }
 
+export class SignInRequiredError extends Error {
+  constructor() {
+    super('sign_in_required')
+    this.name = 'SignInRequiredError'
+  }
+}
+
 export class AIUnavailableError extends Error {
   constructor(status) {
     super(status === 429 ? 'cap_reached' : 'unavailable')
@@ -22,8 +30,7 @@ export class AIUnavailableError extends Error {
 }
 
 async function callClaude(payload) {
-  const sessionId = getDraft().paymentSessionId
-  if (!sessionId) throw new PaymentRequiredError()
+  const sessionId = getDraft().paymentSessionId || ''
   let res
   try {
     // the sign-in token lets the server show Claude the sender's own photos
@@ -40,7 +47,8 @@ async function callClaude(payload) {
   } catch {
     throw new AIUnavailableError(0)
   }
-  if (res.status === 402) throw new PaymentRequiredError()
+  if (res.status === 401) throw new SignInRequiredError()
+  if (res.status === 402) throw new PaymentRequiredError() // the free allowance for this is used up
   if (!res.ok) throw new AIUnavailableError(res.status)
   const data = await res.json()
   if (!data.text) throw new AIUnavailableError(502)
@@ -53,8 +61,8 @@ const opener = (phase1) => ({
 })
 
 /** Planning conversation. `messages` is what's on screen (starts with the assistant). */
-export function runAIInterview(messages, phase1, images = []) {
-  return callClaude({ kind: 'interview', messages: [opener(phase1), ...messages], phase1, images })
+export function runAIInterview(messages, phase1, images = [], story = '') {
+  return callClaude({ kind: 'interview', messages: [opener(phase1), ...messages], phase1, images, story })
 }
 
 /** Writing companion in the editor. `summary` describes the letter box as it stands. */
@@ -69,7 +77,7 @@ export async function generateLetterboxConfig(allData, images = []) {
     const t = text.replace(/```json|```/g, '')
     return JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1))
   } catch (err) {
-    if (err instanceof PaymentRequiredError) throw err
+    if (err instanceof PaymentRequiredError || err instanceof SignInRequiredError) throw err
     return null
   }
 }
@@ -94,7 +102,8 @@ export function extractComplete(text) {
 /**
  * Reads excerpts of their chat and returns the story (moments, sayings, earlier goodbyes).
  * `excerpts` come from pickExcerpts(); `stats` were counted in the browser; `names` = { me, them }.
- * Throws PaymentRequiredError before checkout, AIUnavailableError(429) after three readings.
+ * Throws SignInRequiredError when signed out, PaymentRequiredError after the free reading,
+ * AIUnavailableError(429) after the paid ones.
  */
 export async function findStory({ excerpts, stats, names }) {
   const small = { ...(stats || {}) }

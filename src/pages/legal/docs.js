@@ -47,6 +47,9 @@ export const DOCS = {
       ['Changes and law', [
         'We may update these terms. If a change is material, we’ll email you or show a notice on the site before it takes effect. These terms are governed by the laws of the State of California, USA.',
       ]],
+      ['Credits', [
+        'Stickers: Microsoft Fluent Emoji (MIT License, Copyright Microsoft Corporation); Noto Emoji by Google (Apache License 2.0); Twemoji, Copyright 2020 Twitter, Inc and other contributors, licensed under CC BY 4.0 (creativecommons.org/licenses/by/4.0). Full notices at /stickers/LICENSE.txt.',
+      ]],
       ['Contact', [`${OPERATOR}, California, USA · ${CONTACT}`]],
     ],
   },
@@ -59,6 +62,8 @@ export const DOCS = {
         'From you (the sender): your email address; the names, dates and answers you give while planning; your letters, photos, videos, voice notes and signature; the planning and writing-companion conversations; and your payment status from Stripe (not your card number).',
         'From your recipient: the replies they write and which letters they’ve opened, with the date. We don’t ask recipients to create an account or give their email.',
         'Chats you bring in (optional): if you add an exported chat, it is read and counted in your own browser. The numbers and a selection of messages (not the whole chat) stay in your browser’s local storage until you ask us to find moments in it, or remove it. When you do, that selection and the numbers are sent through our server to our AI provider, once, to find shared moments, things you often say and earlier goodbyes. We keep what it finds with your letter box (it can appear on a letter only if you put it there), and remove the chat from your browser. We don’t store the chat itself on our servers. Only bring in a chat between you and your recipient.',
+        'Your account: you sign in with Kakao, Google or an emailed code. From Kakao or Google we receive your email address and an account ID (and your name or profile picture if that service shares it); we use them only to sign you in and save your letter box.',
+        'Limits on the AI guide: to keep the free planning fair and stop automated misuse, we count AI requests per account, and per network address for one day. The address is stored only as a one-way scrambled value, never the address itself.',
         'Technical data: our hosting provider keeps standard server logs (such as IP address, browser type and time of request) for security and troubleshooting. Your draft is also saved in your own browser’s local storage so you don’t lose work.',
         'Usage data: we count which pages and buttons people use, from first visit to finished letter box, so we can find where people get stuck. Each event has a page name, the date, and a random visitor ID stored in your browser. It never contains your name, email, letters or recipient link. We also keep which site or campaign sent you.',
       ]],
@@ -67,7 +72,7 @@ export const DOCS = {
         'We don’t sell your information, we don’t use it for advertising, and we don’t read your letters except when you ask us to help with a problem or when we must to investigate abuse or comply with the law.',
       ]],
       ['Who else processes it', [
-        'Stripe (payments) · Supabase (database, sign-in and file storage) · Vercel (hosting) · Anthropic (the AI guide; the planning and companion conversations, a short summary of your letter box, and, if you bring in a chat, the selection of messages described above are sent to generate replies) · Resend (sending email).',
+        'Stripe (payments) · Supabase (database, sign-in and file storage) · Kakao and Google (only if you choose to sign in with them) · Vercel (hosting) · Anthropic (the AI guide; the planning and companion conversations, a short summary of your letter box, and, if you bring in a chat, the selection of messages described above are sent to generate replies) · Resend (sending email).',
         'Each processes data only to provide its part of the service to us.',
       ]],
       ['Cookies, tracking and “Do Not Track”', [

@@ -3,7 +3,7 @@ import '../styles/flow.css'
 
 /* Shared frame for the builder pages: brand, step indicator, content column. */
 
-const STEPS = ['The basics', 'Checkout', 'Plan it together', 'Write']
+const STEPS = ['The basics', 'Sign in', 'Plan it together', 'Write', 'Hand it over']
 
 export function Mark({ size = 20 }) {
   return (

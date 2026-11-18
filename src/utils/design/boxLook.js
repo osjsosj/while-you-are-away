@@ -9,7 +9,7 @@
  *  - the pattern is their months of messages, which the recipient was half of
  * The trace (which fact made which choice) stays with the sender. Pure: runs on the server too.
  */
-import { designFromStory, appTheme } from './storyDesign.js'
+import { designFromStory, appTheme, mix } from './storyDesign.js'
 import { storyFromDraft } from '../story.js'
 
 const RELATIONSHIP = { 'a partner': 'partner', 'a parent': 'parent', 'a child': 'child', 'a friend': 'friend' }
@@ -55,9 +55,33 @@ export function boxLook(draft, items, isOpen) {
   return {
     theme: appTheme(spec),
     typeKey: spec.typeKey,
+    art: spec.art,
     palette: { accent: spec.palette.accent, accent2: spec.palette.accent2, accentRaw: spec.palette.accentRaw, accent2Raw: spec.palette.accent2Raw, ink: spec.palette.ink },
     pattern: { kind: spec.pattern.kind, months, calls: Number(st.stats.callMinutes) || 0, late: 0 },
     seal: spec.seal,
     stamps,
+    // the letter paper: tint, age, ruling, stain, and the faces it is written in
+    paper: {
+      tint: mix(spec.palette.paper, '#E8D7B0', spec.paper.grain * 0.35),
+      ink: spec.palette.ink,
+      line: spec.palette.line,
+      grain: Math.round(spec.paper.grain * 100) / 100,
+      lines: spec.paper.lines,
+      stain: spec.paper.stain,
+      faces: { title: spec.type.title, body: spec.type.body, hand: spec.type.hand },
+    },
   }
+}
+
+/**
+ * For the sender only: which part of their story made which choice, in plain words, plus the look
+ * itself for a small preview. Built from the same rules as the box, from letters written so far.
+ */
+export function explainLook(draft, written) {
+  const st = designStory(draft, written)
+  if (!st) return null
+  const spec = designFromStory(st, Number(draft.lookVariant) || 0)
+  const look = boxLook(draft, written, () => true)
+  // only what the box actually shows (the lab also tries per-letter decorations, edges and a goodbye map)
+  return { look, lines: spec.trace.filter((t) => !/^The letter /.test(t.info) && !/edge$|map of your goodbyes/.test(t.design)) }
 }

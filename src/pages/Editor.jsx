@@ -17,6 +17,7 @@ import { buildSummary, isFilled } from '../utils/summary'
 import { cleanPins, draftWithStory, letterFromFinding, storyFindings, storyFromDraft } from '../utils/story'
 import { ChatInvite, FindingsPanel, PinList, StoryEntry } from '../components/StoryFinds'
 import { loadLocalChat } from '../utils/chat/local'
+import DesignWhy from '../components/DesignWhy'
 import '../styles/editor.css'
 import './diary.css'
 
@@ -122,6 +123,7 @@ export default function Editor() {
         )}
 
         <DecorStrip decor={draft.decor} onEdit={() => navigate('/generate')} />
+        <DesignWhy draft={draft} onVariant={(v) => update({ lookVariant: v })} />
 
         <button type="button" className="we-diary" onClick={() => navigate('/diary')}>
           <span>

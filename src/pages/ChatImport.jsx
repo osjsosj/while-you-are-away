@@ -6,13 +6,14 @@ import { getDraft, saveDraft } from '../utils/storage'
 import { chatStats, parseChatAsync, pickExcerpts, readChatFile, suggestRoles, withRoles } from '../utils/chat'
 import { clearLocalChat, loadLocalChat, saveLocalChat } from '../utils/chat/local'
 import { draftWithStory, groupCount, normalizeStory, shortDate, statFacts, storyFindings } from '../utils/story'
-import { AIUnavailableError, PaymentRequiredError, findStory } from '../utils/aiService'
+import { AIUnavailableError, PaymentRequiredError, SignInRequiredError, findStory } from '../utils/aiService'
+import { getUser } from '../utils/supabase'
 import { track } from '../utils/track'
 import '../styles/chats.css'
 
 /*
  * "Bring your chats": the sender drops in an exported chat. It is read and counted on this device;
- * the numbers are free to see. After checkout, a selection of the messages is read by the AI to find
+ * the numbers are free to see. Once signed in, a selection of the messages is read by the AI to find
  * moments, sayings and earlier goodbyes to write from. Nothing here writes a letter.
  */
 
@@ -55,6 +56,9 @@ export default function ChatImport() {
   const draft = getDraft()
   const p1 = draft.phase1 || {}
   const paid = !!draft.paymentSessionId
+  const then = /^\/[a-z-]*$/.test(new URLSearchParams(window.location.search).get('then') || '') ? new URLSearchParams(window.location.search).get('then') : ''
+  const [signedIn, setSignedIn] = useState(null)
+  useEffect(() => { let live = true; getUser().then((u) => live && setSignedIn(!!u)); return () => { live = false } }, [])
   const names = useMemo(() => ({ me: p1.fromName || 'Me', them: p1.toName || 'Them' }), [p1.fromName, p1.toName])
 
   const saved = useMemo(() => loadLocalChat(), [])
@@ -126,9 +130,13 @@ export default function ChatImport() {
       setStep('done')
       track('chat_story_found')
     } catch (err) {
+      if (err instanceof SignInRequiredError) {
+        setStep('preview')
+        return navigate('/start?next=/chats')
+      }
       if (err instanceof PaymentRequiredError) {
         setStep('preview')
-        return setError('Reading the moments comes with the letter box. Your numbers are saved on this device until you check out.')
+        return setError('You’ve used the free reading. Handing over the box gives you two more; your numbers stay saved on this device.')
       }
       setError(err instanceof AIUnavailableError && err.status === 429
         ? 'This letter box has used its three chat readings. Your earlier findings are still in the editor.'
@@ -238,12 +246,12 @@ export default function ChatImport() {
             <div className="wf-paper ci-next">
               <p className="ci-next-h">Next: the moments behind the numbers</p>
               <p className="ci-next-p">We read a selection of your messages (about {Math.round(chat.excerpts.length / 1000)}k characters, not the whole chat) to find shared moments, things you always say, and the goodbyes before this one. You pick what goes on a letter; nothing goes in the box by itself.</p>
-              {paid ? (
-                <button type="button" className="wf-btn wf-btn--ink wf-btn--block" onClick={find}>Find our moments</button>
+              {signedIn === false ? (
+                <button type="button" className="wf-btn wf-btn--ink wf-btn--block" onClick={() => navigate('/start?next=/chats')}>Sign in to find our moments</button>
               ) : (
-                <button type="button" className="wf-btn wf-btn--ink wf-btn--block" onClick={() => navigate('/paywall')}>Continue to checkout</button>
+                <button type="button" className="wf-btn wf-btn--ink wf-btn--block" onClick={find} disabled={signedIn === null}>Find our moments</button>
               )}
-              {!paid && <p className="wf-note">Comes with the letter box. Your numbers stay saved on this device; come back here after checkout.</p>}
+              <p className="wf-note">{paid ? 'Up to three readings come with your letter box.' : 'Your first reading is free. Your numbers stay saved on this device.'}</p>
             </div>
             {error && <p className="wf-error" role="alert">{error}</p>}
             <button type="button" className="wf-link ci-back" onClick={startOver}>Remove this chat and start over</button>
@@ -262,7 +270,7 @@ export default function ChatImport() {
               {groups.map((g) => <li key={g.id} className="wf-card"><span className="ci-found-n">{g.items.length}</span> {groupCount(g).replace(/^\d+ /, '')}</li>)}
             </ul>
             <p className="wf-note ci-note">The chat itself has been removed from this device. Only what we found is kept with your letter box.</p>
-            <button type="button" className="wf-btn wf-btn--block" onClick={() => navigate(getDraft().plan ? '/editor' : '/ai-interview')}>{getDraft().plan ? 'Open the editor' : 'Back to planning'}</button>
+            <button type="button" className="wf-btn wf-btn--block" onClick={() => navigate(then || (getDraft().plan ? '/editor' : '/ai-interview'))}>{then === '/ai-interview' || !getDraft().plan ? 'Start planning together' : 'Open the editor'}</button>
           </>
         )}
       </div>

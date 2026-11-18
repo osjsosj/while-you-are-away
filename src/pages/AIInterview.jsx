@@ -2,8 +2,9 @@ import { track } from '../utils/track'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDraft, saveDraft } from '../utils/storage'
-import { runAIInterview, extractComplete, extractGathered, PaymentRequiredError } from '../utils/aiService'
+import { runAIInterview, extractComplete, extractGathered, PaymentRequiredError, SignInRequiredError } from '../utils/aiService'
 import { normalizePlan, SCHEDULES, SECTION_INFO } from '../utils/plan'
+import { storyBrief, storyFromDraft } from '../utils/story'
 import { normalizeUnlock, formatLong } from '../utils/diary'
 import { uploadMedia, NeedSignInError, useMediaUrl } from '../utils/media'
 import { useRecorder, fmtSeconds } from '../utils/useRecorder'
@@ -63,7 +64,7 @@ export default function AIInterview() {
     try {
       const last = msgs[msgs.length - 1]
       const seePhoto = last?.media?.kind === 'photo' ? [last.media.ref] : []
-      const raw = await runAIInterview(msgs.map((m) => ({ role: m.role, content: m.content })), getDraft().phase1 || {}, seePhoto)
+      const raw = await runAIInterview(msgs.map((m) => ({ role: m.role, content: m.content })), getDraft().phase1 || {}, seePhoto, storyBrief(storyFromDraft(getDraft())))
       const g = extractGathered(raw)
       if (g.gathered !== null) { setGathered(g.gathered); saveDraft({ interviewGathered: g.gathered }) }
       const done = extractComplete(g.text)
@@ -86,15 +87,33 @@ export default function AIInterview() {
         track('plan_ready')
       }
     } catch (err) {
-      if (err instanceof PaymentRequiredError) return navigate('/paywall')
+      if (err instanceof SignInRequiredError) return navigate('/start')
+      if (err instanceof PaymentRequiredError) return navigate('/paywall?reason=limit')
       setFailed(true)
     } finally {
       setLoading(false)
     }
   }, [navigate])
 
+  // before the first message: offer to read their chat first, so the guide can ask about what's really there
+  const [offerChat, setOfferChat] = useState(() => {
+    const d = getDraft()
+    return messages.length === 0 && !d.chatOfferSeen && !storyFromDraft(d)?.hasChat
+  })
+  const skipChat = () => {
+    saveDraft({ chatOfferSeen: true })
+    setOfferChat(false)
+    track('ai_start')
+    ask([])
+  }
+  const goChat = () => {
+    saveDraft({ chatOfferSeen: true })
+    track('chat_offer_taken')
+    navigate('/chats?then=/ai-interview')
+  }
+
   useEffect(() => {
-    if (messages.length === 0) {
+    if (messages.length === 0 && !offerChat) {
       // first visit: the guide opens the conversation
       track('ai_start')
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -167,6 +186,17 @@ export default function AIInterview() {
           <div className="ai-meter-foot">
             <span>Each small detail you share becomes part of how the box looks.</span>
             <button type="button" className="ai-enough" onClick={() => send(ENOUGH)} disabled={loading}>That’s enough for now</button>
+          </div>
+        </div>
+      )}
+
+      {offerChat && (
+        <div className="wf-card ai-chat-offer">
+          <p className="ai-chat-offer-h">Before we talk: shall I read your chats first?</p>
+          <p className="wf-note">Drop in a KakaoTalk, WhatsApp or iMessage chat with {toName}. I’ll ask about what’s really there instead of starting from nothing. Your first reading is free.</p>
+          <div className="ai-chat-offer-btns">
+            <button type="button" className="wf-btn wf-btn--small" onClick={goChat}>Bring in a chat</button>
+            <button type="button" className="wf-btn wf-btn--ghost wf-btn--small" onClick={skipChat}>Skip, let’s talk</button>
           </div>
         </div>
       )}

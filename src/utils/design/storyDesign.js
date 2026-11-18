@@ -119,6 +119,7 @@ export const TYPE = {
   playful: { title: "'Gowun Dodum', system-ui, sans-serif", body: "'Gowun Dodum', system-ui, sans-serif", hand: "'Gaegu', 'Caveat', cursive", label: 'Gowun Dodum + Gaegu' },
   plain: { title: "'IBM Plex Sans KR', 'Schibsted Grotesk', sans-serif", body: "'IBM Plex Sans KR', system-ui, sans-serif", hand: "'Nanum Pen Script', 'Caveat', cursive", label: 'IBM Plex Sans KR' },
 }
+const ART_NAMES = { flat: 'flat', color: 'soft color', noto: 'rounded', twemoji: 'bright' }
 const TYPE_FOR = { partner: 'tender', parent: 'warm', child: 'warm', sibling: 'playful', friend: 'playful' }
 
 // ── the spec ─────────────────────────────────────────────────
@@ -132,15 +133,15 @@ export function designFromStory(story, variant = 0) {
   const r = rng(seed)
   const mood = BASE[story.mood] ? story.mood : 'night'
   const base = BASE[mood]
-  why(`분위기: ${mood}`, `기본 바탕 ${mood}`)
+  why(`The feel you chose: ${mood}`, `${mood} paper and ground`)
 
   // color: the two things they mention most
   const anchors = colorAnchors(story)
   const pick = variant % 2 && anchors.length > 2 ? [anchors[0], anchors[2]] : anchors.slice(0, 2)
   const accent = pick[0]?.hex || '#F0B341'
   const accent2 = pick[1]?.hex || mix(accent, base.dark ? '#FFFFFF' : '#000000', 0.35)
-  if (pick[0]) why(`가장 많이 나온 것: "${pick[0].from}" (${pick[0].n}번)`, `주 색 ${pick[0].name} ${accent}`)
-  if (pick[1]) why(`두 번째: "${pick[1].from}"`, `보조 색 ${pick[1].name} ${accent2}`)
+  if (pick[0]) why(`What comes up most: "${pick[0].from}"${pick[0].n > 1 ? ` (${pick[0].n} times)` : ''}`, `its main color, ${pick[0].name}`)
+  if (pick[1]) why(`Next: "${pick[1].from}"`, `its second color, ${pick[1].name}`)
   const paper = mix(base.paper, accent, 0.06)
   const bg = base.dark ? mix(base.bg, accent2, 0.18) : mix(base.bg, accent, 0.22)
   const ink = readable(mix(base.ink, accent2, 0.15), paper, 9)
@@ -148,28 +149,32 @@ export function designFromStory(story, variant = 0) {
 
   // type: who they are to each other
   const typeKey = mood === 'quiet' ? 'plain' : TYPE_FOR[story.relationship] || 'warm'
-  why(`관계: ${story.relationship}`, `글꼴 ${TYPE[typeKey].label}`)
+  why(`Who they are to you (${story.relationship})`, `the typeface, ${TYPE[typeKey].label}`)
+  // sticker drawings: two styles suit each pairing; "dress it again" swaps between them
+  const ART_FOR = { tender: ['color', 'flat'], warm: ['noto', 'color'], playful: ['twemoji', 'flat'], plain: ['flat', 'noto'] }
+  const art = ART_FOR[typeKey][(variant + (seed % 2)) % 2]
+  why(`Who they are to you, and the feel`, `stickers drawn in the ${ART_NAMES[art]} style`)
 
   // paper: how long they've known each other, how they talk, how many goodbyes
   const st = story.stats || {}
   const years = (st.spanDays || 0) / 365
   const grain = clamp(0.08 + years * 0.12, 0.08, 0.6)
-  why(`대화 기간 ${years.toFixed(1)}년`, `종이 나이(결) ${Math.round(grain * 100)}%`)
+  why(years >= 0.1 ? `${years.toFixed(1)} years of messages` : 'A new chat, or none yet', years >= 1 ? 'older, grainier paper' : 'fresh paper')
   const perDay = st.daysTalked ? st.total / st.daysTalked : 0
   const lines = mood === 'quiet' ? 'none' : perDay > 25 ? 'ruled-tight' : perDay > 8 ? 'ruled' : 'dots'
-  why(`대화한 날 하루 평균 ${perDay.toFixed(0)}개`, `종이 줄 ${lines}`)
+  why(perDay ? `About ${perDay.toFixed(0)} messages on the days you talk` : 'How much you write', lines === 'none' ? 'plain paper' : lines === 'dots' ? 'dotted paper' : 'ruled lines')
   const goodbyes = (story.partings || []).length
   const edge = goodbyes >= 2 ? 'torn' : goodbyes === 1 ? 'deckle' : 'straight'
-  why(`지난 이별 ${goodbyes}번`, `종이 가장자리 ${edge}`)
+  why(goodbyes ? `${goodbyes} goodbye${goodbyes > 1 ? 's' : ''} before this one` : 'No goodbyes before this one', edge === 'torn' ? 'a torn edge' : edge === 'deckle' ? 'a soft deckled edge' : 'a clean edge')
   const stainWord = anchors.find((a) => ['coffee', 'tea', 'rain'].includes(a.name))
   const stain = stainWord ? stainWord.name : null
-  if (stain) why(`"${stainWord.from}"`, `종이 얼룩 ${stain}`)
+  if (stain) why(`"${stainWord.from}"`, stain === 'rain' ? 'a few raindrops on the paper' : `a ${stain} ring on the paper`)
 
   // the conversation as a pattern: their months, drawn
   const months = st.byMonth || []
   const pattern = { kind: years >= 2 ? 'rings' : 'ribbon', months, calls: st.callMinutes || 0, late: st.lateNight || 0 }
-  if (months.length) why(`${months.length}달 동안의 대화량`, pattern.kind === 'rings' ? '나이테 무늬 (한 바퀴 = 1년)' : '리본 무늬 (한 칸 = 한 달)')
-  if (st.callMinutes) why(`통화 ${Math.round(st.callMinutes / 60)}시간`, '무늬 위 통화 점')
+  if (months.length) why(`${months.length} months of messages`, pattern.kind === 'rings' ? 'tree rings at the top (one ring a year)' : 'a ribbon at the top (one bar a month)')
+  if (st.callMinutes) why(`${Math.round(st.callMinutes / 60)} hours on the phone`, 'small dots around the pattern')
 
   // stamps: one per memory, with its own thing in it
   const stamps = (story.memories || []).slice(0, 5).map((m, i) => ({
@@ -180,15 +185,15 @@ export function designFromStory(story, variant = 0) {
     color: [palette.accent, palette.accent2, mix(palette.accent, palette.accent2, 0.5)][i % 3],
     tilt: Math.round((r() - 0.5) * 14),
   }))
-  if (stamps.length) why(`추억 ${stamps.length}개`, `이야기 우표 ${stamps.length}장`)
-  if (stamps.length) why('추억 스티커', '메인 화면: 편지 길 옆 스티커')
-  why(mood === 'night' ? '보조 색' : '주 색', '메인 화면: 바탕 색조')
-  why('주 색', '메인 화면: 지금 열 편지 버튼과 말풍선')
+  if (stamps.length) why(`${stamps.length} moment${stamps.length > 1 ? 's' : ''} on your letters`, 'a stamp for each, shown once its letter opens')
+  if (stamps.length) why('The stickers of those moments', 'set beside the path of letters')
+  why(mood === 'night' ? 'The second color' : 'The main color', 'the tint of the whole box')
+  why('The main color', 'the button for today’s letter')
 
   // seal: what they call each other
   const nick = (story.nicknames || [])[0] || story.to
   const seal = { text: nick, initials: [...String(story.from)][0] + [...String(story.to)][0], color: palette.accent }
-  why(`부르는 이름 "${nick}"`, '봉인 글자')
+  why(`What you call each other, "${nick}"`, 'the words around the seal')
 
   // each letter gets the piece of the story it belongs to
   const memoById = Object.fromEntries((story.memories || []).map((m) => [m.id, m]))
@@ -201,15 +206,15 @@ export function designFromStory(story, variant = 0) {
     else if (m?.place && m?.date) deco = { kind: 'postmark', place: m.place, date: m.date }
     else if (m) deco = { kind: 'stamp', sticker: m.sticker, text: m.title }
     else deco = { kind: 'seal' }
-    why(`편지 "${l.title}" ← ${phrase ? `자주 하는 말 "${phrase.text}"` : m ? `추억 "${m.title}"` : '이야기 없음'}`, `편지 꾸밈 ${deco.kind}`)
+    why(`The letter "${l.title}", from ${phrase ? `"${phrase.text}"` : m ? `"${m.title}"` : 'no part of the story'}`, `its decoration: ${deco.kind}`)
     return { ...l, memoryData: m || null, deco, sticker: m?.sticker || null, tilt: Math.round((r() - 0.5) * 4 * 10) / 10 }
   })
 
   // the road of goodbyes: past ones, then this one
   const route = [...(story.partings || []), story.now ? { ...story.now, current: true } : null].filter(Boolean)
-  if (route.length > 1) why(`이별 ${route.length}번의 날짜와 장소`, '이별 지도')
+  if (route.length > 1) why(`${route.length} goodbyes with their dates and places`, 'a map of your goodbyes')
 
-  return { seed, variant, mood, palette, type: TYPE[typeKey], typeKey, paper: { grain, lines, edge, stain }, pattern, stamps, seal, letters, route, trace }
+  return { seed, variant, mood, palette, type: TYPE[typeKey], typeKey, art, paper: { grain, lines, edge, stain }, pattern, stamps, seal, letters, route, trace }
 }
 
 // ── the recipient app ────────────────────────────────────────

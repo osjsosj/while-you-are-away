@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { getDraft, saveDraft } from '../utils/storage'
-import { askCompanion, AIUnavailableError, PaymentRequiredError } from '../utils/aiService'
+import { askCompanion, AIUnavailableError, PaymentRequiredError, SignInRequiredError } from '../utils/aiService'
 import { renderInline } from '../utils/text'
 
 /* The writing companion: a side panel that stays with the sender while they write. Chat is kept in the draft. */
@@ -31,7 +31,8 @@ export default function Companion({ open, onClose, summary, seed, onSeedUsed }) 
       persist([...msgs, { role: 'assistant', content: reply }])
     } catch (err) {
       if (err instanceof AIUnavailableError && err.status === 429) setError('You’ve used all the companion messages for this letter box. Everything you wrote is safe, and you can keep writing.')
-      else if (err instanceof PaymentRequiredError) setError('The companion opens after checkout.')
+      else if (err instanceof SignInRequiredError) setError('Sign in to talk with the companion.')
+      else if (err instanceof PaymentRequiredError) setError('You’ve used the free companion messages. Handing over the box gives you many more.')
       else setError('That didn’t go through. Your message is still here; try again.')
     } finally {
       setLoading(false)
