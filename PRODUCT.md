@@ -27,7 +27,7 @@ While You're Away turns a goodbye into a letter box that keeps arriving. In the 
 
 ## Operating Context
 
-Flow: landing → short interview → checkout ($24, Stripe) → AI planning conversation (`/ai-interview`) → the box is dressed from the story (`/generate`) → editor and "the days before" diary (`/editor`, `/diary`) → preview and handover (`/preview`, `/export`) → recipient box (`/b/:token`).
+Flow: landing → short interview → sign in (`/start`: Kakao, Google, Apple or an emailed code; only providers switched on in Supabase show) → optional chat import (`/chats`) → AI planning conversation (`/ai-interview`) → the box is dressed from the story (`/generate`) → editor and "the days before" diary (`/editor`, `/diary`) → preview (`/preview`) → handover and checkout ($9.99, Stripe) (`/export`, `/paywall`) → recipient box (`/b/:token`). Everything before handover is free, with per-account AI limits.
 
 Letter box sections: Tonight, The days before, While we're apart, Things I never said, Open when…, Special days, The day we meet again. Letters can carry photos, voice notes, folded notes, stickers, stamps and postmarks. Evening diary reminders go out by email.
 
@@ -40,7 +40,7 @@ The mascot is Perigan, a white pelican mail carrier. He offers help in a speech 
 ## Capabilities and Constraints
 
 - React 19 + Vite SPA with Tailwind, deployed on Vercel with serverless functions in `api/`. Supabase for auth (email sign-in code), drafts, boxes and AI usage; Stripe Checkout; Anthropic API for the planning conversation and writing companion; Resend for reminder email. Installable as a PWA with a service worker.
-- Pricing: $24, one payment per letter box per recipient, no subscription. Full refund within 14 days. Writing companion has a fair-use limit of 300 messages.
+- Pricing: $9.99, one payment per letter box per recipient, taken at handover; planning, one chat reading and writing are free before that. No subscription. Full refund within 14 days. AI limits per account before paying and per box after (api/_lib/access.js).
 - Hosting promise: a box stays online at least one year after the reunion date, or two years from purchase with no date, whichever is later; 60 days' notice and a download path if the service shuts down.
 - Buyers must be 18+. Recipients can be any age.
 - Operator: Sangjin Ouh, sole proprietor, California. Contact: hello@getwhileyouareaway.com. Legal copy lives in `src/pages/legal/docs.js`.

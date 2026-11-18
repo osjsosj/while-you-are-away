@@ -79,7 +79,7 @@ export default function Paywall() {
           You bring the words, the memories, the time. That’s the real gift. We only charge what a good box of letter paper and a pen would cost.
         </p>
         <p style={{ display: 'flex', alignItems: 'baseline', gap: 10, margin: '0 0 4px' }}>
-          <span style={{ fontFamily: 'var(--serif)', fontSize: 44, lineHeight: 1 }}>$24</span>
+          <span style={{ fontFamily: 'var(--serif)', fontSize: 44, lineHeight: 1 }}>$9.99</span>
           <span className="wf-note">once</span>
         </p>
         <p className="wf-note" style={{ marginBottom: 20 }}>No subscription. Full refund within 14 days, for any reason. Have a code? Add it on the next page.</p>

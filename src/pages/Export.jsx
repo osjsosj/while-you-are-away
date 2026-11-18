@@ -128,7 +128,7 @@ export default function Export() {
             </ul>
             <Readiness draft={draft} onEdit={() => navigate('/editor')} />
             <button type="button" className="wh-btn" onClick={publish} disabled={stage === 'publishing'}>
-              {stage === 'publishing' ? 'Making the link…' : draft.paymentSessionId ? 'Make their link' : 'Make their link · $24'}
+              {stage === 'publishing' ? 'Making the link…' : draft.paymentSessionId ? 'Make their link' : 'Make their link · $9.99'}
             </button>
           </>
         )}

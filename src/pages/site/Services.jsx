@@ -2,7 +2,8 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import SiteLayout from './SiteLayout'
 import { STEPS, KINDS, INCLUDED, PRICE } from './content'
-import { StepFragment } from './Fragments'
+import { Phone } from './Scenes'
+import './scenes.css'
 
 export default function Services() {
   useEffect(() => {
@@ -14,11 +15,12 @@ export default function Services() {
       <section className="ph ph--split" aria-labelledby="sv-title">
         <div>
           <h1 id="sv-title" className="ph-title">One letter box, everything in it.</h1>
-          <p className="ph-lede">A secret countdown diary, letter paper an AI counselor dresses from your story, every kind of letter, and a private letter box on their phone.</p>
+          <p className="ph-lede">Plan it with a guide, bring in your chats, write every letter yourself, and hand over a private letter box that opens on their phone over the time apart.</p>
         </div>
         <div className="price" data-rise>
           <p className="price-big">{PRICE}</p>
-          <p className="price-what">Paid once, for the whole letter box. No subscription, nothing renews.</p>
+          <p className="price-what">Paid once, when you hand it over. Planning and writing are free until then.</p>
+          <p className="price-what">No subscription, nothing renews.</p>
           <p className="price-what">Full refund within 14 days, for any reason.</p>
           <Link to="/interview" className="ws-btn" data-track="cta_start" data-track-where="services">Start your letter box</Link>
         </div>
@@ -29,7 +31,7 @@ export default function Services() {
         <ol className="steps">
           {STEPS.map((s) => (
             <li key={s.title} className="step" data-rise>
-              <StepFragment kind={s.frag} />
+              <Phone className="step-phone"><img src={`/site/shots/${s.shot}.webp`} width="390" height="844" alt={s.alt} loading="lazy" /></Phone>
               <h3 className="step-title">{s.title}</h3>
               <p className="step-body">{s.body}</p>
               <p className="step-when">{s.when}</p>

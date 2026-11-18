@@ -5,7 +5,7 @@
 export const CONTACT = 'hello@getwhileyouareaway.com'
 export const OPERATOR = 'Sangjin Ouh'
 export const EFFECTIVE = 'November 10, 2026'
-export const PRICE = '$24'
+export const PRICE = '$9.99'
 
 export const DOCS = {
   terms: {

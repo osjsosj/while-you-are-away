@@ -61,7 +61,7 @@ export default function SiteLayout({ children, cinematic = false, background = n
         </ul>
       </nav>
       <details className="ws-mobile-menu">
-        <summary>Main menu <span aria-hidden="true">+</span></summary>
+        <summary aria-label="Main menu">Menu <span aria-hidden="true">+</span></summary>
         <nav aria-label="Mobile main">
           <ul>{LINKS.map(([to, label]) => <li key={to}><NavLink to={to}>{label}</NavLink></li>)}</ul>
         </nav>
