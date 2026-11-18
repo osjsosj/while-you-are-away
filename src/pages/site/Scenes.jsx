@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { forwardRef, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useReducedMotion } from './useScrollScene'
 import Mascot from '../../components/Mascot'
@@ -88,43 +88,41 @@ function Row({ items, reverse }) {
 }
 
 export function Opening() {
-  const { ref, reduced } = useProgress()
-  const copy = useRef(null)
-  // where the card starts: just under the headline and its button, however the words wrap
-  useLayoutEffect(() => {
-    if (reduced) return undefined
-    const place = () => {
-      if (!ref.current || !copy.current) return
-      ref.current.style.setProperty('--start', `${Math.round(copy.current.offsetTop + copy.current.offsetHeight + 28)}px`)
-    }
-    place()
-    const ro = new ResizeObserver(place)
-    ro.observe(copy.current)
-    window.addEventListener('resize', place)
-    return () => { ro.disconnect(); window.removeEventListener('resize', place) }
-  }, [ref, reduced])
   return (
-    <section ref={ref} className={`sc-open${reduced ? ' is-still' : ''}`} aria-labelledby="open-title">
-      <div className="sc-open-pin">
-        <div className="sc-open-copy" ref={copy}>
-          <h1 id="open-title" className="sc-open-title">Goodbyes can be prepared.</h1>
-          <p className="sc-open-lede">Before you part, write the letters they’ll open while you’re away: one tonight, one every week, one for the day you meet again.</p>
-          <div className="sc-open-actions">
-            <Link to="/interview" className="ws-btn sc-start-main" data-track="cta_start" data-track-where="opening">Start your letter box<Arrow /></Link>
-            <p className="sc-open-price">Free to plan and write. $9.99 when you hand it over.</p>
-          </div>
-        </div>
-        <div className="sc-card-now" role="group" aria-labelledby="now-title">
-          <img className="sc-now-bg" src="/site/now/letters.webp" width="1376" height="768" alt="" fetchpriority="high" />
-          <div className="sc-now-inner">
-            <h2 id="now-title" className="sc-now-title"><span>While You’re Away, right now:</span> listening to someone’s story and making a better letter.</h2>
+    <section className="sc-hero" aria-labelledby="open-title">
+      <h1 id="open-title" className="sc-open-title">Goodbyes can be prepared.</h1>
+      <p className="sc-open-lede">Before you part, write the letters they’ll open while you’re away: one tonight, one every week, one for the day you meet again.</p>
+      <div className="sc-open-actions">
+        <Link to="/interview" className="ws-btn sc-start-main" data-track="cta_start" data-track-where="opening">Start your letter box<Arrow /></Link>
+        <p className="sc-open-price">Free to plan and write. $9.99 when you hand it over.</p>
+      </div>
+    </section>
+  )
+}
+
+/**
+ * "Right now", the way kakaocorp.com/page does it: the title sits above a small card that already
+ * shows the whole picture (story bubbles, Perigan). Once it reaches the middle of the screen it holds,
+ * and the card's window opens outward until it fills the screen; the title steps down into it.
+ * Nothing is scaled, so nothing is cut: the window only reveals more of what's around it.
+ */
+export function Now() {
+  const { ref, reduced } = useProgress()
+  return (
+    <section ref={ref} className={`sc-now${reduced ? ' is-still' : ''}`} aria-labelledby="now-title">
+      <div className="sc-now-pin">
+        <div className="sc-now-window">
+          <img className="sc-now-bg" src="/site/now/letters.webp" width="1376" height="768" alt="" loading="lazy" />
+          <div className="sc-now-group">
             <div className="sc-rows" aria-label="Pieces of one made-up story the guide found">
               <Row items={BUBBLES[0]} />
               <Row items={BUBBLES[1]} reverse />
             </div>
-            <div className="sc-now-pelican"><Mascot move="putdown" loop size={110} label="Perigan, putting a letter down" /></div>
+            <div className="sc-now-pelican"><Mascot move="putdown" loop size={84} label="Perigan, putting a letter down" /></div>
           </div>
         </div>
+        <h2 id="now-title" className="sc-now-title">While You’re Away, right now</h2>
+        <p className="sc-now-sub">listening to someone’s story and making a better letter.</p>
       </div>
     </section>
   )

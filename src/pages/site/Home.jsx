@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { clearDraft, saveDraft } from '../../utils/storage'
 import SiteLayout from './SiteLayout'
 import NightSky from './NightSky'
-import { Opening, Flow, Words, Kinds, StartBar } from './Scenes'
+import { Opening, Now, Flow, Words, Kinds, StartBar } from './Scenes'
 import TimeApart from './TimeApart'
 import { RHYTHMS } from './letters'
 import { FAQ, PRICE } from './content'
@@ -93,6 +93,7 @@ export default function Home() {
   return (
     <SiteLayout cinematic background={<NightSky />}>
       <Opening />
+      <Now />
       <Flow />
       <Words />
       <Kinds />

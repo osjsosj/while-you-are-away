@@ -6,45 +6,58 @@
 .sc-screen { position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: 37px; background: var(--night); }
 .sc-screen img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; }
 
-/* ---------- opening: the headline, then the "right now" card rises and fills the screen ---------- */
-.ws main > .sc-open { --p: 0; --g: clamp(0, var(--p) / .5, 1); position: relative; height: 270svh; padding-inline: 0; }
-.sc-open-pin { position: sticky; top: 0; height: 100svh; overflow: hidden; }
-.sc-open-copy { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; padding: clamp(112px, 15svh, 150px) var(--gut) 0; text-align: center; opacity: clamp(0, 1 - var(--p) * 3, 1); transform: translateY(calc(var(--p) * -10svh)); }
+/* ---------- opening: the headline, on its own ---------- */
+.ws main > .sc-hero { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 92svh; padding-top: 96px; text-align: center; }
 .sc-open-title { max-width: 11ch; font-size: clamp(48px, 9.6vw, 104px); font-weight: 800; line-height: .93; letter-spacing: -0.04em; color: var(--moon); }
 .sc-open-lede { max-width: 31em; margin-top: 22px; font-size: var(--step-lead); line-height: 1.4; color: var(--mist-soft); }
 .sc-open-actions { display: flex; flex-direction: column; align-items: center; }
 .sc-open-actions .ws-btn { gap: 18px; margin-top: 30px; }
 .sc-open-price { margin-top: 14px; font-size: var(--step-small); color: var(--mist-muted); }
 
-/* the card is screen-sized, scaled down and lowered at first, and grows into place as you scroll */
-.sc-card-now { --s0: .86; position: absolute; inset: 0; z-index: 2; overflow: hidden; border-radius: calc(32px * (1 - var(--g))); background: var(--night); outline: 1px solid rgba(233, 236, 242, calc(.24 * (1 - var(--g)))); outline-offset: -1px; transform: translateY(calc((1 - var(--g)) * var(--start, 62svh))) scale(calc(var(--s0) + (1 - var(--s0)) * var(--g))); transform-origin: 50% 0; will-change: transform; }
-.sc-now-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 70% 50%; transform: scale(calc(1.12 - .12 * var(--g))); }
-.sc-now-inner { position: absolute; inset: 0; display: grid; grid-template-rows: auto 1fr auto; align-items: center; padding-top: clamp(100px, 13svh, 124px); background: rgba(5, 10, 25, .38); }
-.sc-now-title { max-width: 20ch; margin: 0 auto; padding-inline: var(--gut); font-size: clamp(30px, 4.6vw, 64px); font-weight: 800; line-height: 1.02; letter-spacing: -0.04em; text-align: center; color: var(--moon); }
-.sc-now-title span { display: block; margin-bottom: .4em; font-size: .46em; font-weight: 600; letter-spacing: -0.02em; color: var(--light); }
-.sc-rows { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+/* ---------- right now: a small card whose window opens out to the whole screen ---------- */
+.ws main > .sc-now {
+  --p: 0;
+  --e: clamp(0, var(--p) / .55, 1);          /* how far the window has opened */
+  --W0: min(46vw, 660px);                     /* the card at rest */
+  --H0: min(36svh, 320px);
+  --Yc: 54svh;                                /* its middle */
+  --top0: calc(var(--Yc) - var(--H0) / 2);
+  position: relative; height: 290svh; margin-top: 0; padding-inline: 0;
+}
+.sc-now-pin { position: sticky; top: 0; height: 100svh; overflow: hidden; }
+.sc-now-window { position: absolute; inset: 0; overflow: hidden; background: #22305C;
+  clip-path: inset(calc(var(--top0) * (1 - var(--e))) calc((100vw - var(--W0)) / 2 * (1 - var(--e))) calc((100svh - var(--Yc) - var(--H0) / 2) * (1 - var(--e))) calc((100vw - var(--W0)) / 2 * (1 - var(--e))) round calc(24px * (1 - var(--e)))); }
+.sc-now-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 70% 50%; opacity: calc(.5 + .5 * var(--e)); }
+.sc-now-window::before { content: ''; position: absolute; inset: 0; z-index: 1; background: rgba(5, 10, 25, calc(.12 + .3 * var(--e))); }
+/* the title: just above the card at rest; it steps down a little and the opening card takes it in */
+.sc-now-title { position: absolute; z-index: 2; left: 0; right: 0; top: var(--top0); padding-inline: var(--gut); transform: translateY(calc(-100% - 18px + var(--step, 6svh) * var(--e))); font-size: clamp(32px, 5vw, 72px); font-weight: 800; line-height: 1; letter-spacing: -0.04em; text-align: center; color: var(--moon); }
+/* bubbles and Perigan sit in the card's middle and never move: the window grows around them */
+.sc-now-group { position: absolute; z-index: 2; left: 0; right: 0; top: var(--Yc); display: flex; flex-direction: column; align-items: center; gap: 10px; transform: translateY(-50%); }
+.sc-now-group .sc-rows { width: 100%; }
+.sc-now-pelican { display: flex; justify-content: center; }
+/* the line under the card, inside it once it has opened */
+.sc-now-sub { position: absolute; z-index: 2; left: 0; right: 0; top: calc(var(--Yc) + var(--H0) / 2 + 18px); padding-inline: var(--gut); font-size: clamp(16px, 1.6vw, 22px); font-weight: 600; letter-spacing: -0.01em; text-align: center; color: color-mix(in srgb, var(--mist-muted) calc(100% - var(--e) * 100%), var(--light)); }
+.sc-rows { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .sc-row { overflow: hidden; }
-.sc-row ul { display: flex; gap: 12px; width: max-content; animation: scRow 46s linear infinite; }
+.sc-row ul { display: flex; gap: 10px; width: max-content; animation: scRow 46s linear infinite; }
 .sc-row.is-reverse ul { animation-direction: reverse; animation-duration: 54s; }
 @keyframes scRow { to { transform: translateX(-50%); } }
-.sc-bubble { display: flex; flex-direction: column; gap: 2px; padding: 12px 16px; border-radius: 18px 18px 18px 4px; background: rgba(246, 243, 234, .95); color: var(--ink); white-space: nowrap; }
-.sc-bubble span { font-size: clamp(14px, 1.2vw, 17px); font-weight: 600; letter-spacing: -0.01em; }
-.sc-bubble small { font-size: 12px; color: var(--ink-soft); }
+.sc-bubble { display: flex; flex-direction: column; gap: 2px; padding: 10px 14px; border-radius: 16px 16px 16px 4px; background: rgba(246, 243, 234, .95); color: var(--ink); white-space: nowrap; }
+.sc-bubble span { font-size: clamp(13px, 1.1vw, 16px); font-weight: 600; letter-spacing: -0.01em; }
+.sc-bubble small { font-size: 11px; color: var(--ink-soft); }
 .sc-bubble--say { background: var(--light); }
 .sc-bubble--say small { color: rgba(16, 26, 51, .72); }
 .sc-bubble--num { background: var(--night-4); color: var(--moon); box-shadow: inset 0 0 0 1px rgba(233, 236, 242, .2); }
 .sc-bubble--num small, .sc-bubble--bye small { color: var(--mist-soft); }
 .sc-bubble--bye { background: rgba(5, 10, 25, .86); color: var(--mist); box-shadow: inset 0 0 0 1px rgba(233, 236, 242, .24); }
-.sc-now-pelican { display: flex; justify-content: center; padding-bottom: 10svh; }
-@media (max-width: 899px) { .sc-card-now { --s0: .9; } .sc-now-bg { object-position: 78% 50%; } }
+@media (max-width: 899px) {
+  .ws main > .sc-now { --W0: calc(100vw - 2 * var(--gut)); --H0: min(34svh, 290px); --Yc: 52svh; }
+  .sc-now-bg { object-position: 78% 50%; }
+}
 @media (prefers-reduced-motion: reduce) { .sc-row ul { animation: none; } }
-
-.ws main > .sc-open.is-still { height: auto; }
-.sc-open.is-still .sc-open-pin { position: static; height: auto; overflow: visible; }
-.sc-open.is-still .sc-open-copy { opacity: 1; transform: none; }
-.sc-open.is-still .sc-card-now { position: relative; height: min(88svh, 760px); margin: 56px var(--gut) 0; border-radius: 28px; transform: none; }
-.sc-open.is-still .sc-now-bg { transform: none; }
-.sc-open.is-still .sc-row { overflow-x: auto; }
+.ws main > .sc-now.is-still { --e: 1; height: auto; }
+.sc-now.is-still .sc-now-pin { position: relative; height: min(90svh, 760px); margin-inline: var(--gut); border-radius: 24px; }
+.sc-now.is-still .sc-row { overflow-x: auto; }
 
 /* ---------- flow: the phone stays, the steps pass ---------- */
 .ws main > .sc-flow { --p: 0; position: relative; height: calc(var(--steps) * 78svh + 100svh); }
@@ -158,3 +171,5 @@
 @media (max-width: 1100px) { .ws .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 56px; } }
 @media (max-width: 560px) { .ws .steps { grid-template-columns: minmax(0, 1fr); } .step-phone { width: min(72vw, 280px); } }
 .ws-mobile-menu summary { white-space: nowrap; }
+/* short screens: the title steps down less, so it never meets the bubbles */
+@media (max-height: 760px) { .ws main > .sc-now { --step: 1.5svh; } }
