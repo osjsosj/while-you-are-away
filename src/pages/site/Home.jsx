@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { clearDraft, saveDraft } from '../../utils/storage'
 import SiteLayout from './SiteLayout'
 import NightSky from './NightSky'
-import { Opening, Flow, More } from './Scenes'
+import { Opening, Flow, Words, Kinds, StartBar } from './Scenes'
 import TimeApart from './TimeApart'
 import { RHYTHMS } from './letters'
 import { FAQ, PRICE } from './content'
@@ -94,11 +94,13 @@ export default function Home() {
     <SiteLayout cinematic background={<NightSky />}>
       <Opening />
       <Flow />
-      <More />
+      <Words />
+      <Kinds />
       <Timeline />
       <Price />
       <Faq />
       <section className="home-close" aria-labelledby="close-title" data-rise><h2 id="close-title">You don’t have to<br />find all the words tonight.</h2><p>You only have to start before the day comes.</p><Link to="/interview" className="ws-btn" data-track="cta_start" data-track-where="home_close">Start your letter box <span aria-hidden="true">↗</span></Link><p className="ws-small">Free to start. {PRICE} when you hand it over.</p></section>
+      <StartBar />
     </SiteLayout>
   )
 }

@@ -1,13 +1,19 @@
 import { forwardRef, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useReducedMotion } from './useScrollScene'
+import Mascot from '../../components/Mascot'
+import { Motif } from '../../components/Decor'
+import { KINDS } from './content'
 
 /*
- * The home page's two scroll scenes, both built on real screens of the product (public/site/shots,
- * made with scripts/shots/capture.mjs from a made-up letter box):
- *  - Opening: the headline, then their letter box rises and grows until it fills the screen.
- *  - Flow: the phone stays put while the five steps of making a letter box pass by its side.
- * Native scrolling drives both; only a visible scene does any work, and reduced motion gets a still page.
+ * The home page's scroll scenes, laid out after kakaocorp.com/page:
+ *  - Opening: the headline, then a card ("right now") rises and grows until it fills the screen,
+ *    with rows of story bubbles flowing through it and Perigan at work.
+ *  - Flow: the phone stays put while the five steps pass beside it (real screens, public/site/shots).
+ *  - Words: Services, About, Contact as huge words with a picture rising over each; each opens its page.
+ *  - Kinds: the seven kinds of letter as panels that open sideways.
+ *  - StartBar: a start button that floats at the bottom once the headline's own button is gone.
+ * Native scrolling drives everything; only a visible scene does any work; reduced motion gets a still page.
  */
 
 const clamp = (n) => Math.max(0, Math.min(1, n))
@@ -54,23 +60,44 @@ export const Phone = forwardRef(function Phone({ children, className = '' }, ref
   return <div ref={ref} className={`sc-phone ${className}`}><div className="sc-screen">{children}</div></div>
 })
 
+/* Bits of one made-up couple's story, flowing through the card like the bubbles on a live service page. */
+const BUBBLES = [
+  [
+    { text: 'Bikes on the Han River', meta: 'a moment · Apr 2, 2023' },
+    { text: '“Text me when you’re home”', meta: 'something she always says', tone: 'say' },
+    { text: 'The night the power went out', meta: 'a moment · Aug 17, 2024' },
+    { text: '4:12 a.m.', meta: 'the latest they stayed up talking', tone: 'num' },
+    { text: 'Ramyeon at 2 a.m.', meta: 'a moment · the corner store' },
+  ],
+  [
+    { text: '“Did you eat?”', meta: 'something he always says', tone: 'say' },
+    { text: 'Lisbon, January 8', meta: 'a goodbye before this one', tone: 'bye' },
+    { text: 'Her first snow in Seoul', meta: 'a moment · Dec 21, 2024' },
+    { text: '153 hours', meta: 'on the phone, over 412 calls', tone: 'num' },
+    { text: '“did you get home okay?”', meta: 'the very first message', tone: 'say' },
+  ],
+]
+
+function Row({ items, reverse }) {
+  const list = [...items, ...items]
+  return (
+    <div className={`sc-row${reverse ? ' is-reverse' : ''}`}>
+      <ul>{list.map((b, i) => <li key={i} className={`sc-bubble${b.tone ? ` sc-bubble--${b.tone}` : ''}`} aria-hidden={i >= items.length ? 'true' : undefined}><span>{b.text}</span><small>{b.meta}</small></li>)}</ul>
+    </div>
+  )
+}
+
 export function Opening() {
   const { ref, reduced } = useProgress()
   const copy = useRef(null)
-  const phone = useRef(null)
-  // where the phone starts: just under the words, however tall they wrap on this screen
+  // where the card starts: just under the headline and its button, however the words wrap
   useLayoutEffect(() => {
     if (reduced) return undefined
     const place = () => {
-      const node = ref.current
-      if (!node || !copy.current || !phone.current) return
-      const vh = window.innerHeight
-      const h = phone.current.offsetHeight
-      const top = copy.current.offsetTop + copy.current.offsetHeight + 28
-      node.style.setProperty('--start', `${Math.round(top + h * 0.25 - vh / 2)}px`)
+      if (!ref.current || !copy.current) return
+      ref.current.style.setProperty('--start', `${Math.round(copy.current.offsetTop + copy.current.offsetHeight + 28)}px`)
     }
     place()
-    // the words reflow as fonts arrive and on rotation: place again whenever they change size
     const ro = new ResizeObserver(place)
     ro.observe(copy.current)
     window.addEventListener('resize', place)
@@ -83,48 +110,23 @@ export function Opening() {
           <h1 id="open-title" className="sc-open-title">Goodbyes can be prepared.</h1>
           <p className="sc-open-lede">Before you part, write the letters they’ll open while you’re away: one tonight, one every week, one for the day you meet again.</p>
           <div className="sc-open-actions">
-            <Link to="/interview" className="ws-btn" data-track="cta_start" data-track-where="opening">Start your letter box<Arrow /></Link>
+            <Link to="/interview" className="ws-btn sc-start-main" data-track="cta_start" data-track-where="opening">Start your letter box<Arrow /></Link>
             <p className="sc-open-price">Free to plan and write. $9.99 when you hand it over.</p>
           </div>
         </div>
-        <div className="sc-open-fill" aria-hidden="true" />
-        <div className="sc-open-stage">
-          <Phone className="sc-open-phone" ref={phone}>
-            <img src="/site/shots/box.webp" width="390" height="844" alt="Mina’s letter box on her phone: a seal with their initials, rings of their months of messages, stamps of two moments, and a pelican pointing at the letter that’s ready." fetchpriority="high" />
-          </Phone>
+        <div className="sc-card-now" role="group" aria-labelledby="now-title">
+          <img className="sc-now-bg" src="/site/now/letters.webp" width="1376" height="768" alt="" fetchpriority="high" />
+          <div className="sc-now-inner">
+            <h2 id="now-title" className="sc-now-title"><span>While You’re Away, right now:</span> listening to someone’s story and making a better letter.</h2>
+            <div className="sc-rows" aria-label="Pieces of one made-up story the guide found">
+              <Row items={BUBBLES[0]} />
+              <Row items={BUBBLES[1]} reverse />
+            </div>
+            <div className="sc-now-pelican"><Mascot move="putdown" loop size={110} label="Perigan, putting a letter down" /></div>
+          </div>
         </div>
-        <Now />
       </div>
     </section>
-  )
-}
-
-/* Bits of one (made-up) couple's story, drifting in around the line, like the chat bubbles on a live service page. */
-const FRAGMENTS = [
-  { text: 'Bikes on the Han River', kind: 'moment', at: .70 },
-  { text: '“Text me when you’re home”', kind: 'saying', at: .74 },
-  { text: '4:12 a.m.', kind: 'number', at: .78 },
-  { text: 'Her first snow in Seoul', kind: 'moment', at: .82 },
-  { text: '“Did you eat?”', kind: 'saying', at: .86 },
-  { text: 'Lisbon, January 8', kind: 'goodbye', at: .9 },
-]
-
-/** After their box fills the screen: what the service is doing, right now, over letters rising into the night. */
-function Now() {
-  return (
-    <div className="sc-now">
-      <img className="sc-now-bg" src="/site/now/letters.webp" width="1376" height="768" alt="" loading="lazy" />
-      <div className="sc-now-copy">
-        <p className="sc-now-title">
-          <span className="sc-now-l1">While You’re Away is, right now,</span>
-          <span className="sc-now-l2">listening to someone’s story</span>
-          <span className="sc-now-l3">and making a better letter.</span>
-        </p>
-      </div>
-      <ul className="sc-now-bits" aria-hidden="true">
-        {FRAGMENTS.map((f, i) => <li key={f.text} className={`sc-bit sc-bit--${f.kind} sc-bit--${i}`} style={{ '--at': f.at }}>{f.text}</li>)}
-      </ul>
-    </div>
   )
 }
 
@@ -202,36 +204,80 @@ export function Flow() {
   )
 }
 
-const MORE = [
-  { to: '/services', name: 'Services', line: 'Everything in a letter box: seven kinds of letter, paper from your story, and what $9.99 covers.', img: '/site/shots/letter.webp', phone: true, alt: 'A letter on paper made from their story.' },
-  { to: '/about', name: 'About', line: 'Why this exists: the letters Jin wrote through his own goodbyes.', img: '/site/platform-dusk.jpg', alt: 'A train platform at dusk.' },
-  { to: '/contact', name: 'Contact', line: 'A question before you start, or help after. A person reads every message.', img: '/site/letter-1864.jpg', alt: 'An old handwritten letter.' },
+const WORDS = [
+  { word: 'Services', to: '/services', label: 'What’s in a letter box', line: 'Seven kinds of letter, paper made from your story, and what $9.99 covers.', img: '/site/han-river-night.jpg', alt: 'Bicycles along the Han River at night.' },
+  { word: 'About', to: '/about', label: 'Why this exists', line: 'The letters Jin wrote through his own goodbyes, and why the words stay yours.', img: '/site/platform-dusk.jpg', alt: 'A train platform at dusk.' },
+  { word: 'Contact', to: '/contact', label: 'Ask us anything', line: 'A question before you start, or help after. A person reads every message.', img: '/site/letter-1864.jpg', alt: 'An old handwritten letter.' },
 ]
 
-/** Services, About and Contact pass through the screen one at a time; each one opens its page. */
-export function More() {
-  const [step, setStep] = useState(0)
-  const { ref, reduced } = useProgress((p) => setStep(Math.min(MORE.length - 1, Math.floor(p * MORE.length * 0.999))))
+/** One huge word with a picture rising over it; the whole screen opens its page. */
+function Word({ w }) {
+  const { ref, reduced } = useProgress()
   return (
-    <section ref={ref} className={`sc-more${reduced ? ' is-still' : ''}`} style={{ '--count': MORE.length }} aria-labelledby="more-title">
-      <div className="sc-more-pin">
-        <h2 id="more-title" className="ws-sr">More about While You’re Away</h2>
-        {MORE.map((m, i) => (
-          <Link key={m.to} to={m.to} className={`sc-card${i === step ? ' is-on' : i < step ? ' is-past' : ''}`} data-track="more_open" data-track-where={m.name.toLowerCase()}>
-            <span className="sc-card-media" aria-hidden={m.phone ? 'true' : undefined}>
-              {m.phone
-                ? <Phone className="sc-card-phone"><img src={m.img} width="390" height="844" alt="" loading="lazy" /></Phone>
-                : <img src={m.img} alt={m.alt} loading="lazy" />}
-            </span>
-            <span className="sc-card-text">
-              <span className="sc-card-name">{m.name}</span>
-              <span className="sc-card-line">{m.line}</span>
-              <span className="sc-card-go">Open {m.name}<Arrow /></span>
-            </span>
-          </Link>
-        ))}
-        <div className="sc-more-dots" aria-hidden="true">{MORE.map((m, i) => <span key={m.to} className={i === step ? 'is-on' : ''} />)}</div>
-      </div>
+    <section ref={ref} className={`sc-word${reduced ? ' is-still' : ''}`} aria-labelledby={`word-${w.word}`}>
+      <Link to={w.to} className="sc-word-pin" data-track="word_open" data-track-where={w.word.toLowerCase()}>
+        <span className="sc-word-label"><span className="sc-word-name" id={`word-${w.word}`}>{w.label}</span><span className="sc-word-line">{w.line}</span><span className="sc-word-go">Open {w.word}<Arrow /></span></span>
+        <span className="sc-word-big" aria-hidden="true">{w.word}</span>
+        <span className="sc-word-pic"><img src={w.img} alt={w.alt} loading="lazy" /></span>
+      </Link>
     </section>
+  )
+}
+
+export function Words() {
+  return WORDS.map((w) => <Word key={w.word} w={w} />)
+}
+
+const KIND_ART = ['crescent-moon', 'spiral-notepad', 'airplane', 'love-letter', 'glowing-star', 'birthday-cake', 'house-with-garden']
+const KIND_TONE = ['#18234A', '#2B2F4A', '#1F3A4D', '#4A2C3A', '#3A3550', '#4A3A22', '#5B4A2A']
+
+/** The seven kinds of letter as panels that open sideways (one at a time; tap, hover or focus). */
+export function Kinds() {
+  const [open, setOpen] = useState(0)
+  return (
+    <section className="sc-kinds" aria-labelledby="kinds-title">
+      <h2 id="kinds-title" className="ws-h2">Seven kinds of letter,<br />one box.</h2>
+      <ul className="sc-kinds-list">
+        {KINDS.map((k, i) => (
+          <li key={k.name} className={i === open ? 'is-open' : ''} style={{ '--tone': KIND_TONE[i] }} onMouseEnter={() => setOpen(i)}>
+            <button type="button" aria-expanded={i === open} aria-controls={`kind-${i}`} onClick={() => setOpen(i)} onFocus={() => setOpen(i)}>
+              <Motif id={KIND_ART[i]} size={44} />
+              <span className="sc-kind-name">{k.name}</span>
+            </button>
+            <div className="sc-kind-body" id={`kind-${i}`} inert={i !== open}>
+              <p>{k.desc}</p>
+              <Link to="/services" className="ws-link">See every kind <span aria-hidden="true">↗</span></Link>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+/** The start button that floats at the bottom of the screen, like the search bar on a portal home page. */
+export function StartBar() {
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    const main = document.querySelector('.sc-start-main')
+    const close = document.querySelector('.home-close')
+    if (!main) return undefined
+    const seen = { main: true, close: false }
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.target === main) seen.main = e.isIntersecting
+        if (e.target === close) seen.close = e.isIntersecting
+      }
+      setShow(!seen.main && !seen.close)
+    })
+    io.observe(main)
+    if (close) io.observe(close)
+    return () => io.disconnect()
+  }, [])
+  return (
+    <div className={`sc-startbar${show ? ' is-on' : ''}`} inert={!show}>
+      <Link to="/interview" className="sc-startbar-btn" data-track="cta_start" data-track-where="startbar">Start your letter box<Arrow /></Link>
+      <span className="sc-startbar-chips" aria-hidden="true"><span>Free to plan</span><span>$9.99 at handover</span></span>
+    </div>
   )
 }
