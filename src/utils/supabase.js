@@ -68,3 +68,19 @@ export async function authHeader() {
     return {}
   }
 }
+
+/**
+ * Which sign-in providers are switched on in Supabase (e.g. { google: true, kakao: false }),
+ * so the sign-in page shows only buttons that work. null if it can't be read.
+ */
+export async function enabledProviders() {
+  if (!url || !anonKey) return null
+  try {
+    const res = await fetch(`${url}/auth/v1/settings`, { headers: { apikey: anonKey } })
+    if (!res.ok) return null
+    const { external } = await res.json()
+    return external && typeof external === 'object' ? external : null
+  } catch {
+    return null
+  }
+}

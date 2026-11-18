@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import FlowFrame from '../components/FlowFrame'
 import Mascot from '../components/Mascot'
-import { supabase, getUser } from '../utils/supabase'
+import { supabase, getUser, enabledProviders } from '../utils/supabase'
 import { hydrateFromDB, saveDraft, getDraft } from '../utils/storage'
 import { track } from '../utils/track'
 import { PROVIDER, hereProviders } from '../utils/signIn'
@@ -40,7 +40,13 @@ export default function Start() {
   const [params] = useSearchParams()
   const next = /^\/[a-z-]*$/.test(params.get('next') || '') ? params.get('next') : '/ai-interview'
   const p1 = getDraft().phase1 || {}
-  const [providers] = useState(hereProviders)
+  // only the buttons whose provider is switched on in Supabase (all of them if that can't be read)
+  const [providers, setProviders] = useState(hereProviders)
+  useEffect(() => {
+    let live = true
+    enabledProviders().then((on) => { if (live && on) setProviders(hereProviders().filter((p) => on[p.id])) })
+    return () => { live = false }
+  }, [])
   const [mode, setMode] = useState('choose') // choose | email | code
   const [email, setEmail] = useState(() => getDraft().email || '')
   const [code, setCode] = useState('')
