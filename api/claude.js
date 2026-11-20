@@ -174,7 +174,7 @@ const DESIGN_SYSTEM = `You design how a letter box looks. Someone is preparing l
 Rules:
 - Use only things the sender actually said or showed in a photo. If nothing fits a decoration, leave it out. Fewer, truer touches beat many.
 - 2 to 4 stickers ("motifs"), each an exact library id. Prefer the most specific sticker that matches what they said ("tangerine" over "red-heart", "steaming-bowl" for ramen, "bus" for the bus they took). Hearts only if nothing more personal fits.
-- Match on meaning, not only exact words: a "clementine" is a tangerine, "late-night convenience-store ramyeon" is a steaming-bowl, "our walks by the Han river" can be water-wave. Korean words count too.
+- Match on meaning, not only exact words: a "clementine" is a tangerine, "late-night diner pancakes" is pancakes, "our walks along the lake" can be water-wave. Words in any language count, Korean included.
 - Pick stickers that look good together: vary them (one food, one place or object, one animal, say) rather than three of the same kind.
 - Each "why" quotes or closely paraphrases what they said, addressed to them ("You said you always split a tangerine on the bus."). One short sentence.
 - postmark: a real place from their story and its date, if they gave one. "place" at most 24 characters, in capitals is fine.

@@ -193,7 +193,7 @@ export default function AIInterview() {
       {offerChat && (
         <div className="wf-card ai-chat-offer">
           <p className="ai-chat-offer-h">Before we talk: shall I read your chats first?</p>
-          <p className="wf-note">Drop in a KakaoTalk, WhatsApp or iMessage chat with {toName}. I’ll ask about what’s really there instead of starting from nothing. Your first reading is free.</p>
+          <p className="wf-note">Drop in an iMessage, WhatsApp or KakaoTalk chat with {toName}. I’ll ask about what’s really there instead of starting from nothing. Your first reading is free.</p>
           <div className="ai-chat-offer-btns">
             <button type="button" className="wf-btn wf-btn--small" onClick={goChat}>Bring in a chat</button>
             <button type="button" className="wf-btn wf-btn--ghost wf-btn--small" onClick={skipChat}>Skip, let’s talk</button>

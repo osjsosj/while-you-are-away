@@ -139,8 +139,10 @@
 .la-node:hover .la-node-face { transform: translateY(-2px); box-shadow: 0 9px 0 var(--lip); }
 .la-node:active .la-node-face { transform: translateY(6px); box-shadow: 0 1px 0 var(--lip); }
 .la-node:disabled { cursor: default; opacity: 0.5; }
-.la-node-d { font-weight: 800; font-size: 19px; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
-.la-step--big .la-node-d { font-size: 22px; }
+.la-node-d { display: flex; flex-direction: column; align-items: center; line-height: 1; font-variant-numeric: tabular-nums; }
+.la-node-d b { font-weight: 800; font-size: 19px; letter-spacing: -0.03em; }
+.la-node-d small { margin-top: 2px; font-size: 10px; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; opacity: 0.8; }
+.la-step--big .la-node-d b { font-size: 22px; }
 
 .la-step--fresh { --face: var(--lamp); --lip: var(--lamp-lip); --glyph: var(--on-light); }
 .la-step--read { --face: var(--paper); --lip: var(--paper-lip); --glyph: var(--ink); }

@@ -79,6 +79,6 @@ export function BoxFragment({ compact = false }) {
 export function StepFragment({ kind, compact = false }) {
   if (kind === 'chat') return <ChatFragment compact={compact} />
   if (kind === 'paper') return <PaperFragment compact={compact} meta="Tonight" />
-  if (kind === 'write') return <PaperFragment compact={compact} photo={false} title="Nine days left" meta="D-9" body="Today you cried and said it was allergies. It hurt to watch. I’m so glad I’m writing these." />
+  if (kind === 'write') return <PaperFragment compact={compact} photo={false} title="Nine days left" meta="9 days before you leave" body="Today you cried and said it was allergies. It hurt to watch. I’m so glad I’m writing these." />
   return <BoxFragment compact={compact} />
 }

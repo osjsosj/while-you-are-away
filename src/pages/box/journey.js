@@ -7,6 +7,20 @@ import { moonOn } from '../../utils/sky.js'
 
 const byDate = (a, b) => (a.date || '9999').localeCompare(b.date || '9999')
 
+/** How long before the parting a diary entry was written, in words: "9 days before", "The last day". */
+export function beforeLabel(n) {
+  if (n === null || n === undefined) return 'Before you left'
+  if (n <= 0) return 'The last day'
+  return n === 1 ? '1 day before' : `${n} days before`
+}
+
+/** The same, short enough for the round node on the path: a big number over a small word. */
+export function beforeMark(n) {
+  if (n === null || n === undefined) return { big: '…', small: 'before' }
+  if (n <= 0) return { big: 'Last', small: 'day' }
+  return { big: String(n), small: n === 1 ? 'day' : 'days' }
+}
+
 /**
  * The path, in the order time walks it: the days before → tonight → while apart (with special days
  * where they fall) → the day we meet again. Each unit is a banner and its nodes.
@@ -19,7 +33,7 @@ export function buildPath(items, box) {
     .map((i) => {
       const written = i.writtenOn || null
       const n = written && part ? daysBetween(written, part) : null
-      return { item: i, kind: 'before', date: written, badge: n === null ? 'D' : n <= 0 ? 'D-day' : `D-${n}`, caption: i.date || '' }
+      return { item: i, kind: 'before', date: written, badge: beforeLabel(n), mark: beforeMark(n), caption: i.date || '' }
     })
     .sort(byDate)
 

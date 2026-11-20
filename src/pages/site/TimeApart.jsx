@@ -2,26 +2,30 @@ import { useMemo } from 'react'
 import { planLetters, addDays, short } from './letters'
 
 /*
- * The time apart as a calendar. It starts today with the diary you keep in secret (D-14 … D-1),
- * lights the day you part and every day a letter opens, and seals the day you meet again.
+ * The time apart as a calendar. It starts today with the diary you keep in secret (the 14 days before),
+ * lights the day you part (weeks start on Sunday) and every day a letter opens, and seals the day you meet again.
  * Long stretches fold in the middle so the start and the end both show.
  */
 
 export default function TimeApart({ weeks, rhythm, seal, start, before }) {
   const plan = useMemo(() => planLetters({ weeks, rhythm, seal, start, before }), [weeks, rhythm, seal, start, before])
   const first = -plan.before
-  const rows = Math.floor((plan.total - first) / 7) + 1
+  // weeks run Sunday to Saturday, as on an American calendar; the days before today stay blank
+  const lead = addDays(start, first).getDay()
+  const rowStart = first - lead
+  const rows = Math.floor((plan.total - rowStart) / 7) + 1
   const folded = rows > 7
   // keep the countdown, the parting and its first weeks, then the last two weeks
-  const head = Math.min(rows - 3, Math.max(3, Math.ceil(plan.before / 7) + 2))
+  const head = Math.min(rows - 3, Math.max(3, Math.ceil((plan.before + lead) / 7) + 2))
   const shown = folded ? [...[...Array(head).keys()], rows - 2, rows - 1] : [...Array(rows).keys()]
-  const dayOf = (row, col) => first + row * 7 + col
+  const dayOf = (row, col) => rowStart + row * 7 + col
   const hiddenFrom = dayOf(head, 0)
   const hiddenTo = dayOf(rows - 2, 0)
   const hiddenLetters = folded ? [...plan.letters.keys()].filter((d) => d >= hiddenFrom && d < hiddenTo).length : 0
 
   const cell = (day) => {
     const date = addDays(start, day)
+    if (day < first) return <li key={day} className="ta-day ta-day--out" aria-hidden="true" />
     if (day > plan.total) {
       // the days after you meet again finish the row, so the reunion never stands alone
       return <li key={day} className="ta-day ta-day--after" aria-hidden="true"><span className="ta-date">{date.getDate()}</span></li>
@@ -41,7 +45,7 @@ export default function TimeApart({ weeks, rhythm, seal, start, before }) {
     )
   }
 
-  const weekdays = [...Array(7).keys()].map((i) => addDays(start, first + i).toLocaleDateString('en-US', { weekday: 'short' }))
+  const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
   return (
     <figure className="ta" data-ui aria-label={`Calendar: ${plan.before} diary days before you part, then ${plan.count} letters over ${weeks} weeks apart`}>

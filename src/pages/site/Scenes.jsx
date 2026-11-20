@@ -70,7 +70,7 @@ const BUBBLES = [
     { text: 'Pancakes at 2 a.m.', meta: 'a moment · the diner on Clark' },
   ],
   [
-    { text: '“Did you eat?”', meta: 'something he always says', tone: 'say' },
+    { text: '“Drive safe”', meta: 'something he always says', tone: 'say' },
     { text: 'Lisbon, January 8', meta: 'a goodbye before this one', tone: 'bye' },
     { text: 'Her first snow in Chicago', meta: 'a moment · Dec 21, 2024' },
     { text: '153 hours', meta: 'on the phone, over 412 calls', tone: 'num' },
@@ -138,7 +138,7 @@ const FLOW = [
   {
     shot: 'chats',
     title: 'Bring in your chats, if you like.',
-    body: 'Drop in a KakaoTalk, WhatsApp or iMessage export. It’s counted on your phone first: the first message, the latest night, the hours on calls. Reading it for moments is free once.',
+    body: 'Drop in an iMessage, WhatsApp or KakaoTalk export. It’s counted on your phone first: the first message, the latest night, the hours on calls. Reading it for moments is free once.',
     alt: 'Numbers from their chat: the first message “did you get home okay?”, 1,121 days of talking, 153 hours on the phone, 4:12 a.m.',
   },
   {

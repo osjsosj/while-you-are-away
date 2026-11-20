@@ -19,10 +19,9 @@ import '../styles/chats.css'
 
 const SOURCES = [
   {
-    id: 'kakao',
-    name: 'KakaoTalk',
-    steps: ['Open the chat with them.', 'Tap ≡ at the top right, then the ⚙ (설정).', 'Choose “Export chat” (대화 내용 내보내기), then “Text only” (텍스트만 보내기).', 'Save it to Files, then pick it here.'],
-    pc: 'On a computer: in the chat window press Ctrl+S (⌘S on a Mac) and pick the saved .txt.',
+    id: 'imessage',
+    name: 'iMessage',
+    steps: ['iPhone can’t export messages by itself.', 'On a Mac, a free tool like “imessage-exporter” saves a chat as .txt.', 'Or select some messages, copy them, and use Paste instead.'],
   },
   {
     id: 'whatsapp',
@@ -31,9 +30,10 @@ const SOURCES = [
     pc: 'On an iPhone you may get a .zip: open it and pick the _chat.txt inside.',
   },
   {
-    id: 'imessage',
-    name: 'iMessage',
-    steps: ['iPhone can’t export messages by itself.', 'On a Mac, a free tool like “imessage-exporter” saves a chat as .txt.', 'Or select some messages, copy them, and use Paste instead.'],
+    id: 'kakao',
+    name: 'KakaoTalk',
+    steps: ['Open the chat with them.', 'Tap ≡ at the top right, then the ⚙ (설정).', 'Choose “Export chat” (대화 내용 내보내기), then “Text only” (텍스트만 보내기).', 'Save it to Files, then pick it here.'],
+    pc: 'On a computer: in the chat window press Ctrl+S (⌘S on a Mac) and pick the saved .txt.',
   },
   {
     id: 'paste',
@@ -63,7 +63,7 @@ export default function ChatImport() {
 
   const saved = useMemo(() => loadLocalChat(), [])
   const [step, setStep] = useState(saved ? 'preview' : 'pick') // pick → reading → who → preview → finding → done
-  const [source, setSource] = useState('kakao')
+  const [source, setSource] = useState('imessage')
   const [paste, setPaste] = useState('')
   const [error, setError] = useState('')
   const [parsed, setParsed] = useState(null)

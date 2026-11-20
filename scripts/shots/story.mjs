@@ -22,7 +22,7 @@ export const STORY = {
   ],
   catchphrases: [
     { id: 'home', who: 'Emma', text: 'Text me when you’re home' },
-    { id: 'eat', who: 'Sam', text: 'Did you eat?' },
+    { id: 'drive', who: 'Sam', text: 'Drive safe' },
   ],
   partings: [
     { id: 'lisbon', date: '2024-01-08', place: 'O’Hare', what: 'Emma’s semester in Lisbon', back: '2024-06-20' },
@@ -78,7 +78,7 @@ export const DRAFT = {
   interviewChat: [
     { role: 'assistant', content: 'Hi Sam. Emma leaves for Lisbon soon, and you want something waiting for her there. **How often will you two be able to talk?**' },
     { role: 'user', content: 'Every day probably, but the time difference is six hours. Mornings for her are my nights.' },
-    { role: 'assistant', content: 'So you’ll talk, just never at the same time of day. Then letters on a rhythm still help: one a week gives her something that isn’t a call. I saw you always say “Did you eat?”. **Is that where a lot of your nights start?**' },
+    { role: 'assistant', content: 'So you’ll talk, just never at the same time of day. Then letters on a rhythm still help: one a week gives her something that isn’t a call. I saw you always say “Drive safe”. **Is that how a lot of your nights end?**' },
     { role: 'user', content: 'Ha, yes. And she always says text me when you’re home.' },
   ],
   interviewGathered: 4,

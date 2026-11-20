@@ -15,7 +15,7 @@ export function planLetters({ weeks, rhythm, seal, start, before = 0 }) {
   const r = RHYTHMS.find((x) => x.id === rhythm) || RHYTHMS[1]
   const total = weeks * 7
   const letters = new Map()
-  for (let d = -before; d < 0; d++) letters.set(d, `D-${-d}`)
+  for (let d = -before; d < 0; d++) letters.set(d, 'Diary')
   letters.set(0, 'Tonight')
   let k = 0
   for (let day = r.every; day < total; day += r.every) letters.set(day, `${r.unit} ${++k}`)

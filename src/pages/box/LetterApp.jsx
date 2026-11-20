@@ -248,7 +248,7 @@ function FoldRow({ fold, onOpen }) {
 }
 
 function PathNode({ node, i, read, isCurrent, onOpen, today, fromName, art = null }) {
-  const { item, kind, badge, caption } = node
+  const { item, kind, badge, mark, caption } = node
   const [peek, setPeek] = useState(false)
   useEffect(() => {
     if (!peek) return
@@ -274,7 +274,7 @@ function PathNode({ node, i, read, isCurrent, onOpen, today, fromName, art = nul
       {art && <Motif id={art} size={52} className={`la-step-art ${off > 0 ? 'is-left' : 'is-right'}`} tilt={off > 0 ? 8 : -8} />}
       <button type="button" className="la-node" aria-label={label} onClick={() => (locked ? setPeek(true) : onOpen(item.id))} disabled={item.empty}>
         <span className="la-node-face" aria-hidden="true">
-          {locked ? <LockGlyph big={big} kind={kind} /> : kind === 'before' ? <span className="la-node-d">{badge}</span> : kind === 'occasion' ? <GiftGlyph /> : kind === 'last' ? <HeartGlyph /> : read ? <CheckGlyph /> : <EnvelopeGlyph />}
+          {locked ? <LockGlyph big={big} kind={kind} /> : kind === 'before' ? <span className="la-node-d"><b>{mark?.big ?? badge}</b>{mark?.small && <small>{mark.small}</small>}</span> : kind === 'occasion' ? <GiftGlyph /> : kind === 'last' ? <HeartGlyph /> : read ? <CheckGlyph /> : <EnvelopeGlyph />}
         </span>
       </button>
       <span className="la-step-text" aria-hidden="true">

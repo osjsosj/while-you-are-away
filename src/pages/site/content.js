@@ -14,7 +14,7 @@ export const FAQ = [
 
 export const STEPS = [
   { when: 'About 10 minutes', title: 'Sign in and tell the guide', body: 'Why you’re apart, how often you’ll talk, the small things only you two know. It suggests the letters and when each opens; you decide what stays.', shot: 'plan', alt: 'The planning conversation with the guide.' },
-  { when: 'Optional, before you write', title: 'Bring in your chats', body: 'A KakaoTalk, WhatsApp or iMessage export, counted on your phone first. Reading it for moments, sayings and earlier goodbyes is free once.', shot: 'chats', alt: 'Numbers counted from a chat: the first message, days talked, hours on calls.' },
+  { when: 'Optional, before you write', title: 'Bring in your chats', body: 'An iMessage, WhatsApp or KakaoTalk export, counted on your phone first. Reading it for moments, sayings and earlier goodbyes is free once.', shot: 'chats', alt: 'Numbers counted from a chat: the first message, days talked, hours on calls.' },
   { when: 'Any day before you part', title: 'Write with what you found', body: 'Start a letter from a moment, or pin one beside your words. Add a photo or your voice. A companion helps when the words won’t come; it never writes them.', shot: 'findings', alt: 'Moments found in a chat, each with a question to start a letter from.' },
   { when: 'The day you part', title: 'Hand it over', body: 'Make one private link for their phone and pay, once. Anything you add later still arrives on its day.', shot: 'handover', alt: 'The hand-over page with the button to make their link.' },
   { when: 'While you’re apart', title: 'They open them one at a time', body: 'On the right days, even offline, on paper made from your story. They can write back to every letter.', shot: 'box', alt: 'Their letter box on the phone, dressed in their story.' },
@@ -32,7 +32,7 @@ export const KINDS = [
 
 export const INCLUDED = [
   ['A planning conversation', 'We talk through your goodbye and shape the letter box around it.'],
-  ['Your chats, read for moments', 'Up to three readings of a KakaoTalk, WhatsApp or iMessage chat: moments, the things you always say, the goodbyes before this one.'],
+  ['Your chats, read for moments', 'Up to three readings of an iMessage, WhatsApp or KakaoTalk chat: moments, the things you always say, the goodbyes before this one.'],
   ['A companion while you write', 'Help finding the words whenever you get stuck, up to 300 messages. The words stay yours.'],
   ['Paper made from your story', 'Colors, typeface, stamps and a seal drawn from what you shared, so no two letter boxes look alike.'],
   ['The days before', 'Collect moments, photos and voice notes before you part, each stamped with its day.'],

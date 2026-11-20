@@ -35,7 +35,7 @@ export function ChatInvite({ ready, onOpen }) {
         <span className="we-story-title">{ready ? 'Your chat is ready to read' : 'Bring in your chats'}</span>
         <span className="we-story-sub">{ready
           ? 'We counted it on this device. Next we find the moments, sayings and goodbyes in it.'
-          : 'A KakaoTalk, WhatsApp or iMessage chat holds moments you may have forgotten. We find them; you choose what to write about.'}</span>
+          : 'An iMessage, WhatsApp or KakaoTalk chat holds moments you may have forgotten. We find them; you choose what to write about.'}</span>
       </span>
       <span className="we-story-go" aria-hidden="true">{ready ? 'Read' : 'Add'}</span>
     </button>

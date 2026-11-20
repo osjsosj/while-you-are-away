@@ -68,8 +68,8 @@ export function StoryStamp({ stamp, size = 70 }) {
       <rect x="3" y="3" width="54" height="68" fill="none" stroke="#fff" strokeWidth="4" strokeDasharray="0.1 5.9" strokeLinecap="round" />
       <rect x="8" y="8" width="44" height="46" fill="#FFFCF4" />
       <image href={stickerSrc(stamp.sticker, art)} x="14" y="12" width="32" height="32" />
-      {stamp.date && <text x="30" y="51" textAnchor="middle" fontSize="5.4" fontWeight="600" fill="#6B5B45" fontFamily="'IBM Plex Sans KR', sans-serif">{stamp.date.replace(/-/g, '.')}</text>}
-      <text x="30" y="65" textAnchor="middle" fontSize="7" fontWeight="700" fill="#fff" fontFamily="'Gowun Dodum', sans-serif">{stamp.text.slice(0, 9)}</text>
+      {stamp.date && <text x="30" y="51" textAnchor="middle" fontSize="5.4" fontWeight="600" fill="#6B5B45" fontFamily="'Schibsted Grotesk', 'IBM Plex Sans KR', sans-serif">{stamp.date.replace(/-/g, '.')}</text>}
+      <text x="30" y="65" textAnchor="middle" fontSize="7" fontWeight="700" fill="#fff" fontFamily="'Schibsted Grotesk', 'Gowun Dodum', sans-serif">{stamp.text.slice(0, 9)}</text>
     </svg>
   )
 }
@@ -82,8 +82,8 @@ export function Seal({ seal, size = 74 }) {
       <defs><path id={id} d="M50 50 m -34 0 a 34 34 0 1 1 68 0 a 34 34 0 1 1 -68 0" /></defs>
       <circle cx="50" cy="50" r="46" fill={seal.color} />
       <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,.45)" strokeWidth="1.2" />
-      <text fontSize="9" fill="#fff" letterSpacing="1.5" fontFamily="'Gowun Dodum', sans-serif"><textPath href={`#${id}`}>{ring}</textPath></text>
-      <text x="50" y="58" textAnchor="middle" fontSize="22" fill="#fff" fontFamily="'Gowun Batang', serif" fontWeight="700">{seal.initials}</text>
+      <text fontSize="9" fill="#fff" letterSpacing="1.5" fontFamily="'Schibsted Grotesk', 'Gowun Dodum', sans-serif"><textPath href={`#${id}`}>{ring}</textPath></text>
+      <text x="50" y="58" textAnchor="middle" fontSize="22" fill="#fff" fontFamily="'Literata', 'Gowun Batang', serif" fontWeight="700">{seal.initials}</text>
     </svg>
   )
 }

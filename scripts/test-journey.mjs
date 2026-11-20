@@ -1,7 +1,7 @@
 /* Checks foldUnit(): a long path folds read and sealed stretches but never hides today's letter.
  * Run: node scripts/test-journey.mjs */
 import assert from 'node:assert/strict'
-import { foldUnit } from '../src/pages/box/journey.js'
+import { beforeLabel, beforeMark, buildPath, foldUnit } from '../src/pages/box/journey.js'
 
 let failed = 0
 function test(name, fn) {
@@ -11,6 +11,19 @@ function test(name, fn) {
 const node = (id, open) => ({ item: { id, open, opensOn: `2026-12-${String(id).padStart(2, '0')}` } })
 const unit = (id, n, openUpTo) => ({ id, nodes: Array.from({ length: n }, (_, k) => node(k + 1, k + 1 <= openUpTo)) })
 const shown = (rows) => rows.map((r) => (r.node ? r.node.item.id : `[${r.fold.kind} ${r.fold.nodes.length}]`))
+
+test('diary days read as plain English, never D-n', () => {
+  assert.equal(beforeLabel(9), '9 days before')
+  assert.equal(beforeLabel(1), '1 day before')
+  assert.equal(beforeLabel(0), 'The last day')
+  assert.equal(beforeLabel(null), 'Before you left')
+  assert.deepEqual(beforeMark(9), { big: '9', small: 'days' })
+  assert.deepEqual(beforeMark(1), { big: '1', small: 'day' })
+  assert.deepEqual(beforeMark(0), { big: 'Last', small: 'day' })
+  const [u] = buildPath([{ id: 'd1', section: 'before', writtenOn: '2026-12-01' }], { partDate: '2026-12-10' })
+  assert.equal(u.nodes[0].badge, '9 days before')
+  assert.doesNotMatch(JSON.stringify(u), /D-\d|D-day/)
+})
 
 test('a short unit is left alone', () => {
   const u = unit('apart', 4, 2)
