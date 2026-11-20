@@ -63,16 +63,16 @@ export const Phone = forwardRef(function Phone({ children, className = '' }, ref
 /* Bits of one made-up couple's story, flowing through the card like the bubbles on a live service page. */
 const BUBBLES = [
   [
-    { text: 'Bikes on the Han River', meta: 'a moment · Apr 2, 2023' },
+    { text: 'Bikes on the Lakefront Trail', meta: 'a moment · Apr 2, 2023' },
     { text: '“Text me when you’re home”', meta: 'something she always says', tone: 'say' },
     { text: 'The night the power went out', meta: 'a moment · Aug 17, 2024' },
     { text: '4:12 a.m.', meta: 'the latest they stayed up talking', tone: 'num' },
-    { text: 'Ramyeon at 2 a.m.', meta: 'a moment · the corner store' },
+    { text: 'Pancakes at 2 a.m.', meta: 'a moment · the diner on Clark' },
   ],
   [
     { text: '“Did you eat?”', meta: 'something he always says', tone: 'say' },
     { text: 'Lisbon, January 8', meta: 'a goodbye before this one', tone: 'bye' },
-    { text: 'Her first snow in Seoul', meta: 'a moment · Dec 21, 2024' },
+    { text: 'Her first snow in Chicago', meta: 'a moment · Dec 21, 2024' },
     { text: '153 hours', meta: 'on the phone, over 412 calls', tone: 'num' },
     { text: '“did you get home okay?”', meta: 'the very first message', tone: 'say' },
   ],
@@ -133,7 +133,7 @@ const FLOW = [
     shot: 'plan',
     title: 'Tell the guide about the two of you.',
     body: 'Sign in and talk it through: why you’re apart, how often you’ll talk, what’s only yours. It suggests the letters and when each one opens. You decide what stays.',
-    alt: 'The planning conversation: the guide asks how often Jae and Mina will talk, and picks up on a phrase they always say.',
+    alt: 'The planning conversation: the guide asks how often Sam and Emma will talk, and picks up on a phrase they always say.',
   },
   {
     shot: 'chats',
@@ -145,13 +145,13 @@ const FLOW = [
     shot: 'findings',
     title: 'Write, with what you found beside you.',
     body: 'Moments, the things you always say, the goodbyes before this one. Start a letter from any of them, or pin one beside your words. The words are yours; nothing writes them for you.',
-    alt: 'What was found in their chats: Bikes on the Han River, Ramyeon at 2 a.m., The night the power went out, each with a question to start from.',
+    alt: 'What was found in their chats: Bikes on the Lakefront Trail, Pancakes at 2 a.m., The night the power went out, each with a question to start from.',
   },
   {
     shot: 'letter',
     title: 'The paper is made from your story.',
     body: 'The river you keep mentioning tints the box. The years you’ve talked age the paper. Short notes come out in a hand, long ones in a face that’s easy to read on a phone.',
-    alt: 'A letter titled Bikes on the Han River on dotted, lightly aged paper, in handwriting, signed Jae.',
+    alt: 'A letter titled Bikes on the Lakefront Trail on dotted, lightly aged paper, in handwriting, signed Sam.',
   },
   {
     shot: 'handover',
@@ -203,7 +203,7 @@ export function Flow() {
 }
 
 const WORDS = [
-  { word: 'Services', to: '/services', label: 'What’s in a letter box', line: 'Seven kinds of letter, paper made from your story, and what $9.99 covers.', img: '/site/han-river-night.jpg', alt: 'Bicycles along the Han River at night.' },
+  { word: 'Services', to: '/services', label: 'What’s in a letter box', line: 'Seven kinds of letter, paper made from your story, and what $9.99 covers.', img: '/site/lakefront-trail.jpg', alt: 'A bike path along a lake beach, with the city behind it.' },
   { word: 'About', to: '/about', label: 'Why this exists', line: 'The letters Jin wrote through his own goodbyes, and why the words stay yours.', img: '/site/platform-dusk.jpg', alt: 'A train platform at dusk.' },
   { word: 'Contact', to: '/contact', label: 'Ask us anything', line: 'A question before you start, or help after. A person reads every message.', img: '/site/letter-1864.jpg', alt: 'An old handwritten letter.' },
 ]

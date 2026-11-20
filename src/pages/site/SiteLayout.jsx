@@ -107,7 +107,7 @@ export default function SiteLayout({ children, cinematic = false, background = n
           Pictures: <a href="https://commons.wikimedia.org/wiki/File:Toyama_Station_platform_at_dusk_2015-03-13.jpg">“Toyama Station platform at dusk”</a> by squeuei, <a href="https://creativecommons.org/licenses/by/2.0">CC BY 2.0</a>;{" "}
           <a href="https://commons.wikimedia.org/wiki/File:Sunset_and_stars_over_St%C3%A5ngehuvud.jpg">“Sunset and stars over Stångehuvud”</a> by W.carter, <a href="https://creativecommons.org/publicdomain/zero/1.0/deed.en">CC0</a>;{" "}
           <a href="https://commons.wikimedia.org/wiki/File:Handwritten_Letter_to_D._H._Cook_from_Carolina_Cook_-_DPLA_-_56162c270f60b61e1a3ee47c3f7b5a3f_(page_1).jpg">“Handwritten Letter to D. H. Cook from Carolina Cook”</a>, public domain;{" "}
-          <a href="https://commons.wikimedia.org/wiki/File:Bicycles_along_Han_River_at_night_20240430191634.jpg">“Bicycles along Han River at night”</a> by TurnOnTheNight, <a href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0</a>. All via Wikimedia Commons.
+          <a href="https://commons.wikimedia.org/wiki/File:Chicago_in_2022_Lakefront_Trail_by_Oak_Street_Beach_and_Lake_Michigan_(52054928480).jpg">“Lakefront Trail by Oak Street Beach and Lake Michigan”</a> by Chris Rycroft, <a href="https://creativecommons.org/licenses/by/2.0">CC BY 2.0</a>. All via Wikimedia Commons.
         </p>
       </footer>
     </div>

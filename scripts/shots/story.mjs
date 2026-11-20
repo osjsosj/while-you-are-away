@@ -1,6 +1,6 @@
 /*
  * The made-up letter box used for the website's product screenshots (scripts/shots/capture.mjs).
- * Jae is writing to Mina before a semester apart. Not real people; every screen is the real app.
+ * Sam is writing to Emma before a semester apart. Not real people; every screen is the real app.
  */
 import { applyStoryToPlan, normalizeStory } from '../../src/utils/story.js'
 import { normalizePlan } from '../../src/utils/plan.js'
@@ -13,19 +13,19 @@ for (let i = 0; i < 31; i++) {
 
 export const STORY = {
   about: 'You two talk most at night: what you ate, who was on the bus, and the long calls when one of you can’t sleep.',
-  callEachOther: 'Min, bear',
+  callEachOther: 'Em, bear',
   memories: [
-    { id: 'bikes', title: 'Bikes on the Han River', place: 'Han River', date: '2023-04-02', sticker: 'bicycle', prompt: 'What do you remember about getting lost that night?' },
-    { id: 'ramyeon', title: 'Ramyeon at 2 a.m.', place: 'The corner store', sticker: 'steaming-bowl', prompt: 'What did you two talk about over those late bowls?' },
+    { id: 'bikes', title: 'Bikes on the Lakefront Trail', place: 'Lakefront Trail', date: '2023-04-02', sticker: 'bicycle', prompt: 'What do you remember about taking the long way that day?' },
+    { id: 'pancakes', title: 'Pancakes at 2 a.m.', place: 'The diner on Clark', sticker: 'pancakes', prompt: 'What did you two talk about over those late stacks?' },
     { id: 'power', title: 'The night the power went out', date: '2024-08-17', sticker: 'candle', prompt: 'What would you tell her about that night now?' },
-    { id: 'snow', title: 'Her first snow in Seoul', date: '2024-12-21', sticker: 'snowman', prompt: 'What did her face do when it started?' },
+    { id: 'snow', title: 'Her first snow in Chicago', date: '2024-12-21', sticker: 'snowman', prompt: 'What did her face do when it started?' },
   ],
   catchphrases: [
-    { id: 'home', who: 'Mina', text: 'Text me when you’re home' },
-    { id: 'eat', who: 'Jae', text: 'Did you eat?' },
+    { id: 'home', who: 'Emma', text: 'Text me when you’re home' },
+    { id: 'eat', who: 'Sam', text: 'Did you eat?' },
   ],
   partings: [
-    { id: 'lisbon', date: '2024-01-08', place: 'Incheon Airport', what: 'Mina’s semester in Lisbon', back: '2024-06-20' },
+    { id: 'lisbon', date: '2024-01-08', place: 'O’Hare', what: 'Emma’s semester in Lisbon', back: '2024-06-20' },
   ],
   stats: {
     total: 6240, calls: 412, callMinutes: 9180, photos: 820, voices: 96, from: '2023-03-11', to: '2026-11-10', spanDays: 1340, daysTalked: 1121,
@@ -49,23 +49,23 @@ const base = normalizePlan({
 })
 const { plan, pins } = applyStoryToPlan(base, normalizeStory(STORY))
 const bikes = Object.keys(pins).find((id) => pins[id][0].ref === 'bikes')
-const ramyeon = Object.keys(pins).find((id) => pins[id][0].ref === 'ramyeon')
+const pancakes = Object.keys(pins).find((id) => pins[id][0].ref === 'pancakes')
 
 export const DRAFT = {
-  phase1: { fromName: 'Jae', toName: 'Mina', relationship: 'A partner', startDate: part, endDate: back, situation: 'Mina is starting a semester in Lisbon' },
+  phase1: { fromName: 'Sam', toName: 'Emma', relationship: 'A partner', startDate: part, endDate: back, situation: 'Emma is starting a semester in Lisbon' },
   phase1Done: true,
-  phase2: { nicknames: 'Min, bear', shared: 'the Han River at night, stars over the river, late night walks', transport: 'bus 7' },
+  phase2: { nicknames: 'Em, bear', shared: 'the lake at night, stars over the water, late night walks', transport: 'the Red Line' },
   phase2Done: true,
   chatOfferSeen: true,
-  generatedConfig: { chosenName: 'Letters for Min', welcomeMessage: 'Open one when you miss Seoul.' },
+  generatedConfig: { chosenName: 'Letters for Em', welcomeMessage: 'Open one when you miss Chicago.' },
   decor: { style: 'flowers' },
   plan,
   story: STORY,
   capsuleData: {
-    t0: { letter: 'Hey, you.\n\nYou’ll read this somewhere over the sea, probably pretending you’re not tired. I put the bus 7 card in your coat pocket. Use it the day you come back, and I’ll be at the stop.' },
+    t0: { letter: 'Hey, you.\n\nYou’ll read this somewhere over the sea, probably pretending you’re not tired. I put my Ventra card in your coat pocket. Use it the day you come back, and I’ll be at the station.' },
     [bikes]: { letter: 'We were never lost. You just wanted the long way, and I wanted whatever you wanted.', pins: pins[bikes] },
-    [ramyeon]: { letter: 'Two bowls, one too spicy, and you telling me about your sister until the lights in the store flickered.', pins: pins[ramyeon] },
-    s0: { letter: 'Put your phone face down. Count the trams. I’m doing the same thing, nine hours behind.' },
+    [pancakes]: { letter: 'Two stacks, one burnt, and you telling me about your sister until the sign in the window flickered.', pins: pins[pancakes] },
+    s0: { letter: 'Put your phone face down. Count the trams. I’m doing the same thing, six hours behind.' },
     s1: { letter: 'Go to the bakery on the corner and order in Portuguese. Badly. Tell me everything.' },
     n0: { letter: 'You were holding two coffees and neither was yours.' },
     w0: { letter: 'One week. Send me a photo of your street.' },
@@ -73,11 +73,11 @@ export const DRAFT = {
   },
   diary: [
     { id: 'd1', writtenOn: new Date(Date.now() - 2 * 864e5).toISOString().slice(0, 10), title: 'Today', body: 'You packed the yellow scarf and said you wouldn’t need it.' },
-    { id: 'd2', writtenOn: new Date(Date.now() - 864e5).toISOString().slice(0, 10), title: 'Today', body: 'We walked to the bus stop the long way. Neither of us said why.' },
+    { id: 'd2', writtenOn: new Date(Date.now() - 864e5).toISOString().slice(0, 10), title: 'Today', body: 'We walked to the train the long way. Neither of us said why.' },
   ],
   interviewChat: [
-    { role: 'assistant', content: 'Hi Jae. Mina leaves for Lisbon soon, and you want something waiting for her there. **How often will you two be able to talk?**' },
-    { role: 'user', content: 'Every day probably, but the time difference is nine hours. Mornings for her are my nights.' },
+    { role: 'assistant', content: 'Hi Sam. Emma leaves for Lisbon soon, and you want something waiting for her there. **How often will you two be able to talk?**' },
+    { role: 'user', content: 'Every day probably, but the time difference is six hours. Mornings for her are my nights.' },
     { role: 'assistant', content: 'So you’ll talk, just never at the same time of day. Then letters on a rhythm still help: one a week gives her something that isn’t a call. I saw you always say “Did you eat?”. **Is that where a lot of your nights start?**' },
     { role: 'user', content: 'Ha, yes. And she always says text me when you’re home.' },
   ],

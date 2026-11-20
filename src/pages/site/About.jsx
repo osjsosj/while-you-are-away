@@ -31,7 +31,7 @@ export default function About() {
         </div>
         <figure className="ab-shot" data-rise>
           <PaperFragment title="Week four" meta="While we’re apart · opened today" body="If you’re reading this, you’ve already done the hardest part once. I keep thinking about the bus stop, and how you said the rain was the reason your eyes were wet." />
-          <figcaption>A letter from Jae to Mina, on paper made from their story.</figcaption>
+          <figcaption>A letter from Sam to Emma, on paper made from their story.</figcaption>
         </figure>
       </section>
 

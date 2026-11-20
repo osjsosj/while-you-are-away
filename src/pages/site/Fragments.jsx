@@ -4,7 +4,7 @@ import { PHOTO, decorFor } from './paper'
 /*
  * Pieces of the real product, rendered by the app's own components rather than pictured:
  * the counselor conversation, the letter paper it composes, and the recipient's letter box.
- * The story in them (Jae writing to Mina) is illustrative.
+ * The story in them (Sam writing to Emma) is illustrative.
  */
 
 const WAVE = [6, 12, 18, 10, 22, 14, 8, 16, 24, 12, 6, 14, 20, 10, 16, 8, 12, 18, 6, 10]
@@ -14,9 +14,9 @@ export function ChatFragment({ compact = false }) {
     <div className={compact ? "frag frag-chat frag--compact" : "frag frag-chat"} data-ui>
       <p className="fc-head">Planning your letter box</p>
       <p className="fc-msg fc-msg--ai">Tell me about the two of you. Where did it start? A place, a date, a photo, anything.</p>
-      <p className="fc-msg fc-msg--me">Han River, April 2. We rented bikes and got lost on purpose.</p>
+      <p className="fc-msg fc-msg--me">The Lakefront Trail, April 2. We rented bikes and took the long way on purpose.</p>
       <figure className="fc-msg fc-msg--me fc-photo">
-        <img src={PHOTO} alt="Two rental bikes by the Han River at night" width="1200" height="800" loading="lazy" />
+        <img src={PHOTO} alt="The bike path along the lake, with the beach on one side and the city on the other" width="1280" height="800" loading="lazy" />
       </figure>
       <div className="fc-msg fc-msg--me fc-voice" role="img" aria-label="A voice note, 42 seconds">
         <span className="fc-play" aria-hidden="true"><svg viewBox="0 0 12 12" width="12" height="12"><path d="M3 1.5v9l7.5-4.5z" fill="currentColor" /></svg></span>
@@ -25,7 +25,7 @@ export function ChatFragment({ compact = false }) {
         </svg>
         <span>0:42</span>
       </div>
-      <p className="fc-msg fc-msg--ai">That night goes on her first letter: the river, the bikes, and a postmark from April 2.</p>
+      <p className="fc-msg fc-msg--ai">That day goes on her first letter: the lake, the bikes, and a postmark from April 2.</p>
     </div>
   )
 }
@@ -39,7 +39,7 @@ export function PaperFragment({ style = 'night', dressed = true, body = 'Your wo
         meta={meta}
         letter={body}
         photoUrl={photo && dressed ? PHOTO : undefined}
-        fromName="Jae"
+        fromName="Sam"
         showPostmark={dressed}
         isTicket={ticket && dressed}
         textSizeControl={false}
@@ -60,8 +60,8 @@ const ROWS = [
 export function BoxFragment({ compact = false }) {
   return (
     <div className={`frag frag-box${compact ? ' frag--compact' : ''}`} data-ui>
-      <p className="fb-from">From Jae</p>
-      <p className="fb-name">Mina’s letter box</p>
+      <p className="fb-from">From Sam</p>
+      <p className="fb-name">Emma’s letter box</p>
       <p className="fb-count"><span aria-hidden="true" />A new letter today</p>
       <ul>
         {ROWS.map((r) => (

@@ -66,27 +66,27 @@
     "saved": "2026-11-02T05:51:40.911Z"
   },
   {
-    "file": "public/site/han-river-night.jpg",
+    "file": "public/site/lakefront-trail.jpg",
     "media": "image",
-    "ref": "commons:193266242",
-    "title": "Bicycles along Han River at night 20240430191634",
-    "creator": "TurnOnTheNight",
-    "creatorUrl": null,
-    "date": "2024-04-30",
-    "license": "CC BY-SA 4.0",
-    "licenseCode": "by-sa",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "ref": "commons:128464148",
+    "title": "Chicago in 2022 Lakefront Trail by Oak Street Beach and Lake Michigan (52054928480)",
+    "creator": "Chris Rycroft",
+    "creatorUrl": "https://www.flickr.com/people/193316968@N06",
+    "date": "2022-03-21",
+    "license": "CC BY 2.0",
+    "licenseCode": "by",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
     "creditRequired": true,
-    "page": "https://commons.wikimedia.org/wiki/File:Bicycles_along_Han_River_at_night_20240430191634.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Chicago_in_2022_Lakefront_Trail_by_Oak_Street_Beach_and_Lake_Michigan_(52054928480).jpg",
     "via": "Wikimedia Commons",
-    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0d/Bicycles_along_Han_River_at_night_20240430191634.jpg/1280px-Bicycles_along_Han_River_at_night_20240430191634.jpg",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Chicago_in_2022_Lakefront_Trail_by_Oak_Street_Beach_and_Lake_Michigan_%2852054928480%29.jpg/1280px-Chicago_in_2022_Lakefront_Trail_by_Oak_Street_Beach_and_Lake_Michigan_%2852054928480%29.jpg",
     "width": 1280,
-    "height": 853,
-    "bytes": 242434,
-    "credit": "\"Bicycles along Han River at night 20240430191634\" by TurnOnTheNight, CC BY-SA 4.0, via Wikimedia Commons",
+    "height": 800,
+    "bytes": 264836,
+    "credit": "\"Lakefront Trail by Oak Street Beach and Lake Michigan\" by Chris Rycroft, CC BY 2.0, via Wikimedia Commons",
     "notes": [
-      "Share-alike: an altered version (recoloured, combined with other pictures) must be shared under the same licence."
+      "Recompressed (JPEG quality) only."
     ],
-    "saved": "2026-11-02T06:29:40.059Z"
+    "saved": "2026-11-20T00:30:00.000Z"
   }
 ]

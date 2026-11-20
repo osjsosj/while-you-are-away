@@ -56,7 +56,7 @@ export function demoBox(token = 'demo') {
     return isOpen ? { ...it, open: true, letter: LETTER, empty: false } : { ...it, open: false }
   })
 
-  const photo = { d1: '/site/han-river-night.jpg', t0: '/site/platform-dusk.jpg', w1: '/site/sunset-stars.jpg', n1: '/site/letter-1864.jpg' }
+  const photo = { d1: '/site/lakefront-trail.jpg', t0: '/site/platform-dusk.jpg', w1: '/site/sunset-stars.jpg', n1: '/site/letter-1864.jpg' }
   for (const it of items) if (it.open && photo[it.id]) it.photo = { url: photo[it.id], key: null }
 
   const opened = fresh ? [] : long ? [...before.map((b) => b.id), 't0', ...scheduled.slice(0, 28).map((w) => w.id), 'n1', 's0'] : ['d:0', 'd:1', 'd:2', 't0', 'w0', 'n1', 's0']

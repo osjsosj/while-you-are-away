@@ -14,7 +14,7 @@ const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application
 const OUT = path.resolve('public/site/shots')
 fs.mkdirSync(OUT, { recursive: true })
 
-const chat = { excerpts: 'made-up', stats: STORY.stats, names: { me: 'Jae', them: 'Mina' }, source: 'kakao', messages: 6240 }
+const chat = { excerpts: 'made-up', stats: STORY.stats, names: { me: 'Sam', them: 'Emma' }, source: 'imessage', messages: 6240 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--hide-scrollbars', '--lang=en-US'] })
