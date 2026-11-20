@@ -1,0 +1,42 @@
+{
+  "topic": "Introducing While You're Away",
+  "caption": "A goodbye that keeps writing back.\n\nBefore you part, write the letters they’ll open while you’re away: one for tonight, one every week, and one sealed until the day you meet again.\n\nA guide helps you plan them. Bring in your chats if you like, and it finds the moments you might forget: the first message, the 4 a.m. calls, the thing they always say. Every word is still yours.\n\nThey open it on their phone, with nothing to install, and can write back to every letter.\n\nFree to plan and write. $9.99 once, when you hand it over.\nLink in bio → getwhileyouareaway.com\n\n#longdistance #longdistancerelationship #letters #openwhenletters #goodbye #studyabroad #deployment #military #movingaway #handwrittenletters",
+  "alt": [
+    "A phone showing a letter box called “Letters for Em”, fading into an amber background, with the words “A goodbye that keeps writing back?”",
+    "A white card listing the kinds of letter: tonight, while apart, open when, never said, and the last one, sealed until you meet again.",
+    "A white card of prices: planning, reading your chats and writing are free; their private link is $9.99.",
+    "Step 1: a phone showing the planning conversation, with one of the guide’s questions lifted out and enlarged.",
+    "Step 2: a phone showing numbers counted from a chat, with “153 hours on the phone” lifted out.",
+    "Step 3: a phone showing moments found in a chat, with “Bikes on the Lakefront Trail” lifted out.",
+    "Step 4: a phone showing the recipient’s letter box, with the button “Make their link · $9.99”.",
+    "“Start your letter box” and the site address on an amber background with light rays."
+  ],
+  "slides": [
+    { "type": "cover", "shot": "box", "title": "A goodbye that keeps<br>writing back?", "sub": "Letters they open while you’re away" },
+    { "type": "card", "title": "One letter box,<br>opened over time", "rows": [
+      ["Tonight", "One letter for the night you part"],
+      ["While apart", "Every day, every week or every two weeks"],
+      ["Open when…", "For a bad day or a sleepless night"],
+      ["Never said", "The things you never quite said out loud"],
+      ["The last one", "Sealed until the day you meet again"]
+    ] },
+    { "type": "price", "title": "Free until you<br>hand it over", "sub": "Plan, write and preview every letter first.<br>You pay once, when you make their link.", "rows": [
+      ["Planning with the guide", "Free"],
+      ["Reading your chats", "Free", "first one"],
+      ["Writing every letter", "Free"]
+    ], "last": ["Their private link", "$9.99"], "fine": "No subscription. Full refund within 14 days." },
+    { "type": "step", "pill": "STEP 1", "title": "Tell the guide about<br>the two of you", "shot": "plan",
+      "tags": [{ "text": "why you’re apart", "side": "left", "x": 70, "y": 520 }, { "text": "what only you two know", "side": "right", "x": 60, "y": 610 }],
+      "pop": { "kind": "bubble", "text": "Hi Sam. Emma leaves for Lisbon soon, and you want something waiting for her there. <b>How often will you two be able to talk?</b>" } },
+    { "type": "step", "pill": "STEP 2", "title": "Bring in your chats,<br>if you like", "shot": "chats",
+      "tags": [{ "text": "KakaoTalk", "side": "left", "x": 96, "y": 530 }, { "text": "WhatsApp", "side": "left", "x": 70, "y": 600 }, { "text": "iMessage", "side": "right", "x": 84, "y": 570 }],
+      "pop": { "kind": "stat", "label": "counted on your phone first", "big": "153 hours", "small": "on the phone, over 412 calls" } },
+    { "type": "step", "pill": "STEP 3", "title": "Write with what<br>you found", "shot": "findings",
+      "tags": [{ "text": "a moment you forgot", "side": "right", "x": 56, "y": 550 }, { "text": "every word stays yours", "side": "left", "x": 58, "y": 630 }],
+      "pop": { "kind": "moment", "label": "A MOMENT", "title": "Bikes on the Lakefront Trail", "meta": "Lakefront Trail · Apr 2, 2023", "question": "What do you remember about taking the long way that day?" } },
+    { "type": "step", "pill": "STEP 4", "title": "Hand over one link,<br>they open it on their phone", "shot": "box",
+      "tags": [{ "text": "nothing to install", "side": "left", "x": 70, "y": 550 }, { "text": "works offline", "side": "right", "x": 80, "y": 510 }, { "text": "they can write back", "side": "right", "x": 56, "y": 600 }],
+      "pop": { "kind": "button", "text": "Make their link · $9.99" } },
+    { "type": "end", "title": "Start your letter box", "sub": "getwhileyouareaway.com" }
+  ]
+}
