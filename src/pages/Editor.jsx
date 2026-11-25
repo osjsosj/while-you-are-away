@@ -23,6 +23,7 @@ import { loadLocalChat } from '../utils/chat/local'
 import DesignWhy from '../components/DesignWhy'
 import '../styles/editor.css'
 import './diary.css'
+import { letterForm } from '../utils/design/letterForm'
 
 /* Step 4: write. The letter box is laid out the way it will open, section by section. */
 
@@ -381,6 +382,23 @@ function MissingSections({ plan, p1, onPlan }) {
   )
 }
 
+/* How this letter will arrive on their phone (utils/design/letterForm.js), said while it's being written,
+   with the one thing that would make it more theirs when nothing is pinned yet. */
+function ArrivesAs({ slot, pins = [], toName, canAdd }) {
+  const d = getDraft()
+  const p1 = d.phase1 || {}
+  const f = letterForm({ id: slot.id, section: slot.section, label: slot.label, opensOn: slot.opensOn, writtenOn: slot.writtenOn, pins: pins || [] }, { fromName: p1.fromName, toName: p1.toName, partDate: p1.startDate, returnDate: p1.endDate, transport: d.decor?.ticket?.kind })
+  const design = f.why[0]?.design
+  if (!design) return null
+  const plain = !pins?.length && ['leaf', 'classic'].includes(f.form)
+  return (
+    <p className="we-arrives">
+      <span>{toName || 'They'} will open this as {design}.</span>
+      {plain && canAdd && <span className="we-arrives-tip"> Pin a moment to make it a postcard from that place, or a saying to have it written large on top.</span>}
+    </p>
+  )
+}
+
 function LetterSheet({ slot, content, plan, toName, onChange, onPlan, onAsk, onClose, onFromStory, fromChat = true, onUnpin }) {
   const listKey = ADDABLE[slot.section]
   const item = listKey ? plan[listKey].find((x) => x.id === slot.id) : null
@@ -426,7 +444,7 @@ function LetterSheet({ slot, content, plan, toName, onChange, onPlan, onAsk, onC
         </button>
         <p className="we-sheet-meta">
           {SECTION_INFO[slot.section]?.title}
-          {slot.opensOn ? ` · ${slot.section === 'last' ? 'sealed until' : 'opens'} ${formatLong(slot.opensOn)}` : slot.section === 'anytime' ? ' · they can open it any time' : ''}
+          {slot.opensOn ? `, ${slot.section === 'last' ? 'sealed until' : 'opens'} ${formatLong(slot.opensOn)}` : slot.section === 'anytime' ? ', they can open it any time' : ''}
         </p>
         {item ? (
           <>
@@ -441,6 +459,7 @@ function LetterSheet({ slot, content, plan, toName, onChange, onPlan, onAsk, onC
         )}
         {slot.hint && <p className="we-hint">{slot.hint}</p>}
         <PinList pins={content.pins} onRemove={onUnpin} />
+        <ArrivesAs slot={slot} pins={content.pins} toName={toName} canAdd={!!onFromStory} />
         {onFromStory && <button type="button" className="we-from-story" onClick={onFromStory}>{fromChat ? '+ Add something from your chats' : '+ Add something from your story'}</button>}
 
         <label htmlFor="we-letter" className="wf-sr">Your letter</label>

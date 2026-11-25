@@ -103,7 +103,7 @@ export function FindingsPanel({ story, target, pinnedOn, letterFor, onPin, onUnp
                     <div className="we-find-top">
                       {it.sticker ? <Motif id={it.sticker} size={34} /> : <span className="we-find-mark" aria-hidden="true">{KIND_MARK[it.pin.kind]}</span>}
                       <div className="we-find-text">
-                        <span className="we-find-kind">{KIND_NAME[it.pin.kind]}{it.from === 'talk' ? ' · from your planning talk' : ''}</span>
+                        <span className="we-find-kind">{KIND_NAME[it.pin.kind]}{it.from === 'talk' ? ', from your planning talk' : ''}</span>
                         <span className="we-find-title">{it.title}</span>
                         {it.sub && <span className="we-find-sub">{it.sub}</span>}
                         {it.prompt && <span className="we-find-prompt">{it.prompt}</span>}

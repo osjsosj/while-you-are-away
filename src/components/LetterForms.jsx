@@ -87,7 +87,7 @@ export default function FormHead({ form, meta, photoUrl = null, signature = null
       return (
         <div className="lpf-leaf">
           <div className="lpf-leaf-weeks" role="img" aria-label={`Week ${h.filled} of ${h.weeks}`}>
-            {Array.from({ length: h.weeks }, (_, i) => <i key={i} className={i < h.filled - 1 ? 'is-gone' : i === h.filled - 1 ? 'is-now' : ''} />)}
+            {Array.from({ length: h.weeks }, (_, i) => <i key={i} style={{ '--i': i }} className={i < h.filled - 1 ? 'is-gone' : i === h.filled - 1 ? 'is-now' : ''} />)}
           </div>
           <p className="lpf-leaf-left">{h.left}</p>
         </div>

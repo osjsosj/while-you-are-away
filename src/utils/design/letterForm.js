@@ -142,7 +142,7 @@ export function letterForm(item = {}, box = {}) {
         filled: Math.min(weeks, Math.round(gone / 7)),
         left: left === 0 ? 'Today you meet again' : left < 14 ? `${left} ${left === 1 ? 'day' : 'days'} to go` : `${Math.round(left / 7)} weeks to go`,
         date: longDate(item.opensOn),
-      }, [], { info: `Opens ${longDate(item.opensOn)}, ${gone} days into your time apart`, design: 'a leaf of your calendar, the weeks behind you filled in' })
+      }, [], { info: `Opens ${longDate(item.opensOn)}, ${gone} days into your time apart`, design: 'a page of your time apart, with the weeks already behind you filled in' })
     }
   }
 

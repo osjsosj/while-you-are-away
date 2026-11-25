@@ -28,7 +28,7 @@ export function demoBox(token = 'demo') {
     return {
       id: `d:${k}`,
       section: 'before',
-      label: long ? `Day ${n} before` : ['The first night I knew', 'Your laugh on the phone', 'Packing your blue jumper', 'What I didn’t say at dinner', 'The station, practised', 'Tomorrow'][k],
+      label: long ? `Day ${n} before` : ['The first night I knew', 'Your laugh on the phone', 'Packing your blue sweater', 'What I didn’t say at dinner', 'The station, practiced', 'Tomorrow'][k],
       stamp: `Written ${n} ${n === 1 ? 'day' : 'days'} before I left`,
       date: formatLong(writtenOn),
       writtenOn,
@@ -62,7 +62,7 @@ export function demoBox(token = 'demo') {
   const opened = fresh ? [] : long ? [...before.map((b) => b.id), 't0', ...scheduled.slice(0, 28).map((w) => w.id), 'n1', 's0'] : ['d:0', 'd:1', 'd:2', 't0', 'w0', 'n1', 's0']
   const replies = fresh ? [] : [
     { item_id: 'd:1', body: 'I didn’t know you remembered that call. I still have the voicemail.', created_at: `${addDays(today, -6)}T21:14:00Z` },
-    { item_id: 'w0', body: 'Week one done. The flat is too quiet without your music.', created_at: `${addDays(today, -12)}T08:40:00Z` },
+    { item_id: 'w0', body: 'Week one done. The apartment is too quiet without your music.', created_at: `${addDays(today, -12)}T08:40:00Z` },
   ]
 
   return {

@@ -166,14 +166,14 @@
 .we-find-lede { margin: 6px 0 0; font-size: 14px; line-height: 1.45; color: var(--mist-soft); }
 .we-find-close { flex: none; color: var(--mist-soft); }
 .we-find-group { margin-top: 18px; }
-.we-find-gh { margin: 0 0 10px; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mist-muted); }
+.we-find-gh { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--mist-muted); }
 .we-find-list { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
 .we-find-item { padding: 14px; border-radius: 14px; background: var(--paper); color: var(--ink); }
 .we-find-top { display: flex; align-items: flex-start; gap: 12px; }
 .we-find-top .dc-motif { flex: none; margin-top: 2px; }
 .we-find-mark { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #EDE6D3; color: var(--ink-soft); font-family: var(--serif); font-size: 18px; font-weight: 700; }
 .we-find-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.we-find-kind { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); }
+.we-find-kind { font-size: 13px; font-weight: 600; color: var(--ink-muted); }
 .we-find-title { font-family: var(--serif); font-size: 18px; line-height: 1.3; color: var(--ink); overflow-wrap: anywhere; word-break: keep-all; }
 .we-find-sub { font-size: 13px; line-height: 1.4; color: var(--ink-soft); }
 .we-find-prompt { margin-top: 4px; font-size: 14px; line-height: 1.45; font-style: italic; color: var(--ink-soft); }
@@ -229,3 +229,7 @@
   .we-why-more li { grid-template-columns: 1fr; gap: 0; }
   .we-why-arrow { display: none; }
 }
+
+/* How the letter arrives on their phone, said quietly under its pins */
+.we-arrives { margin: 6px 0 2px; font-size: 14px; line-height: 1.45; color: var(--ink-soft); text-wrap: pretty; }
+.we-arrives-tip { color: var(--ink-muted, #6B7280); }

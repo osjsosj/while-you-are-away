@@ -7,6 +7,7 @@ import Mascot, { Says } from '../../components/Mascot'
 import { Motif, TicketBanner } from '../../components/Decor'
 import { buildPath, currentNodeId, foldUnit, offsetFor, untilStats } from './journey'
 import './letterapp.css'
+import { letterForm } from '../../utils/design/letterForm'
 
 /* The recipient's letter box as an app: a menu (Letters, Photos, My replies, Until we meet) around
    a path that walks through time. Shared by the live box and the sender's preview. */
@@ -185,7 +186,7 @@ function LettersView({ box, items, units, openSet, current, onOpen, today, look 
               const n = row.node
               const i = index++
               const art = look?.pathArt?.length && i % 3 === 1 && current !== n.item.id ? look.pathArt[Math.floor(i / 3) % look.pathArt.length] : null
-              return <PathNode key={n.item.id} node={n} i={i} read={openSet.has(n.item.id)} isCurrent={current === n.item.id} onOpen={onOpen} today={today} fromName={box.fromName} art={art} />
+              return <PathNode key={n.item.id} node={n} i={i} read={openSet.has(n.item.id)} isCurrent={current === n.item.id} onOpen={onOpen} today={today} fromName={box.fromName} art={art} paper={paperOf(n.item, box)} />
             })}
           </ol>
         </section>
@@ -247,7 +248,7 @@ function FoldRow({ fold, onOpen }) {
   )
 }
 
-function PathNode({ node, i, read, isCurrent, onOpen, today, fromName, art = null }) {
+function PathNode({ node, i, read, isCurrent, onOpen, today, fromName, art = null, paper = null }) {
   const { item, kind, badge, mark, caption } = node
   const [peek, setPeek] = useState(false)
   useEffect(() => {
@@ -264,7 +265,7 @@ function PathNode({ node, i, read, isCurrent, onOpen, today, fromName, art = nul
   const name = kind === 'before' ? badge : item.label
   const label = locked
     ? `${name}, sealed${item.opensOn ? `, opens ${formatLong(item.opensOn)}` : ''}`
-    : `${name}${caption ? `, ${caption}` : ''}${fresh ? ', new' : ', read'}`
+    : `${name}${caption ? `, ${caption}` : ''}${paper && fresh ? `, ${PAPER_NAMES[paper]}` : ''}${fresh ? ', new' : ', read'}`
 
   return (
     <li className={`la-step la-step--${state} la-step--${kind}${big ? ' la-step--big' : ''}${isCurrent ? ' is-current' : ''}`} style={{ '--x': off, '--d': `${Math.min(i, 14) * 55}ms` }}>
@@ -274,7 +275,7 @@ function PathNode({ node, i, read, isCurrent, onOpen, today, fromName, art = nul
       {art && <Motif id={art} size={52} className={`la-step-art ${off > 0 ? 'is-left' : 'is-right'}`} tilt={off > 0 ? 8 : -8} />}
       <button type="button" className="la-node" aria-label={label} onClick={() => (locked ? setPeek(true) : onOpen(item.id))} disabled={item.empty}>
         <span className="la-node-face" aria-hidden="true">
-          {locked ? <LockGlyph big={big} kind={kind} /> : kind === 'before' ? <span className="la-node-d"><b>{mark?.big ?? badge}</b>{mark?.small && <small>{mark.small}</small>}</span> : kind === 'occasion' ? <GiftGlyph /> : kind === 'last' ? <HeartGlyph /> : read ? <CheckGlyph /> : <EnvelopeGlyph />}
+          {locked ? <LockGlyph big={big} kind={kind} /> : kind === 'before' ? <span className="la-node-d"><b>{mark?.big ?? badge}</b>{mark?.small && <small>{mark.small}</small>}</span> : kind === 'occasion' ? <GiftGlyph /> : kind === 'last' ? <HeartGlyph /> : read ? <CheckGlyph /> : <PaperGlyph form={paper} />}
         </span>
       </button>
       <span className="la-step-text" aria-hidden="true">
@@ -496,6 +497,22 @@ function MoonIcon() { return <svg width="22" height="22" viewBox="0 0 24 24" ari
 function LockGlyph({ big, kind }) {
   if (kind === 'last') return <svg width={big ? 34 : 26} height={big ? 34 : 26} viewBox="0 0 24 24" {...S} strokeWidth="1.8"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg>
   return <svg width={big ? 30 : 24} height={big ? 30 : 24} viewBox="0 0 24 24" {...S} strokeWidth="1.8"><rect x="5" y="10.5" width="14" height="9.5" rx="2" /><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" /></svg>
+}
+/* The paper an unread letter will open as (utils/design/letterForm.js), so the path previews what waits. */
+const PAPER_NAMES = { postcard: 'a postcard', saying: 'a note', tally: 'a receipt of your numbers', leaf: 'a page of your calendar', ticket: 'a ticket', card: 'a card', sealed: 'a sealed letter', diary: 'a diary page', envelope: 'an envelope', folded: 'a folded note' }
+function paperOf(item, box) {
+  if (!item.open || item.empty) return null
+  const f = letterForm(item, { fromName: box.fromName, toName: box.toName, partDate: box.partDate, returnDate: box.returnDate, transport: box.decor?.ticket?.kind, nickname: box.look?.seal?.text, seal: box.look?.seal, stamps: box.look?.stamps, months: box.look?.pattern?.months })
+  return PAPER_NAMES[f.form] ? f.form : null
+}
+function PaperGlyph({ form }) {
+  const g = { width: 30, height: 30, viewBox: '0 0 24 24', ...S, strokeWidth: 1.8 }
+  if (form === 'postcard') return <svg {...g}><rect x="2.5" y="5" width="19" height="14" rx="1.5" /><rect x="15" y="7.5" width="4" height="4.5" /><path d="M5.5 9h6M5.5 12h6M5.5 15h4" /></svg>
+  if (form === 'saying') return <svg {...g}><path d="M5 17c0-4 1.5-7 4.5-8.5M13 17c0-4 1.5-7 4.5-8.5" /><circle cx="7" cy="16" r="2" /><circle cx="15" cy="16" r="2" /></svg>
+  if (form === 'tally') return <svg {...g}><path d="M6 3h12v18l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5L6 21z" /><path d="M9 8h6M9 11.5h6M9 15h3.5" /></svg>
+  if (form === 'leaf') return <svg {...g}><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M4 9.5h16M8.5 3v4M15.5 3v4" /><rect x="7.5" y="12.5" width="3" height="3" fill="currentColor" /></svg>
+  if (form === 'ticket') return <svg {...g}><path d="M3 7h18v3a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4z" /><path d="M15 7.5v9" strokeDasharray="1.6 1.6" /></svg>
+  return <EnvelopeGlyph />
 }
 function EnvelopeGlyph() { return <svg width="30" height="30" viewBox="0 0 24 24" {...S} strokeWidth="1.9"><rect x="3" y="5.5" width="18" height="13" rx="2.5" /><path d="M3.5 7l8.5 6.5L20.5 7" /></svg> }
 function CheckGlyph() { return <svg width="28" height="28" viewBox="0 0 24 24" {...S} strokeWidth="2.2"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg> }
