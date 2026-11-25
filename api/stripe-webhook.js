@@ -9,7 +9,9 @@ import { db } from './_lib/server.js'
  * 예전 코드의 supabaseAdmin.auth.admin.sendRawEmail()은 존재하지 않는 함수라 제거.
  */
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+// made on first use, so a missing key answers with an error instead of crashing the function at load
+let client = null
+const stripeApi = () => (client ||= new Stripe(process.env.STRIPE_SECRET_KEY))
 
 export const config = {
   api: { bodyParser: false },
@@ -41,7 +43,7 @@ export default async function handler(req, res) {
 
   let event
   try {
-    event = stripe.webhooks.constructEvent(
+    event = stripeApi().webhooks.constructEvent(
       rawBody,
       req.headers['stripe-signature'],
       process.env.STRIPE_WEBHOOK_SECRET,

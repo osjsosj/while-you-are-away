@@ -2,7 +2,12 @@
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+// made on first use, so a missing or broken Stripe key can never take down the functions that don't pay
+let stripeClient = null
+function stripe() {
+  if (!stripeClient) stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY)
+  return stripeClient
+}
 
 const paidCache = new Set() // per warm instance: skip re-asking Stripe about a session we already saw paid
 
@@ -10,7 +15,7 @@ export async function isPaid(sessionId) {
   if (typeof sessionId !== 'string' || !sessionId.startsWith('cs_')) return false
   if (paidCache.has(sessionId)) return true
   try {
-    const session = await stripe.checkout.sessions.retrieve(sessionId)
+    const session = await stripe().checkout.sessions.retrieve(sessionId)
     // 'no_payment_required' = a 100%-off promotion code (friends, testers) on a completed checkout
     const paid = session.payment_status === 'paid' || (session.status === 'complete' && session.payment_status === 'no_payment_required')
     if (paid) paidCache.add(sessionId)

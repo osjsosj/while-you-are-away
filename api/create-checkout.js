@@ -1,6 +1,8 @@
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+// made on first use, so a missing key answers with an error instead of crashing the function at load
+let client = null
+const stripeApi = () => (client ||= new Stripe(process.env.STRIPE_SECRET_KEY))
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -11,7 +13,7 @@ export default async function handler(req, res) {
     const { toName, fromName, email, anonId } = req.body
     const origin = req.headers.origin || process.env.SITE_URL || 'http://localhost:5173'
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await stripeApi().checkout.sessions.create({
       payment_method_types: ['card'],
       customer_email: email || undefined,
       line_items: [
