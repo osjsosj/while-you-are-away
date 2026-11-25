@@ -61,8 +61,10 @@ different kinds shows at least three different compositions.
 
 ### Opening
 
-Each form moves once as it opens, the way that paper moves in a hand (the flap lifts, the stub tears,
-the note unfolds, the seal presses, the postmark thumps, the receipt prints, the weeks fill in).
+Each form moves once as it opens, the way that paper moves in a hand (the stub tears, the note unfolds,
+the seal presses, the postmark thumps, the receipt prints, the weeks fill in). The envelope and the card
+stay still: in review (2026-11-25) their motion was too slight to read as opening, so it was taken out
+rather than kept half-working.
 Transform and clip only, under a second, ending on the resting design; nothing moves under reduced
 motion.
 
