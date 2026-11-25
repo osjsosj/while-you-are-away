@@ -35,7 +35,7 @@ export default function FormHead({ form, meta, photoUrl = null, signature = null
             {h.from && <div><dt>From</dt><dd>{h.from}</dd></div>}
             {h.departs && <div><dt>Departs</dt><dd>{h.departs}</dd></div>}
             {h.returns && <div><dt>Returns</dt><dd>{h.returns}</dd></div>}
-            {h.place && <div className="lpf-ticket-wide"><dt>Last time</dt><dd>{h.place}</dd></div>}
+            {h.place && <div className="lpf-ticket-wide"><dt>The last goodbye</dt><dd>{h.place}</dd></div>}
           </dl>
           <div className="lpf-ticket-stub" aria-hidden="true"><span>{h.returns ? 'Return' : 'One way'}</span></div>
         </div>

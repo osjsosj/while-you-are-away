@@ -2,7 +2,7 @@
  * Run: node scripts/test-forms.mjs */
 import assert from 'node:assert/strict'
 import { recipientView } from '../src/utils/boxModel.js'
-import { letterForm, FORMS, splitSub, openWhenReason, toIso } from '../src/utils/design/letterForm.js'
+import { letterForm, FORMS, splitSub, openWhenReason, toIso, whoSays } from '../src/utils/design/letterForm.js'
 import { LETTER_STORIES } from '../src/pages/lab/letterStories.js'
 
 let failed = 0
@@ -75,6 +75,11 @@ test('helpers read facts as given', () => {
   assert.equal(openWhenReason('For a rainy Sunday'), 'For a rainy Sunday')
   assert.equal(toIso('Apr 2, 2023'), '2023-04-02')
   assert.equal(toIso('the diner'), '')
+  assert.equal(whoSays('Emma', { toName: 'Emma', fromName: 'Sam' }), 'you say this a lot')
+  assert.equal(whoSays('Sam', { toName: 'Emma', fromName: 'Sam' }), 'I say this a lot')
+  assert.equal(whoSays('Mom', { toName: 'Diego', fromName: 'Mom' }), 'I say this a lot')
+  assert.equal(whoSays('Dad', { toName: 'Diego', fromName: 'Mom' }), 'Dad says this a lot')
+  assert.equal(whoSays('Your running joke', {}), 'Your running joke')
 })
 
 test('the seed only moves small things: the same letter always gets the same form and side', () => {

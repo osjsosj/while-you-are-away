@@ -33,6 +33,16 @@ export function splitSub(sub) {
   return { place, date }
 }
 
+/** Who says it, said the way the two of them would: "you say this a lot" when it's the reader's line. */
+export function whoSays(who, box = {}) {
+  const w = String(who || '').trim()
+  if (!w) return ''
+  const same = (n) => n && w.toLowerCase() === String(n).trim().toLowerCase()
+  if (same(box.toName) || same(box.nickname)) return 'you say this a lot'
+  if (same(box.fromName)) return 'I say this a lot'
+  return /\s/.test(w) ? w : `${w} says this a lot`
+}
+
 /** "Apr 2, 2023" → "2023-04-02" for the postmark; '' when it isn't a full date. */
 export function toIso(text) {
   if (isDate(text)) return String(text).slice(0, 10)
@@ -73,13 +83,15 @@ export function letterForm(item = {}, box = {}) {
     case 'before': {
       const n = isDate(item.writtenOn) && isDate(box.partDate) ? daysBetween(item.writtenOn, box.partDate) : null
       const before = n === null ? '' : n <= 0 ? 'The last day before you left' : n === 1 ? '1 day before you left' : `${n} days before you left`
-      return done('diary', { weekday: weekday(item.writtenOn), date: longDate(item.writtenOn), before }, [], { info: 'Written in the days before', design: 'a diary page with the day it was written' })
+      // the time it was written, when the diary kept it ("December 30, 2025, 11:40 PM")
+      const at = String(item.date || '').match(/,\s*(\d{1,2}:\d{2}\s*(?:[AaPp]\.?[Mm]\.?)?)\s*$/)?.[1] || ''
+      return done('diary', { weekday: weekday(item.writtenOn), date: [longDate(item.writtenOn), at].filter(Boolean).join(', '), before }, [], { info: 'Written in the days before', design: 'a diary page with the day it was written' })
     }
     case 'tonight': {
       const parting = pins.find((p) => p.kind === 'parting')
-      const { place } = splitSub(parting?.sub)
+      const { place, date: partedOn } = splitSub(parting?.sub)
       const kind = transportOf(box, pins)
-      return done('ticket', { kind, name: TICKET_NAMES[kind] || 'Ticket', color: TICKETS[kind]?.color || '', passenger: box.toName || '', from: box.fromName || '', departs: shortDate(box.partDate || item.opensOn), returns: shortDate(box.returnDate), place }, parting ? [parting] : [], { info: kind ? `The night you part, and how you travel (${kind})` : 'The night you part', design: `a ${(TICKET_NAMES[kind] || 'ticket stub').toLowerCase()} with your names and dates` })
+      return done('ticket', { kind, name: TICKET_NAMES[kind] || 'Ticket', color: TICKETS[kind]?.color || '', passenger: box.toName || '', from: box.fromName || '', departs: shortDate(box.partDate || item.opensOn), returns: shortDate(box.returnDate), place: [place, partedOn].filter(Boolean).join(', ') }, parting ? [parting] : [], { info: kind ? `The night you part, and how you travel (${kind})` : 'The night you part', design: `a ${(TICKET_NAMES[kind] || 'ticket stub').toLowerCase()} with your names and dates` })
     }
     case 'anytime':
       return done('envelope', { reason: openWhenReason(item.label), to, from: box.fromName || '', ...(box.seal ? { seal: box.seal } : {}) }, [], { info: `“${item.label}”`, design: 'an envelope with that reason written on it' })
@@ -91,7 +103,7 @@ export function letterForm(item = {}, box = {}) {
   }
 
   const quote = pins.find((p) => p.kind === 'quote' && p.text)
-  if (quote) return done('saying', { text: quote.text, who: quote.sub || '' }, [quote], { info: `“${quote.text}”`, design: 'the saying, written large at the top' })
+  if (quote) return done('saying', { text: quote.text, who: whoSays(quote.sub, box) }, [quote], { info: `“${quote.text}”`, design: 'the saying, written large at the top' })
 
   const memory = pins.find((p) => p.kind === 'memory' && p.text)
   if (memory) {

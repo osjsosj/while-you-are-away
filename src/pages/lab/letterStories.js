@@ -43,7 +43,7 @@ function draft({ key, from, to, relationship, mood, part, weeks, situation, stor
       story: story || undefined,
       plan,
       capsuleData,
-      diary: diary.map((d, i) => ({ id: `d${i}`, writtenOn: add(part, -d.before), title: '', body: d.text })),
+      diary: diary.map((d, i) => ({ id: `d${i}`, writtenOn: add(part, -d.before), ...(d.time ? { writtenTime: d.time } : {}), title: '', body: d.text })),
     },
   }
 }
@@ -73,7 +73,7 @@ export const LETTER_STORIES = [
         { text: 'Four weeks. Send me a photo of your street. The real one, not the pretty one.' },
       ],
     },
-    diary: [{ before: 9, text: 'You packed the yellow scarf and said you wouldn’t need it.' }, { before: 1, text: 'We walked to the train the long way. Neither of us said why.' }],
+    diary: [{ before: 9, text: 'You packed the yellow scarf and said you wouldn’t need it.' }, { before: 1, time: '11:40 PM', text: 'We walked to the train the long way. Neither of us said why.' }],
     anytime: [{ label: 'Open when you can’t sleep', text: 'Put your phone face down. Count the trams. I’m doing the same thing, six hours behind.' }],
     never: [{ label: 'The first time I saw you', text: 'You were holding two coffees and neither was yours.' }],
     last: 'Look up. I’m the one with the sign.',
