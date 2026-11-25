@@ -8,7 +8,7 @@ import { MAX_PINS, groupCount, storyFindings, shortDate } from '../utils/story'
  * The panel never writes words for them; a pin sits beside their letter, the letter stays theirs.
  */
 
-const KIND_MARK = { memory: '◆', quote: '“', parting: '↗', stat: '#' }
+const KIND_MARK = { memory: '◆', quote: '“', parting: '↗', stat: '#', plan: '→', repair: '~' }
 const KIND_NAME = { memory: 'A moment', quote: 'Something you say', parting: 'An earlier goodbye', stat: 'A number', plan: 'A plan you made', repair: 'How you make up' }
 
 /** The card on the writing page that opens the panel. */

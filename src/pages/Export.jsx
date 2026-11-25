@@ -18,6 +18,9 @@ import { timedFetch } from '../utils/net'
 
 /* Hand it over: publish the letter box to a private link, share it, and read their replies. */
 
+/** Local development only: /export?demo=live shows the handed-over page with no account and no server. */
+const isDemo = () => import.meta.env.DEV && new URLSearchParams(window.location.search).get('demo') === 'live'
+
 export default function Export() {
   const navigate = useNavigate()
   const draft = getDraft()
@@ -34,6 +37,8 @@ export default function Export() {
   const labels = useMemo(() => Object.fromEntries(allItems(getDraft()).map((i) => [i.id, i.label])), [])
 
   const loadExisting = useCallback(async () => {
+    // local development only: /export?demo=live shows the handed-over page without an account or a server
+    if (isDemo()) { setLink(`${window.location.origin}/b/demo`); return setStage('live') }
     if (!supabase) return setStage('ready')
     const user = await getUser()
     if (!user) return setStage('ready')
@@ -67,6 +72,7 @@ export default function Export() {
     setError('')
     setRelinking('busy')
     try {
+      if (isDemo()) { setLink(`${window.location.origin}/b/demo-${Date.now().toString(36)}`); return }
       const { data: { session } } = await supabase.auth.getSession()
       const res = await timedFetch('/api/box', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` }, body: JSON.stringify({ action: 'relink' }) }, 30000)
       const { token } = (await res.json().catch(() => null)) || {}
