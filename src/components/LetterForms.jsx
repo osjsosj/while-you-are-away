@@ -8,7 +8,7 @@ import { Seal } from './StoryArt'
  * of their numbers, a seal. Empty facts leave their slot out.
  */
 
-export default function FormHead({ form, meta, photoUrl = null }) {
+export default function FormHead({ form, meta, photoUrl = null, signature = null }) {
   const h = form.head || {}
   switch (form.form) {
     case 'sealed':
@@ -28,7 +28,8 @@ export default function FormHead({ form, meta, photoUrl = null }) {
       )
     case 'ticket':
       return (
-        <div className="lpf-ticket" role="group" aria-label="Ticket">
+        <div className={`lpf-ticket${h.kind ? ` lpf-ticket--${h.kind}` : ''}`} role="group" aria-label={h.name} style={h.color ? { '--lpf-tk': h.color } : undefined}>
+          <p className="lpf-ticket-name">{h.name}</p>
           <dl className="lpf-ticket-main">
             {h.passenger && <div><dt>Passenger</dt><dd>{h.passenger}</dd></div>}
             {h.from && <div><dt>From</dt><dd>{h.from}</dd></div>}
@@ -44,7 +45,7 @@ export default function FormHead({ form, meta, photoUrl = null }) {
         <div className="lpf-envelope">
           <div className="lpf-envelope-front">
             <p className="lpf-envelope-reason"><span>Open when</span> {h.reason}</p>
-            {(h.to || h.from) && <p className="lpf-envelope-addr">{h.to && <span>For {h.to}</span>}{h.from && <span>from {h.from}</span>}</p>}
+            {(h.to || h.from) && <p className="lpf-envelope-addr">{h.to && <span>For {h.to}</span>}{h.from && <span className="lpf-from">from {signature?.d ? <Signed signature={signature} name={h.from} /> : h.from}</span>}</p>}
           </div>
           <div className="lpf-envelope-flap" aria-hidden="true" />
           {h.seal && <span className="lpf-envelope-seal" aria-hidden="true"><Seal seal={h.seal} size={46} /></span>}
@@ -78,7 +79,7 @@ export default function FormHead({ form, meta, photoUrl = null }) {
               {h.place && h.iso && <span className="lpf-postcard-pm"><Postmark place={h.place} date={h.iso} size={78} /></span>}
             </div>
             {h.to && <p className="lpf-postcard-line">To {h.to}</p>}
-            {h.from && <p className="lpf-postcard-line lpf-postcard-line--soft">from {h.from}</p>}
+            {h.from && <p className="lpf-postcard-line lpf-postcard-line--soft lpf-from">from {signature?.d ? <Signed signature={signature} name={h.from} /> : h.from}</p>}
           </div>
         </div>
       )
@@ -123,6 +124,15 @@ function MonthBars({ months }) {
         const h = Math.max(1.2, (m.count / max) * 24)
         return <rect key={m.month} x={i * w + w * 0.15} y={24 - h} width={w * 0.7} height={h} />
       })}
+    </svg>
+  )
+}
+
+/* The sender's own drawn signature, small, where an address line would carry their name. */
+function Signed({ signature, name }) {
+  return (
+    <svg className="lpf-signed" viewBox="0 0 400 150" role="img" aria-label={name}>
+      <path d={signature.d} />
     </svg>
   )
 }

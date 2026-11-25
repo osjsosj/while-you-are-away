@@ -73,7 +73,7 @@ export default function LetterPaper({
       </div>
       )}
 
-      {f && <FormHead form={f} meta={meta} photoUrl={f.form === 'postcard' ? photoUrl : null} />}
+      {f && <FormHead form={f} meta={meta} photoUrl={f.form === 'postcard' ? photoUrl : null} signature={signature} />}
       {isTicket && d.ticket && f?.form !== 'ticket' && <TicketBanner ticket={d.ticket} />}
 
       <h2 className={f?.form === 'envelope' ? 'lp-title lpf-sr' : 'lp-title'} id={titleId}>{title}</h2>

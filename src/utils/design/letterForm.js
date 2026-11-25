@@ -5,6 +5,15 @@
  * Pure functions: no DOM, no React. LetterForms.jsx draws the heads.
  */
 import { hash } from './storyDesign.js'
+import { TICKETS } from '../decor.js'
+
+const TICKET_NAMES = { plane: 'Boarding pass', train: 'Rail ticket', bus: 'Bus ticket' }
+/** The way they travel, from the box's ticket (picked from their story) or a goodbye pinned to the letter. */
+function transportOf(box, pins) {
+  if (TICKETS[box.transport]) return box.transport
+  const text = pins.filter((p) => p.kind === 'parting').map((p) => `${p.text} ${p.sub}`).join(' ').toLowerCase()
+  return Object.keys(TICKETS).find((k) => TICKETS[k].words.some((w) => new RegExp(`(^|[^a-z])${w}([^a-z]|$)`).test(text))) || ''
+}
 
 const DAY = 86400000
 const parse = (iso) => { const [y, m, d] = String(iso).slice(0, 10).split('-').map(Number); return new Date(y, m - 1, d) }
@@ -44,7 +53,7 @@ export { FORMS }
 
 /**
  * item: { id, section, label, opensOn, writtenOn, pins: [{ kind, ref, text, sub }], stickers }
- * box:  { fromName, toName, partDate, returnDate, nickname, seal: { text, initials, color }, stamps: [{ memory, sticker }], months: [{ month, count }] }
+ * box:  { fromName, toName, partDate, returnDate, transport ('plane'|'train'|'bus'), nickname, seal: { text, initials, color }, stamps: [{ memory, sticker }], months: [{ month, count }] }
  * → { form, head, pins (the ones the head did not use), side, why: [{ info, design }] }
  */
 export function letterForm(item = {}, box = {}) {
@@ -69,7 +78,8 @@ export function letterForm(item = {}, box = {}) {
     case 'tonight': {
       const parting = pins.find((p) => p.kind === 'parting')
       const { place } = splitSub(parting?.sub)
-      return done('ticket', { passenger: box.toName || '', from: box.fromName || '', departs: shortDate(box.partDate || item.opensOn), returns: shortDate(box.returnDate), place }, parting ? [parting] : [], { info: 'The night you part', design: 'a boarding-pass stub with your names and dates' })
+      const kind = transportOf(box, pins)
+      return done('ticket', { kind, name: TICKET_NAMES[kind] || 'Ticket', color: TICKETS[kind]?.color || '', passenger: box.toName || '', from: box.fromName || '', departs: shortDate(box.partDate || item.opensOn), returns: shortDate(box.returnDate), place }, parting ? [parting] : [], { info: kind ? `The night you part, and how you travel (${kind})` : 'The night you part', design: `a ${(TICKET_NAMES[kind] || 'ticket stub').toLowerCase()} with your names and dates` })
     }
     case 'anytime':
       return done('envelope', { reason: openWhenReason(item.label), to, from: box.fromName || '', ...(box.seal ? { seal: box.seal } : {}) }, [], { info: `“${item.label}”`, design: 'an envelope with that reason written on it' })

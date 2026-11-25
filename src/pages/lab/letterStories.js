@@ -11,7 +11,7 @@ const add = (iso, n) => { const d = new Date(`${iso}T12:00:00Z`); d.setUTCDate(d
 const months = (from, n, f) => Array.from({ length: n }, (_, i) => { const d = new Date(`${from}-01T12:00:00Z`); d.setUTCMonth(d.getUTCMonth() + i); return { month: d.toISOString().slice(0, 7), count: Math.round(f(i)) } })
 
 /* Build a draft the way the app stores one, so recipientView() and boxLook() run on it unchanged. */
-function draft({ key, from, to, relationship, mood, part, weeks, situation, story, nicknames, letters, diary = [], anytime = [], never = [], occasions = [], last }) {
+function draft({ key, from, to, relationship, mood, part, weeks, situation, story, nicknames, letters, diary = [], anytime = [], never = [], occasions = [], last, ticket = null, signature = null }) {
   const back = add(part, weeks * 7)
   const base = normalizePlan({
     tonight: !!letters.tonight, last: !!last,
@@ -38,7 +38,8 @@ function draft({ key, from, to, relationship, mood, part, weeks, situation, stor
       phase2: { nicknames: nicknames || '' },
       phase2Done: true,
       generatedConfig: { chosenName: `Letters for ${to}` },
-      decor: { style: mood },
+      decor: { style: mood, ...(ticket ? { ticket: { kind: ticket, letterId: anytime.length ? 's0' : never.length ? 'n0' : 'o0' } } : {}) },
+      ...(signature ? { signature: { d: signature } } : {}),
       story: story || undefined,
       plan,
       capsuleData,
@@ -49,7 +50,8 @@ function draft({ key, from, to, relationship, mood, part, weeks, situation, stor
 
 export const LETTER_STORIES = [
   draft({
-    key: 'sam-emma', from: 'Sam', to: 'Emma', relationship: 'partner', mood: 'night', part: '2026-01-08', weeks: 16,
+    key: 'sam-emma', from: 'Sam', to: 'Emma', relationship: 'partner', mood: 'night', part: '2026-01-08', weeks: 16, ticket: 'plane',
+    signature: 'M20 96 Q 40 30 62 92 Q 70 120 92 70 Q 110 40 120 92 L 150 60 Q 170 40 182 96 Q 200 120 224 70 Q 250 30 262 90 Q 300 110 380 64',
     situation: 'Emma is starting a semester in Lisbon', nicknames: 'Em, bear',
     story: {
       about: 'You two talk most at night.', callEachOther: 'Em, bear',
@@ -77,7 +79,7 @@ export const LETTER_STORIES = [
     last: 'Look up. I’m the one with the sign.',
   }),
   draft({
-    key: 'maria-diego', from: 'Mom', to: 'Diego', relationship: 'child', mood: 'flowers', part: '2026-08-20', weeks: 14,
+    key: 'maria-diego', from: 'Mom', to: 'Diego', relationship: 'child', mood: 'flowers', part: '2026-08-20', weeks: 14, ticket: 'bus',
     situation: 'Diego is leaving for college in Austin', nicknames: 'mijo',
     story: {
       about: 'Mostly short texts, a lot of food photos.', callEachOther: 'mijo',
@@ -113,7 +115,7 @@ export const LETTER_STORIES = [
     last: 'Hi. Hi. Hi.',
   }),
   draft({
-    key: 'priya-anika', from: 'Priya', to: 'Anika', relationship: 'friend', mood: 'scrapbook', part: '2026-06-14', weeks: 12,
+    key: 'priya-anika', from: 'Priya', to: 'Anika', relationship: 'friend', mood: 'scrapbook', part: '2026-06-14', weeks: 12, ticket: 'plane',
     situation: 'Anika is moving to Seattle', nicknames: 'Ani',
     story: {
       about: 'You talk all day in bursts.', callEachOther: 'Ani',
@@ -138,7 +140,7 @@ export const LETTER_STORIES = [
     last: 'Your hoodie and I are at arrivals.',
   }),
   draft({
-    key: 'walt-lily', from: 'Grandpa Walt', to: 'Lily', relationship: 'parent', mood: 'quiet', part: '2026-09-01', weeks: 20,
+    key: 'walt-lily', from: 'Grandpa Walt', to: 'Lily', relationship: 'parent', mood: 'quiet', part: '2026-09-01', weeks: 20, ticket: 'train',
     situation: 'Lily is spending a gap year in Japan', nicknames: 'Lil',
     story: {
       about: 'Long emails on Sunday mornings.', callEachOther: 'Lil',

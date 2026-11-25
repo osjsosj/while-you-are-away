@@ -40,7 +40,7 @@ export default function LetterLab() {
       <StickerArtContext.Provider value={box.look?.art || 'flat'}>
         <div style={{ display: 'grid', gap: 28, maxWidth: 560, margin: '0 auto' }}>
           {shown.map((item) => {
-            const form = letterForm(item, { fromName: box.fromName, toName: box.toName, partDate: box.partDate, returnDate: box.returnDate, nickname: box.look?.seal?.text, seal: box.look?.seal, stamps: box.look?.stamps, months: box.look?.pattern?.months })
+            const form = letterForm(item, { fromName: box.fromName, toName: box.toName, partDate: box.partDate, returnDate: box.returnDate, transport: box.decor?.ticket?.kind, nickname: box.look?.seal?.text, seal: box.look?.seal, stamps: box.look?.stamps, months: box.look?.pattern?.months })
             return (
               <article key={item.id} data-letter={item.id} data-form={form.form} className={`wb-sheet wb-sheet--${box.decor?.style || 'night'}${paper ? ' wb-sheet--story' : ''}`} style={{ ...sheetStyle(paper), position: 'relative', maxHeight: 'none', transform: 'none', animation: 'none' }}>
                 <LetterPaper
@@ -54,6 +54,7 @@ export default function LetterLab() {
                   pins={item.pins || []}
                   photoUrl={typeof item.photo === 'string' ? item.photo : item.photo?.url}
                   fromName={box.fromName}
+                  signature={box.signature}
                   showPostmark={item.id === pm}
                   isTicket={box.decor?.ticket?.letterId === item.id}
                   textSizeControl={false}
