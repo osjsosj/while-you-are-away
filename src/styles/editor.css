@@ -233,3 +233,17 @@
 /* How the letter arrives on their phone, said quietly under its pins */
 .we-arrives { margin: 6px 0 2px; font-size: 14px; line-height: 1.45; color: var(--ink-soft); text-wrap: pretty; }
 .we-arrives-tip { color: var(--ink-muted, #6B7280); }
+
+/* Notes from their messages, with the switch that turns them off for the whole box */
+.we-why-notes { display: grid; gap: 6px; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(233, 236, 242, .12); }
+.we-why-notes-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.we-why-notes h3 { margin: 0; font-size: 16px; font-weight: 600; }
+.we-why-notes ul { display: grid; gap: 6px; margin: 4px 0 0; padding: 0; list-style: none; font-size: 14px; line-height: 1.4; }
+.we-why-notes li b { font-weight: 600; }
+.we-why-notes li span { color: var(--mist-soft, #C9D0DC); }
+.we-why-notes .gn-switch { position: relative; width: 46px; height: 28px; flex: none; border: none; border-radius: 999px; background: #3A4566; cursor: pointer; transition: background-color 200ms ease; }
+.we-why-notes .gn-switch i { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #E9ECF2; transition: transform 200ms ease; }
+.we-why-notes .gn-switch[aria-checked='true'] { background: var(--light, #F0B341); }
+.we-why-notes .gn-switch[aria-checked='true'] i { transform: translateX(18px); }
+.we-why-notes .gn-switch:focus-visible { outline: 2px solid var(--light, #F0B341); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .we-why-notes .gn-switch, .we-why-notes .gn-switch i { transition: none; } }

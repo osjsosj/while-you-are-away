@@ -148,3 +148,69 @@ export function letterForm(item = {}, box = {}) {
 
   return done('classic', {}, [], null)
 }
+
+// ── Margin notes (docs/letter-design-rules.md § Margin notes from their messages) ─────────────
+
+const n = (v) => Number(v).toLocaleString('en-US')
+const clockOf = (at) => {
+  const m = String(at || '').match(/T(\d{2}):(\d{2})/)
+  if (!m) return ''
+  const h = Number(m[1])
+  return `${h % 12 || 12}:${m[2]} ${h < 12 ? 'a.m.' : 'p.m.'}`
+}
+
+/**
+ * The notes from their chat that belong on this letter: at most two, the most particular first.
+ * item: as in letterForm(); facts: box.look.facts (boxLook.chatFacts); form: letterForm()'s result.
+ * Every note is a counted fact from their messages; nothing is estimated, nothing is written for them.
+ */
+export function marginNotes(item = {}, facts = null, form = null, box = {}) {
+  if (!facts) return []
+  const out = []
+  const add = (note) => { if (note && out.length < 2 && !out.some((x) => x.id === note.id)) out.push(note) }
+  const label = String(item.label || '').toLowerCase()
+  const md = isDate(item.opensOn) ? item.opensOn.slice(5, 10) : ''
+  const year = (iso) => String(iso).slice(0, 4)
+
+  // on this day: the letter opens on the anniversary of the first message or of a moment they pinned
+  if (md) {
+    if (facts.first?.at && facts.first.at.slice(5, 10) === md && year(facts.first.at) < year(item.opensOn)) add({ id: 'onthisday', main: `On this day in ${year(facts.first.at)}`, sub: 'your very first message' })
+    const m = (facts.moments || []).find((x) => x.date.slice(5, 10) === md && year(x.date) < year(item.opensOn))
+    if (m) add({ id: 'onthisday', main: `On this day in ${year(m.date)}`, sub: m.title })
+  }
+
+  const late = () => facts.late && add({ id: 'late', main: `${clockOf(facts.late.at)} “${facts.late.text}”`.trim(), sub: `the latest you two stayed up${facts.late.at ? `, ${shortDate(facts.late.at)}` : ''}` })
+  switch (item.section) {
+    case 'tonight':
+      if (facts.goodnight >= 3) add({ id: 'goodnight', main: `Good night no. ${n(facts.goodnight + 1)}`, sub: `after ${n(facts.goodnight)} in your messages` })
+      break
+    case 'last':
+      if (facts.loveYou >= 2) add({ id: 'loveyou', main: `“I love you”, ${n(facts.loveYou)} times`, sub: 'typed before today' })
+      break
+    case 'never':
+      if (facts.first?.role && facts.first.at) add({ id: 'whofirst', main: facts.first.role === 'them' ? 'You sent the first message' : 'I sent the first message', sub: shortDate(facts.first.at) })
+      break
+    case 'anytime':
+      if (/miss/.test(label) && facts.missYou >= 2) add({ id: 'miss', main: `“I miss you”, ${n(facts.missYou)} times`, sub: 'typed in your messages' })
+      if (/laugh|smile|bad day|sad|down/.test(label) && facts.laugh >= 3) add({ id: 'laugh', main: `${n(facts.laugh)} laughs`, sub: 'in your messages' })
+      if (/sleep|awake|night|late/.test(label)) late()
+      if (facts.words?.length && box.firstAnytime === item.id) add({ id: 'word', main: `“${facts.words[0].word}”, ${n(facts.words[0].count)} times`, sub: 'what you call each other' })
+      break
+    case 'scheduled':
+      if (box.firstScheduled === item.id && facts.first?.text) add({ id: 'first', main: `“${facts.first.text}”`, sub: `the first message${facts.first.at ? `, ${shortDate(facts.first.at)}` : ''}` })
+      if (form?.form === 'leaf' && isDate(facts.from) && isDate(item.opensOn)) {
+        const d = daysBetween(facts.from, item.opensOn) + 1
+        if (d > 1) add({ id: 'day', main: `Day ${n(d)}`, sub: 'since your first message' })
+      }
+      break
+    default:
+  }
+  if (item.voice && facts.voices) add({ id: 'voice', main: `Voice note no. ${n(facts.voices + 1)}`, sub: `after ${n(facts.voices)} in your chat` })
+  if (item.photo && facts.photos) add({ id: 'photo', main: `Photo no. ${n(facts.photos + 1)}`, sub: `after ${n(facts.photos)} in your chat` })
+  return out
+}
+
+/** The first letter on the rhythm and the first "open when": they carry the first message and their word. */
+export function firstsOf(items = []) {
+  return { firstScheduled: items.find((i) => i.section === 'scheduled')?.id, firstAnytime: items.find((i) => i.section === 'anytime')?.id }
+}

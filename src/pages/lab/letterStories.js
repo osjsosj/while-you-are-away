@@ -62,7 +62,7 @@ export const LETTER_STORIES = [
       ],
       catchphrases: [{ id: 'home', who: 'Emma', text: 'Text me when you’re home' }, { id: 'drive', who: 'Sam', text: 'Drive safe' }],
       partings: [{ id: 'lisbon', date: '2024-01-08', place: 'O’Hare', what: 'Emma’s first semester away', back: '2024-06-20' }],
-      stats: { total: 6240, calls: 412, callMinutes: 9180, from: '2023-03-11', to: '2025-12-30', spanDays: 1025, daysTalked: 990, first: { at: '2023-03-11T22:14', text: 'did you get home okay?' }, lateNight: { at: '2024-08-18T04:12', text: 'still awake?' }, phrases: { goodnight: 640, missYou: 118 }, byMonth: months('2023-03', 34, (i) => 150 + 110 * Math.abs(Math.sin(i / 2.6))) },
+      stats: { total: 6240, calls: 412, callMinutes: 9180, from: '2023-03-11', to: '2025-12-30', spanDays: 1025, daysTalked: 990, first: { at: '2023-03-11T22:14', role: 'them', text: 'did you get home okay?' }, lateNight: { at: '2024-08-18T04:12', role: 'me', text: 'still awake?' }, phrases: { goodnight: 640, missYou: 118, loveYou: 301, laugh: 990 }, voices: 96, photos: 820, topWords: [{ word: 'em', count: 214 }, { word: 'okay', count: 180 }], byMonth: months('2023-03', 34, (i) => 150 + 110 * Math.abs(Math.sin(i / 2.6))) },
     },
     letters: {
       tonight: 'Hey, you.\n\nYou’ll read this somewhere over the ocean, pretending you’re not tired. My Ventra card is in your coat pocket. Use it the day you come back, and I’ll be at the station.',

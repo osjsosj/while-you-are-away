@@ -24,7 +24,7 @@ function paragraphs(text) {
 
 export default function LetterPaper({
   decor, title, titleId, meta, prompt, letter, photoUrl, videoUrl, voiceUrl, fromName,
-  signature, note, showPostmark = false, isTicket = false, textSizeControl = true, celebrate = false, stickers = [], pins = [], paper = null, form = null,
+  signature, note, showPostmark = false, isTicket = false, textSizeControl = true, celebrate = false, stickers = [], pins = [], paper = null, form = null, notes = [],
 }) {
   const d = decor || { style: 'night', motifs: [], postmark: null, ticket: null, tape: true }
   const [size, setSize] = useState(readSize)
@@ -94,6 +94,11 @@ export default function LetterPaper({
       {layout === 'photo-first' && !photoInHead && photo}
       {paras.length > 0 && <div className="lp-body">{paras.map((p, i) => <p key={i}>{p}</p>)}</div>}
       {layout !== 'photo-first' && !photoInHead && photo}
+      {notes.length > 0 && (
+        <ul className="lpf-notes" aria-label="From your messages">
+          {notes.map((nt) => <li key={nt.id}><span className="lpf-note-main">{nt.main}</span>{nt.sub && <span className="lpf-note-sub">{nt.sub}</span>}</li>)}
+        </ul>
+      )}
       {videoUrl && <video className="lp-video" src={videoUrl} controls playsInline preload="metadata" />}
       {voiceUrl && (
         <div className="lp-voice">

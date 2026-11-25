@@ -2,7 +2,9 @@
  * Run: node scripts/test-forms.mjs */
 import assert from 'node:assert/strict'
 import { recipientView } from '../src/utils/boxModel.js'
-import { letterForm, FORMS, splitSub, openWhenReason, toIso, whoSays, markPlace } from '../src/utils/design/letterForm.js'
+import { letterForm, FORMS, splitSub, openWhenReason, toIso, whoSays, markPlace, marginNotes, firstsOf } from '../src/utils/design/letterForm.js'
+import { boxLook } from '../src/utils/design/boxLook.js'
+import { allItems, isWritten } from '../src/utils/boxModel.js'
 import { clip } from '../src/utils/story.js'
 import { normalizePlan } from '../src/utils/plan.js'
 import { LETTER_STORIES } from '../src/pages/lab/letterStories.js'
@@ -104,6 +106,37 @@ test('a postmark carries a place it can fit; long names widen the ticket', () =>
   assert.equal(t.form.head.wide, true)
   const p = edge.letters.find((l) => l.form.form === 'postcard')
   assert.ok(p.form.head.mark.length <= 22, p.form.head.mark)
+})
+
+test('margin notes come only from a chat, at most two a letter, each a counted fact', () => {
+  for (const b of boxes) {
+    const facts = b.box.look?.facts || null
+    for (const { item, form } of b.letters) {
+      const notes = marginNotes(item, facts, form, firstsOf(b.letters.map((l) => l.item)))
+      assert.ok(notes.length <= 2, `${b.key} ${item.id}: ${notes.length} notes`)
+      if (!facts) assert.equal(notes.length, 0, `${b.key}: notes without a chat`)
+      for (const n of notes) assert.doesNotMatch(JSON.stringify(n), /undefined|null|NaN|Invalid/, JSON.stringify(n))
+    }
+  }
+  const sam = boxes.find((b) => b.key === 'sam-emma')
+  const all = sam.letters.flatMap(({ item, form }) => marginNotes(item, sam.box.look.facts, form, firstsOf(sam.letters.map((l) => l.item))).map((n) => n.main))
+  assert.ok(all.includes('Good night no. 641'), all.join(' | '))
+  assert.ok(all.includes('“I love you”, 301 times'), all.join(' | '))
+  assert.ok(all.some((m) => m.startsWith('Day ')), all.join(' | '))
+})
+
+test('the sender can switch the notes off for the whole box', () => {
+  const s = LETTER_STORIES.find((x) => x.key === 'sam-emma')
+  const draft = { ...s.draft, decor: { ...s.draft.decor, off: { notes: true } } }
+  const written = allItems(draft).filter((it) => isWritten(it.content))
+  assert.equal(boxLook(draft, written, () => true).facts, undefined)
+  assert.ok(boxLook(s.draft, allItems(s.draft).filter((it) => isWritten(it.content)), () => true).facts)
+})
+
+test('on this day: a letter opening on a pinned moment’s anniversary says so', () => {
+  const facts = { moments: [{ title: 'Bikes on the Lakefront Trail', date: '2023-04-02' }], first: { text: 'hi', at: '2023-03-11T22:14' } }
+  assert.deepEqual(marginNotes({ id: 'w9', section: 'scheduled', opensOn: '2026-04-02' }, facts)[0], { id: 'onthisday', main: 'On this day in 2023', sub: 'Bikes on the Lakefront Trail' })
+  assert.equal(marginNotes({ id: 'w9', section: 'scheduled', opensOn: '2026-04-03' }, facts).length, 0)
 })
 
 test('the seed only moves small things: the same letter always gets the same form and side', () => {

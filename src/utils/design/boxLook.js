@@ -11,7 +11,7 @@
  */
 import { letterForm } from './letterForm.js'
 import { designFromStory, appTheme, mix } from './storyDesign.js'
-import { storyFromDraft } from '../story.js'
+import { storyFromDraft, clip } from '../story.js'
 
 const RELATIONSHIP = { 'a partner': 'partner', 'a parent': 'parent', 'a child': 'child', 'a friend': 'friend' }
 
@@ -60,6 +60,8 @@ export function boxLook(draft, items, isOpen) {
     palette: { accent: spec.palette.accent, accent2: spec.palette.accent2, accentRaw: spec.palette.accentRaw, accent2Raw: spec.palette.accent2Raw, ink: spec.palette.ink },
     pattern: { kind: spec.pattern.kind, months, calls: Number(st.stats.callMinutes) || 0, late: 0 },
     seal: spec.seal,
+    // counted facts from their chat for the margin notes (docs/letter-design-rules.md); off when the sender says so
+    ...(draft.decor?.off?.notes ? {} : { facts: chatFacts(st) }),
     stamps,
     // the letter paper: tint, age, ruling, stain, and the faces it is written in
     paper: {
@@ -102,4 +104,26 @@ function formLines(draft, written, look) {
     else seen.set(f.form, { ...f.why[0], n: 1 })
   }
   return [...seen.values()].map((w) => ({ info: w.n > 1 ? `${w.info}, and ${w.n - 1} more like it` : w.info, design: w.design }))
+}
+
+/** The few counted facts the margin notes may use: short quotes are clipped, everything else is a number or a date. */
+export function chatFacts(st) {
+  const s = st?.stats || {}
+  const num = (v) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Math.round(Number(v)) : 0)
+  const quote = (m) => (m && typeof m.text === 'string' && m.text.trim() ? { text: clip(m.text, 90), at: typeof m.at === 'string' ? m.at.slice(0, 16) : '', role: m.role === 'me' || m.role === 'them' ? m.role : '' } : null)
+  const p = s.phrases || {}
+  // a nickname among their most-used words, written the way they gave it ("Em", not "em")
+  const nicks = (st?.nicknames || []).map((n) => String(n))
+  const words = Array.isArray(s.topWords) ? s.topWords.map((w) => ({ w, nick: nicks.find((n) => n.toLowerCase() === String(w?.word || '').toLowerCase()) })).filter((x) => x.nick).map((x) => ({ word: x.nick, count: num(x.w.count) })) : []
+  const out = {
+    first: quote(s.first),
+    late: quote(s.lateNight),
+    goodnight: num(p.goodnight), missYou: num(p.missYou), loveYou: num(p.loveYou), laugh: num(p.laugh),
+    voices: num(s.voices), photos: num(s.photos),
+    from: typeof s.from === 'string' ? s.from.slice(0, 10) : '',
+    words,
+    moments: (st?.memories || []).filter((m) => /^\d{4}-\d{2}-\d{2}$/.test(m.date || '')).map((m) => ({ title: String(m.title || '').slice(0, 80), date: m.date })),
+  }
+  const any = out.first || out.late || out.goodnight || out.missYou || out.loveYou || out.laugh || out.voices || out.photos || out.words.length || out.moments.length
+  return any ? out : null
 }

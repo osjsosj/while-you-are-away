@@ -5,6 +5,7 @@ import { recipientView, addDays } from '../utils/boxModel'
 import { useMediaUrl } from '../utils/media'
 import { daysBetween, formatLong, localISODate } from '../utils/diary'
 import { LetterSheet, Seal, Story, OurSky } from './Box'
+import { firstsOf } from '../utils/design/letterForm'
 import LetterApp from './box/LetterApp'
 import { storyLook, useStoryFonts } from '../components/storyLook'
 import FilmPlayer from '../components/FilmPlayer'
@@ -117,13 +118,13 @@ export default function Preview() {
           <FilmPlayer {...playing} paper={box.decor?.style} fromName={box.fromName} title={box.appName} closing={box.welcome} onDone={() => setPlaying(null)} />
         </div>
       )}
-      {current && <PreviewSheet item={current} box={box} showPostmark={current.id === postmarkLetterId(items)} onClose={() => setOpenId(null)} />}
+      {current && <PreviewSheet item={current} box={box} firsts={firstsOf(items)} showPostmark={current.id === postmarkLetterId(items)} onClose={() => setOpenId(null)} />}
     </div>
   )
 }
 
 /** The letter sheet with this device's media refs turned into viewable URLs. */
-function PreviewSheet({ item, box, showPostmark, onClose }) {
+function PreviewSheet({ item, box, firsts, showPostmark, onClose }) {
   const photo = useMediaUrl(item.photo || null)
   const video = useMediaUrl(item.video || null)
   const voice = useMediaUrl(item.voice || null)
@@ -135,7 +136,7 @@ function PreviewSheet({ item, box, showPostmark, onClose }) {
   }
   return (
     <div className="wb" style={{ minHeight: 0, padding: 0, ...(box.accent ? { '--light': box.accent } : {}) }}>
-      <LetterSheet item={resolved} replies={[]} toName={box.toName} fromName={box.fromName} signature={box.signature} decor={box.decor} paper={box.look?.paper || null} art={box.look?.art} look={box.look || null} partDate={box.partDate} returnDate={box.returnDate} showPostmark={showPostmark} onClose={onClose} onReply={async () => {}} preview />
+      <LetterSheet item={resolved} replies={[]} toName={box.toName} fromName={box.fromName} signature={box.signature} decor={box.decor} paper={box.look?.paper || null} art={box.look?.art} look={box.look || null} partDate={box.partDate} returnDate={box.returnDate} firsts={firsts} showPostmark={showPostmark} onClose={onClose} onReply={async () => {}} preview />
     </div>
   )
 }

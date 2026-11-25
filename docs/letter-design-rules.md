@@ -75,6 +75,31 @@ motion.
 - The sender sees, under each letter in the editor, how it will arrive ("Emma will open this as a
   postcard from Lakefront Trail") and, when nothing is pinned, how a moment or a saying would change it.
 
+### Margin notes from their messages
+
+Small printed notes in a letter's margin, drawn from the chat they brought in, that only the two of them
+would recognise. At most two per letter, below the words, never inside them; set like a typed slip, not
+a badge. Each comes from a counted fact, never an estimate, and only when the chat holds it. The sender
+can switch them off for the whole box. Reviewed candidates (2026-11-25):
+
+| Note | On which letter | From |
+|---|---|---|
+| The first message, word for word, and its date | the first letter on the rhythm | `stats.first` |
+| "Good night no. 641" | the night you part | `phrases.goodnight` + 1 |
+| The latest they stayed up, and what was said | "open when" a sleepless or late night | `stats.lateNight` |
+| "I miss you", n times | "open when" missing someone | `phrases.missYou` |
+| n laughs in their messages | "open when" a laugh or a bad day | `phrases.laugh` |
+| "I love you", n times | the sealed last letter | `phrases.loveYou` |
+| "Voice note no. 97" | a letter carrying a voice note | `stats.voices` + 1 |
+| "Photo no. 821" | a letter carrying a photo | `stats.photos` + 1 |
+| Who sent the first message | a "things I never said" letter | `stats.first.role` |
+| "Day 1,067" since the first message | a calendar-leaf letter | `stats.from` to the day it opens |
+| "On this day in 2023" | a letter that opens on the anniversary of the first message or a pinned moment | dates in the chat |
+| "bear", n times | the first "open when" letter, when a nickname is among their most-used words | `stats.topWords` |
+
+Turned down: emoji as icons (reads as generated, Hallmark floor), the count of "sorry" (can read as a
+tally of faults), call hours and message totals (the tally form already carries them).
+
 ## 3. Only real facts
 
 - A slot with no fact is left out. No placeholder place, no made-up date, no lorem.

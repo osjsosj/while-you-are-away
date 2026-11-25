@@ -153,7 +153,7 @@ export default function Editor() {
         )}
 
         <DecorStrip decor={draft.decor} onEdit={() => navigate('/generate')} />
-        <DesignWhy draft={draft} onVariant={(v) => update({ lookVariant: v })} />
+        <DesignWhy draft={draft} onVariant={(v) => update({ lookVariant: v })} onNotes={(off) => update({ decor: { ...(draft.decor || {}), off: { ...(draft.decor?.off || {}), notes: off } } })} />
 
         <button type="button" className="we-diary" onClick={() => navigate('/diary')}>
           <span>
