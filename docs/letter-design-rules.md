@@ -46,6 +46,33 @@ Within a box the stationery stays one set (one palette, one pair of faces, one p
 writing paper would. The forms change from letter to letter, so a box with five or more letters of
 different kinds shows at least three different compositions.
 
+### Details that make a form theirs
+
+- Ticket: names their transport (boarding pass, rail or bus ticket, in its colour) when the story has
+  one; the last goodbye with its place and date; long names take a single column.
+- Postcard: the letter's own photo as the picture side; a postmark from the moment's place (trimmed to
+  fit the ring) and date; their nickname on the "to" line, the sender's drawn signature on "from".
+- Saying: signed "you say this a lot" or "I say this a lot" when it's one of the two of them.
+- Envelope: pressed shut with their seal; the "open when" reason written on its front.
+- Sealed: how many days apart it waited. Diary: the time it was written. Tally: their months of
+  messages, a bar a month. Leaf: the weeks of their own time apart, the ones behind them filled in.
+- The feel they chose dresses every form (night: navy ticket and envelope; scrapbook: kraft and tape;
+  pressed flowers: blush and a dashed rule; quiet: white, level, no tape).
+
+### Opening
+
+Each form moves once as it opens, the way that paper moves in a hand (the flap lifts, the stub tears,
+the note unfolds, the seal presses, the postmark thumps, the receipt prints, the weeks fill in).
+Transform and clip only, under a second, ending on the resting design; nothing moves under reduced
+motion.
+
+### Before it opens
+
+- The recipient's path shows an unread letter as the paper waiting in it (postcard, note, receipt,
+  calendar page, ticket), and says so to screen readers.
+- The sender sees, under each letter in the editor, how it will arrive ("Emma will open this as a
+  postcard from Lakefront Trail") and, when nothing is pinned, how a moment or a saying would change it.
+
 ## 3. Only real facts
 
 - A slot with no fact is left out. No placeholder place, no made-up date, no lorem.
