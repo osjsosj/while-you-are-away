@@ -282,7 +282,7 @@ function LetterSheetBody({ item, replies, toName, fromName, signature = null, de
   }
 
   const style = decor?.style || 'night'
-  const form = letterForm(item, { fromName, toName, partDate, returnDate, nickname: look?.seal?.text, seal: look?.seal, stamps: look?.stamps })
+  const form = letterForm(item, { fromName, toName, partDate, returnDate, nickname: look?.seal?.text, seal: look?.seal, stamps: look?.stamps, months: look?.pattern?.months })
   const meta = item.section === 'before' ? `${item.stamp} · ${item.date}` : item.opensOn ? formatLong(item.opensOn) : SECTION_TITLES[item.section] || ''
 
   return (

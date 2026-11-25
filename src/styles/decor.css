@@ -244,3 +244,19 @@
 .lpf-leaf-left { font-size: 14px; color: var(--lp-soft); }
 .lp--form-leaf :is(.lp-title, .lp-body) { text-align: left; margin-inline: 0; }
 .lp--form-leaf .lp-title { font-size: 30px; }
+
+/* A seal pressed where the envelope's flap meets, their initials and the name they use */
+.lpf-envelope-seal { position: absolute; z-index: 3; left: 50%; top: 8px; transform: translateX(-50%) rotate(-6deg); filter: drop-shadow(0 3px 4px rgba(40, 20, 10, .25)); }
+.lpf-envelope:has(.lpf-envelope-seal) .lpf-envelope-front { padding-top: 64px; }
+
+/* A postcard whose picture side is the letter's own photograph */
+.lpf-postcard-pic.has-photo { display: grid; gap: 8px; }
+.lpf-postcard-photo { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 4px; box-shadow: 0 0 0 4px var(--lp-paper), 0 4px 10px -4px rgba(40, 28, 16, .35); }
+.lpf-postcard-pic.has-photo .lpf-postcard-title { font-size: 28px; }
+
+/* Their months of messages under the receipt */
+.lpf-tally tfoot tr { padding-top: 12px; border-top: 1.5px dashed color-mix(in srgb, var(--lp-ink) 35%, transparent); }
+.lpf-tally tfoot td { display: grid; gap: 4px; margin: 0; }
+.lpf-tally-bars { display: block; width: 100%; height: 28px; fill: color-mix(in srgb, var(--lp-ink) 55%, transparent); }
+.lpf-tally-span { font-size: 13px; color: var(--lp-soft); }
+.lpf-sealed-until span { display: block; }

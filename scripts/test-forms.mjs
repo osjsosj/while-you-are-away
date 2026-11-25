@@ -12,7 +12,7 @@ function test(name, fn) {
 
 const boxes = LETTER_STORIES.map((s) => {
   const { box, items } = recipientView(s.draft, s.today)
-  const ctx = { fromName: box.fromName, toName: box.toName, partDate: box.partDate, returnDate: box.returnDate, nickname: box.look?.seal?.text, seal: box.look?.seal, stamps: box.look?.stamps }
+  const ctx = { fromName: box.fromName, toName: box.toName, partDate: box.partDate, returnDate: box.returnDate, nickname: box.look?.seal?.text, seal: box.look?.seal, stamps: box.look?.stamps, months: box.look?.pattern?.months }
   const letters = items.filter((it) => it.open && !it.empty).map((it) => ({ item: it, form: letterForm(it, ctx) }))
   return { key: s.key, box, letters }
 })

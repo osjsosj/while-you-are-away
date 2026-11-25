@@ -34,6 +34,7 @@ export default function LetterPaper({
   const ownMarks = f && ['postcard', 'ticket', 'sealed', 'envelope', 'diary'].includes(f.form)
   const showMeta = !f || !['diary', 'sealed', 'ticket', 'card', 'envelope'].includes(f.form)
   const shownPins = f ? f.pins : pins
+  const photoInHead = f?.form === 'postcard' && !!photoUrl
   const paras = paragraphs(letter)
   // this letter's own stickers (from what it says) first, then the box's
   const scatter = [...stickers.map((id) => ({ id })), ...d.motifs].filter((m, i, a) => a.findIndex((x) => x.id === m.id) === i).slice(0, 3)
@@ -72,7 +73,7 @@ export default function LetterPaper({
       </div>
       )}
 
-      {f && <FormHead form={f} meta={meta} />}
+      {f && <FormHead form={f} meta={meta} photoUrl={f.form === 'postcard' ? photoUrl : null} />}
       {isTicket && d.ticket && f?.form !== 'ticket' && <TicketBanner ticket={d.ticket} />}
 
       <h2 className={f?.form === 'envelope' ? 'lp-title lpf-sr' : 'lp-title'} id={titleId}>{title}</h2>
@@ -89,9 +90,9 @@ export default function LetterPaper({
         </div>
       )}
 
-      {layout === 'photo-first' && photo}
+      {layout === 'photo-first' && !photoInHead && photo}
       {paras.length > 0 && <div className="lp-body">{paras.map((p, i) => <p key={i}>{p}</p>)}</div>}
-      {layout !== 'photo-first' && photo}
+      {layout !== 'photo-first' && !photoInHead && photo}
       {videoUrl && <video className="lp-video" src={videoUrl} controls playsInline preload="metadata" />}
       {voiceUrl && (
         <div className="lp-voice">

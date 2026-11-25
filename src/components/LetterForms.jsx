@@ -8,14 +8,14 @@ import { Seal } from './StoryArt'
  * of their numbers, a seal. Empty facts leave their slot out.
  */
 
-export default function FormHead({ form, meta }) {
+export default function FormHead({ form, meta, photoUrl = null }) {
   const h = form.head || {}
   switch (form.form) {
     case 'sealed':
       return (
         <div className="lpf-sealed">
           {h.seal && <Seal seal={h.seal} size={92} />}
-          {h.until && <p className="lpf-sealed-until">Sealed until {h.until}</p>}
+          {h.until && <p className="lpf-sealed-until">Sealed until {h.until}{h.apart && <span>{h.apart}</span>}</p>}
           {h.to && <p className="lpf-sealed-to">For {h.to}</p>}
         </div>
       )
@@ -47,6 +47,7 @@ export default function FormHead({ form, meta }) {
             {(h.to || h.from) && <p className="lpf-envelope-addr">{h.to && <span>For {h.to}</span>}{h.from && <span>from {h.from}</span>}</p>}
           </div>
           <div className="lpf-envelope-flap" aria-hidden="true" />
+          {h.seal && <span className="lpf-envelope-seal" aria-hidden="true"><Seal seal={h.seal} size={46} /></span>}
         </div>
       )
     case 'card':
@@ -65,8 +66,9 @@ export default function FormHead({ form, meta }) {
     case 'postcard':
       return (
         <div className={`lpf-postcard lpf-postcard--${form.side}`}>
-          <div className="lpf-postcard-pic">
-            {h.sticker && <Motif id={h.sticker} size={64} tilt={form.side === 'left' ? -6 : 5} className="lpf-postcard-sticker" />}
+          <div className={`lpf-postcard-pic${photoUrl ? ' has-photo' : ''}`}>
+            {photoUrl && <img className="lpf-postcard-photo" src={photoUrl} alt="" loading="lazy" />}
+            {!photoUrl && h.sticker && <Motif id={h.sticker} size={64} tilt={form.side === 'left' ? -6 : 5} className="lpf-postcard-sticker" />}
             <p className="lpf-postcard-title">{h.title}</p>
             {(h.place || h.date) && <p className="lpf-postcard-where">{[h.place, h.date].filter(Boolean).join(', ')}</p>}
           </div>
@@ -96,9 +98,31 @@ export default function FormHead({ form, meta }) {
           <tbody>
             {h.rows.map((r, i) => <tr key={i}><th scope="row">{r.num}</th><td>{r.sub}</td></tr>)}
           </tbody>
+          {h.months && (
+            <tfoot>
+              <tr><td>
+                <MonthBars months={h.months} />
+                <span className="lpf-tally-span">{h.span[0]} to {h.span[1]}, a bar a month</span>
+              </td></tr>
+            </tfoot>
+          )}
         </table>
       )
     default:
       return null
   }
+}
+
+/* Their messages, a bar a month: the shape of their own conversation, drawn small like a receipt's footer. */
+function MonthBars({ months }) {
+  const max = Math.max(1, ...months.map((m) => m.count))
+  const w = 100 / months.length
+  return (
+    <svg className="lpf-tally-bars" viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true">
+      {months.map((m, i) => {
+        const h = Math.max(1.2, (m.count / max) * 24)
+        return <rect key={m.month} x={i * w + w * 0.15} y={24 - h} width={w * 0.7} height={h} />
+      })}
+    </svg>
+  )
 }

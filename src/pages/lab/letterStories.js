@@ -24,7 +24,7 @@ function draft({ key, from, to, relationship, mood, part, weeks, situation, stor
   const { plan, pins } = st ? applyStoryToPlan(base, st) : { plan: base, pins: {} }
   const capsuleData = {}
   if (letters.tonight) capsuleData.t0 = { letter: letters.tonight }
-  ;(letters.weeks || []).forEach((w, i) => { if (w) capsuleData[`w${i}`] = { letter: w.text, pins: w.pins || pins[`w${i}`] } })
+  ;(letters.weeks || []).forEach((w, i) => { if (w) capsuleData[`w${i}`] = { letter: w.text, pins: w.pins || pins[`w${i}`], ...(w.photo ? { photo: w.photo } : {}) } })
   anytime.forEach((a, i) => { capsuleData[`s${i}`] = { letter: a.text } })
   never.forEach((n, i) => { capsuleData[`n${i}`] = { letter: n.text } })
   occasions.forEach((o, i) => { capsuleData[`o${i}`] = { letter: o.text } })
@@ -65,7 +65,7 @@ export const LETTER_STORIES = [
     letters: {
       tonight: 'Hey, you.\n\nYou’ll read this somewhere over the ocean, pretending you’re not tired. My Ventra card is in your coat pocket. Use it the day you come back, and I’ll be at the station.',
       weeks: [
-        { text: 'We were never lost. You just wanted the long way, and I wanted whatever you wanted.', pins: [{ kind: 'memory', ref: 'bikes', text: 'Bikes on the Lakefront Trail', sub: 'Lakefront Trail · Apr 2, 2023' }] },
+        { text: 'We were never lost. You just wanted the long way, and I wanted whatever you wanted.', photo: '/site/lakefront-trail.jpg', pins: [{ kind: 'memory', ref: 'bikes', text: 'Bikes on the Lakefront Trail', sub: 'Lakefront Trail · Apr 2, 2023' }] },
         { text: 'You say it every single night, and every single night I text you back. Week two. I’m home. I’m always home when I’m talking to you.', pins: [{ kind: 'quote', ref: 'home', text: 'Text me when you’re home', sub: 'Emma' }] },
         { text: 'I counted. Don’t laugh. I wanted to know how much of you I’ve had so far, and it turns out it’s a lot, and it still isn’t enough.', pins: [{ kind: 'stat', ref: 'calls', text: '153 hours', sub: 'on the phone, over 412 calls' }, { kind: 'stat', ref: 'late', text: '4:12 a.m.', sub: 'the latest we stayed up talking, Aug 18, 2024' }, { kind: 'stat', ref: 'first', text: '“did you get home okay?”', sub: 'The first message, Mar 11, 2023' }] },
         { text: 'Four weeks. Send me a photo of your street. The real one, not the pretty one.' },

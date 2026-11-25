@@ -9,6 +9,7 @@ import { ticketLetterIds } from '../utils/boxModel'
 import { formatLong } from '../utils/diary'
 import FlowFrame from '../components/FlowFrame'
 import LetterPaper from '../components/LetterPaper'
+import { letterForm } from '../utils/design/letterForm'
 import { Motif, Postmark, TicketBanner, StyleSwatch } from '../components/Decor'
 import '../styles/generate.css'
 
@@ -210,6 +211,7 @@ export default function AIGenerate() {
               signature={draft.signature}
               showPostmark
               textSizeControl={false}
+              form={letterForm({ id: 't0', section: 'tonight', label: 'Read this tonight', opensOn: p1.startDate }, { fromName: p1.fromName, toName: p1.toName, partDate: p1.startDate, returnDate: p1.endDate })}
             />
           </div>
           {live.ticket && ticketLetter && (

@@ -13,6 +13,7 @@ export const longDate = (iso) => (isDate(iso) ? parse(iso).toLocaleDateString('e
 const shortDate = (iso) => (isDate(iso) ? parse(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '')
 const weekday = (iso) => (isDate(iso) ? parse(iso).toLocaleDateString('en-US', { weekday: 'long' }) : '')
 const daysBetween = (a, b) => Math.round((parse(b) - parse(a)) / DAY)
+const monthName = (ym) => parse(`${ym}-01`).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
 
 /** "Han River · Apr 2, 2023" → { place, date }; a lone date or a lone place is kept as what it is. */
 export function splitSub(sub) {
@@ -43,7 +44,7 @@ export { FORMS }
 
 /**
  * item: { id, section, label, opensOn, writtenOn, pins: [{ kind, ref, text, sub }], stickers }
- * box:  { fromName, toName, partDate, returnDate, nickname, seal: { text, initials, color }, stamps: [{ memory, sticker }] }
+ * box:  { fromName, toName, partDate, returnDate, nickname, seal: { text, initials, color }, stamps: [{ memory, sticker }], months: [{ month, count }] }
  * → { form, head, pins (the ones the head did not use), side, why: [{ info, design }] }
  */
 export function letterForm(item = {}, box = {}) {
@@ -59,7 +60,7 @@ export function letterForm(item = {}, box = {}) {
 
   switch (item.section) {
     case 'last':
-      return done('sealed', { ...(box.seal ? { seal: box.seal } : {}), to, until: longDate(box.returnDate || item.opensOn) }, [], { info: 'The letter for the day you meet again', design: 'a sealed letter under your seal' })
+      return done('sealed', { ...(box.seal ? { seal: box.seal } : {}), to, until: longDate(box.returnDate || item.opensOn), apart: isDate(box.partDate) && isDate(box.returnDate) && daysBetween(box.partDate, box.returnDate) > 0 ? `after ${daysBetween(box.partDate, box.returnDate)} days apart` : '' }, [], { info: 'The letter for the day you meet again', design: 'a sealed letter under your seal' })
     case 'before': {
       const n = isDate(item.writtenOn) && isDate(box.partDate) ? daysBetween(item.writtenOn, box.partDate) : null
       const before = n === null ? '' : n <= 0 ? 'The last day before you left' : n === 1 ? '1 day before you left' : `${n} days before you left`
@@ -71,7 +72,7 @@ export function letterForm(item = {}, box = {}) {
       return done('ticket', { passenger: box.toName || '', from: box.fromName || '', departs: shortDate(box.partDate || item.opensOn), returns: shortDate(box.returnDate), place }, parting ? [parting] : [], { info: 'The night you part', design: 'a boarding-pass stub with your names and dates' })
     }
     case 'anytime':
-      return done('envelope', { reason: openWhenReason(item.label), to, from: box.fromName || '' }, [], { info: `“${item.label}”`, design: 'an envelope with that reason written on it' })
+      return done('envelope', { reason: openWhenReason(item.label), to, from: box.fromName || '', ...(box.seal ? { seal: box.seal } : {}) }, [], { info: `“${item.label}”`, design: 'an envelope with that reason written on it' })
     case 'never':
       return done('folded', {}, [], { info: 'Something never said out loud', design: 'a note folded in four' })
     case 'occasions':
@@ -93,7 +94,8 @@ export function letterForm(item = {}, box = {}) {
   }
 
   const stats = pins.filter((p) => p.kind === 'stat' && p.text)
-  if (stats.length) return done('tally', { rows: stats.slice(0, 4).map((p) => ({ num: p.text, sub: p.sub || '' })) }, stats.slice(0, 4), { info: 'Numbers from your messages', design: 'set like a receipt at the top' })
+  const months = (box.months || []).filter((m) => m && /^\d{4}-\d{2}$/.test(m.month) && Number.isFinite(m.count))
+  if (stats.length) return done('tally', { rows: stats.slice(0, 4).map((p) => ({ num: p.text, sub: p.sub || '' })), ...(months.length >= 6 ? { months: months.slice(-48), span: [monthName(months[Math.max(0, months.length - 48)].month), monthName(months[months.length - 1].month)] } : {}) }, stats.slice(0, 4), { info: 'Numbers from your messages', design: 'set like a receipt at the top' })
 
   // a letter on the rhythm with nothing pinned: a leaf of their own calendar, how far into the time apart it opens
   if (item.section === 'scheduled' && isDate(item.opensOn) && isDate(box.partDate) && isDate(box.returnDate)) {
