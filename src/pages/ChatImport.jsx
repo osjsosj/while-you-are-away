@@ -209,7 +209,7 @@ export default function ChatImport() {
 
             <div className="ci-perigan">
               <Mascot move="talk" size={64} />
-              <p className="ci-bubble">Your chat is read on this phone first. You’ll see the numbers before anything is sent anywhere.</p>
+              <p className="ci-bubble">Your chat is read on this phone first. You’ll see the numbers before anything is sent anywhere, and only a selection is ever sent, never stored.</p>
             </div>
 
             <div className="wf-pills ci-sources" role="radiogroup" aria-label="Where your chat is">

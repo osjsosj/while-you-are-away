@@ -5,6 +5,7 @@ import { recipientView, allItems, trustedToday } from '../src/utils/boxModel.js'
 /**
  * /api/box
  *   POST {action:'publish'}  + Authorization: Bearer <supabase access token>  → { token }
+ *   POST {action:'relink'}   + Authorization: Bearer …  → { token } (a new link; the old one stops working)
  *   GET  ?token=…&today=YYYY-MM-DD                                           → recipient view
  *   POST ?token=… {action:'reply', itemId, body} | {action:'open', itemId}    → { ok }
  */
@@ -14,6 +15,7 @@ export default async function handler(req, res) {
   try {
     if (!token) {
       if (req.method === 'POST' && req.body?.action === 'publish') return await publish(req, res)
+      if (req.method === 'POST' && req.body?.action === 'relink') return await relink(req, res)
       return res.status(400).json({ error: 'missing_token' })
     }
     if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) return res.status(404).json({ error: 'not_found' })
@@ -28,12 +30,34 @@ export default async function handler(req, res) {
   }
 }
 
-async function publish(req, res) {
+/** The signed-in sender, from the Supabase access token, or null. */
+async function senderOf(req) {
   const jwt = (req.headers.authorization || '').replace(/^Bearer\s+/i, '')
-  if (!jwt) return res.status(401).json({ error: 'sign_in_required' })
-  const { data: userData, error: userErr } = await db().auth.getUser(jwt)
-  const user = userData?.user
-  if (userErr || !user) return res.status(401).json({ error: 'sign_in_required' })
+  if (!jwt) return null
+  const { data, error } = await db().auth.getUser(jwt)
+  return error ? null : data?.user || null
+}
+
+/**
+ * A new link for the same box, when the old one went to the wrong person or was shared too widely.
+ * Letters, replies and opened letters belong to the sender's box, not the link, so nothing is lost;
+ * the old link answers "This letter box isn't here" from now on.
+ */
+async function relink(req, res) {
+  const user = await senderOf(req)
+  if (!user) return res.status(401).json({ error: 'sign_in_required' })
+  const { data: existing } = await db().from('boxes').select('share_token, stripe_session_id').eq('user_id', user.id).maybeSingle()
+  if (!existing) return res.status(404).json({ error: 'no_box' })
+  if (!(await isPaid(existing.stripe_session_id))) return res.status(402).json({ error: 'payment_required' })
+  const shareToken = randomBytes(16).toString('base64url')
+  const { error } = await db().from('boxes').update({ share_token: shareToken, updated_at: new Date().toISOString() }).eq('user_id', user.id)
+  if (error) throw error
+  return res.status(200).json({ token: shareToken })
+}
+
+async function publish(req, res) {
+  const user = await senderOf(req)
+  if (!user) return res.status(401).json({ error: 'sign_in_required' })
 
   const { data: draftRow } = await db().from('drafts').select('data').eq('user_id', user.id).maybeSingle()
   const draft = draftRow?.data

@@ -61,6 +61,26 @@ export default function Export() {
     QRCode.toDataURL(link, { margin: 1, width: 440, color: { dark: '#1B2536', light: '#F6F3EA' } }).then(setQr).catch(() => {})
   }, [link])
 
+  // a new link when the old one went to the wrong person; asked twice, on the page, before it happens
+  const [relinking, setRelinking] = useState('idle') // idle → confirm → busy
+  const relink = async () => {
+    setError('')
+    setRelinking('busy')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await timedFetch('/api/box', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` }, body: JSON.stringify({ action: 'relink' }) }, 30000)
+      const { token } = (await res.json().catch(() => null)) || {}
+      if (!res.ok || !token) throw new Error()
+      setLink(`${window.location.origin}/b/${token}`)
+      setCopied(false)
+      track('link_remade')
+    } catch {
+      setError('The new link couldn’t be made. The old one still works; try again in a moment.')
+    } finally {
+      setRelinking('idle')
+    }
+  }
+
   const publish = async () => {
     setError('')
     setStage('publishing')
@@ -149,6 +169,16 @@ export default function Export() {
                   <button type="button" className="wh-btn wh-btn--ghost" onClick={() => window.print()}>Print the card</button>
                 </div>
                 <p className="wh-note">Anyone with this link can open the box, so share it only with {toName}.</p>
+                {relinking === 'idle' && <button type="button" className="wh-link-btn" onClick={() => setRelinking('confirm')}>Sent it to the wrong person? Make a new link</button>}
+                {relinking !== 'idle' && (
+                  <div className="wh-relink" role="group" aria-label="Make a new link">
+                    <p>The link above stops working right away, and {toName} will need the new one. Every letter, reply and opened letter stays.</p>
+                    <div className="wh-actions">
+                      <button type="button" className="wh-btn" onClick={relink} disabled={relinking === 'busy'}>{relinking === 'busy' ? 'Making it…' : 'Make a new link'}</button>
+                      <button type="button" className="wh-btn wh-btn--ghost" onClick={() => setRelinking('idle')} disabled={relinking === 'busy'}>Keep this one</button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
