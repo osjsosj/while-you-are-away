@@ -24,11 +24,13 @@ import './box.css'
 /* The recipient's letter box, opened from the link the sender hands over. */
 
 const read = (k) => { try { return JSON.parse(localStorage.getItem(k)) } catch { return null } }
+/** A letter box reply the page can draw: a box object and a list of letters. */
+const isBoxReply = (j) => !!j && typeof j === 'object' && !!j.box && typeof j.box === 'object' && !Array.isArray(j.box) && Array.isArray(j.items)
 const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch { /* private mode */ } }
 
 function useBox(token) {
   const cacheKey = `wya_box_${token}`
-  const [data, setData] = useState(() => read(cacheKey))
+  const [data, setData] = useState(() => { const c = read(cacheKey); return isBoxReply(c) ? c : null })
   const [status, setStatus] = useState(data ? 'cached' : 'loading')
 
   const load = useCallback(async () => {
@@ -38,16 +40,23 @@ function useBox(token) {
       setData(demoBox(token))
       return setStatus('live')
     }
+    // a request that hangs is treated like no signal after 15 seconds, so nobody waits on a spinner forever
+    const ctrl = new AbortController()
+    const timer = setTimeout(() => ctrl.abort(), 15000)
     try {
-      const res = await fetch(`/api/box?token=${encodeURIComponent(token)}&today=${localISODate()}`)
+      const res = await fetch(`/api/box?token=${encodeURIComponent(token)}&today=${localISODate()}`, { signal: ctrl.signal })
       if (res.status === 404) return setStatus('missing')
       if (!res.ok) throw new Error(String(res.status))
       const json = await res.json()
+      // only a reply shaped like a letter box is kept and shown; anything else counts as a failed load
+      if (!isBoxReply(json)) throw new Error('bad reply')
       setData(json)
       write(cacheKey, json)
       setStatus('live')
     } catch {
       setStatus((s) => (s === 'loading' ? 'offline-empty' : 'offline'))
+    } finally {
+      clearTimeout(timer)
     }
   }, [token, cacheKey])
 
@@ -105,8 +114,9 @@ export default function Box() {
 
   if (status === 'missing') return <Message title="This letter box isn’t here" body="The link may be incomplete. Ask the person who sent it for the full link." />
   if (!data) {
-    return status === 'offline-empty'
-      ? <Message title="You’re offline" body="Open this link once while connected, and it will be here even without signal." />
+    // any failed load with nothing saved on this phone says so (a second try reports 'offline', not 'offline-empty')
+    return status === 'offline-empty' || status === 'offline'
+      ? <Message title="Your letters didn’t load" body="Check your signal and open the link again. Nothing is lost. Once it opens while connected, it will be here even without signal." />
       : <div className="wb wb-center" aria-busy="true"><span role="img" aria-label="Loading"><Mascot move="walk" size={120} /></span></div>
   }
 

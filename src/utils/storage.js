@@ -6,6 +6,7 @@
  */
 
 import { supabase, getUser, loadDraftFromDB, saveDraftToDB } from './supabase'
+import { cleanDraft } from './draftShape'
 
 const LOCAL_KEY = 'lbs_draft'
 
@@ -13,7 +14,8 @@ const LOCAL_KEY = 'lbs_draft'
 
 function localGet() {
   try {
-    return JSON.parse(localStorage.getItem(LOCAL_KEY)) || {}
+    // a damaged or old-shaped save is cleaned here, once, so no page has to guess (utils/draftShape.js)
+    return cleanDraft(JSON.parse(localStorage.getItem(LOCAL_KEY)))
   } catch {
     return {}
   }
@@ -47,7 +49,7 @@ export const saveDraft = (patch) => {
 
 /** draft 초기화 */
 export const clearDraft = () => {
-  localStorage.removeItem(LOCAL_KEY)
+  try { localStorage.removeItem(LOCAL_KEY) } catch { /* private mode */ }
 }
 
 /**
@@ -55,12 +57,21 @@ export const clearDraft = () => {
  * 로그인 상태인 경우에만 동작
  */
 export async function hydrateFromDB() {
+  try {
+    await hydrate()
+  } catch (err) {
+    // offline or the account is unreachable: the copy on this device keeps working
+    console.warn('draft sync skipped:', err?.message)
+  }
+}
+
+async function hydrate() {
   if (!supabase) return
   const user = await getUser()
   if (!user) return
 
   const remote = await loadDraftFromDB(user.id)
-  if (!remote) return
+  if (!remote || typeof remote !== 'object') return
 
   const local = localGet()
   const remoteTime = remote._savedAt || 0
