@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { getDraft, saveDraft } from '../utils/storage'
 import { daysBetween, formatLong } from '../utils/diary'
 import FlowFrame from '../components/FlowFrame'
+import { timedFetch } from '../utils/net'
 
 /* The last step: checkout at handover. Planning and writing were free; paying makes their link and raises the AI limits. */
 
@@ -32,7 +33,7 @@ export default function Paywall() {
     setError('')
     try {
       track('checkout_start')
-      const res = await fetch('/api/create-checkout', {
+      const res = await timedFetch('/api/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fromName: p.fromName || 'Someone', toName: p.toName || 'Someone special', email: email.trim(), anonId: trackingId() }),

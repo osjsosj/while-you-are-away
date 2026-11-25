@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { timedFetch } from './net'
 
 /** VITE_SUPABASE_URL may include /rest/v1 — strip for createClient */
 function normalizeSupabaseUrl(raw) {
@@ -76,7 +77,7 @@ export async function authHeader() {
 export async function enabledProviders() {
   if (!url || !anonKey) return null
   try {
-    const res = await fetch(`${url}/auth/v1/settings`, { headers: { apikey: anonKey } })
+    const res = await timedFetch(`${url}/auth/v1/settings`, { headers: { apikey: anonKey } }, 10000)
     if (!res.ok) return null
     const { external } = await res.json()
     return external && typeof external === 'object' ? external : null

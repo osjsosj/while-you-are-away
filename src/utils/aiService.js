@@ -6,6 +6,7 @@
 import { getDraft } from './storage'
 import { supabase } from './supabase'
 import { localISODate } from './diary'
+import { timedFetch, jsonOrNull } from './net'
 
 export class PaymentRequiredError extends Error {
   constructor() {
@@ -39,19 +40,20 @@ async function callClaude(payload) {
       const token = supabase ? (await supabase.auth.getSession()).data?.session?.access_token : null
       if (token) auth = { Authorization: `Bearer ${token}` }
     } catch { /* not signed in */ }
-    res = await fetch('/api/claude', {
+    // the server may take up to two minutes on a long talk; past that, treat it as unreachable
+    res = await timedFetch('/api/claude', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...auth },
       body: JSON.stringify({ ...payload, sessionId, today: localISODate() }),
-    })
+    }, 130000)
   } catch {
     throw new AIUnavailableError(0)
   }
   if (res.status === 401) throw new SignInRequiredError()
   if (res.status === 402) throw new PaymentRequiredError() // the free allowance for this is used up
   if (!res.ok) throw new AIUnavailableError(res.status)
-  const data = await res.json()
-  if (!data.text) throw new AIUnavailableError(502)
+  const data = await jsonOrNull(res)
+  if (!data?.text) throw new AIUnavailableError(502)
   return data.text
 }
 
@@ -125,12 +127,14 @@ export async function drawSticker(subject, art = 'flat') {
       const token = supabase ? (await supabase.auth.getSession()).data?.session?.access_token : null
       if (token) auth = { Authorization: `Bearer ${token}` }
     } catch { /* not signed in */ }
-    res = await fetch('/api/sticker', { method: 'POST', headers: { 'Content-Type': 'application/json', ...auth }, body: JSON.stringify({ subject, art, sessionId }) })
+    res = await timedFetch('/api/sticker', { method: 'POST', headers: { 'Content-Type': 'application/json', ...auth }, body: JSON.stringify({ subject, art, sessionId }) }, 90000)
   } catch {
     throw new AIUnavailableError(0)
   }
   if (res.status === 401) throw new SignInRequiredError()
   if (res.status === 402) throw new PaymentRequiredError()
   if (!res.ok) throw new AIUnavailableError(res.status)
-  return res.json()
+  const data = await jsonOrNull(res)
+  if (!data) throw new AIUnavailableError(502)
+  return data
 }

@@ -6,6 +6,7 @@ import { supabase, getUser, authHeader } from '../utils/supabase'
 import { localISODate, promptFor, stampFor, daysBetween, formatLong, UNLOCK_OPTIONS, normalizeUnlock } from '../utils/diary'
 import MomentMedia, { MomentMediaView } from '../components/MomentMedia'
 import './diary.css'
+import { timedFetch } from '../utils/net'
 
 const newId = () =>
   (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`)
@@ -308,7 +309,7 @@ function Reminders({ initialEmail, enabled, partDate, daysLeft, toName, sessionI
     setBusy(true)
     setError('')
     try {
-      const res = await fetch('/api/reminder', {
+      const res = await timedFetch('/api/reminder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(await authHeader()) },
         body: JSON.stringify({ sessionId, email: email.trim(), partDate, toName, enabled: nextEnabled }),

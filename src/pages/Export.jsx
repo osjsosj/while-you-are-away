@@ -14,6 +14,7 @@ import { getPlan, planSlots } from '../utils/plan'
 import { normalizeFilm } from '../utils/film'
 import { isFilled } from '../utils/summary'
 import './handover.css'
+import { timedFetch } from '../utils/net'
 
 /* Hand it over: publish the letter box to a private link, share it, and read their replies. */
 
@@ -70,16 +71,17 @@ export default function Export() {
       if (patch) saveDraft(patch)
       await flushDraft()
       const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('/api/box', {
+      const res = await timedFetch('/api/box', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` },
         body: JSON.stringify({ action: 'publish' }),
-      })
+      }, 60000)
       // paying happens here, at handover: off to checkout, then straight back to make the link
       if (res.status === 402) { navigate('/paywall'); return }
       if (res.status === 401) throw new NeedSignInError()
       if (!res.ok) throw new Error('Couldn’t create the link. Try again in a moment.')
-      const { token } = await res.json()
+      const { token } = (await res.json().catch(() => null)) || {}
+      if (!token) throw new Error('Couldn’t create the link. Try again in a moment.')
       setLink(`${window.location.origin}/b/${token}`)
       setStage('live')
       track('link_made')
