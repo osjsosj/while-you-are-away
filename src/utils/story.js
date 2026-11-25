@@ -18,7 +18,15 @@
 import { getPlan, normalizePlan } from './plan.js'
 import { stickersFor } from './decor.js'
 
-const str = (v, n) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, n) : '')
+/* Trim to n characters at a word, with an ellipsis, so nothing ever ends mid-word ("about abs"). */
+export function clip(text, n) {
+  const s = String(text).replace(/\s+/g, ' ').trim()
+  if (s.length <= n) return s
+  const cut = s.slice(0, n - 1)
+  const at = cut.lastIndexOf(' ')
+  return `${(at > n * 0.6 ? cut.slice(0, at) : cut).replace(/[\s,;:.\-–—]+$/, '')}…`
+}
+const str = (v, n) => (typeof v === 'string' ? clip(v, n) : '')
 const isISO = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s)
 const iso = (s) => (isISO(s) ? s : '')
 

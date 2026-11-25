@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Motif, Stamp, Postmark, TicketBanner } from './Decor'
 import FormHead from './LetterForms'
+import ErrorBoundary from './ErrorBoundary'
 import { paperVars } from '../utils/design/paperStyle'
 import '../styles/decor.css'
 
@@ -73,7 +74,7 @@ export default function LetterPaper({
       </div>
       )}
 
-      {f && <FormHead form={f} meta={meta} photoUrl={f.form === 'postcard' ? photoUrl : null} signature={signature} />}
+      {f && <ErrorBoundary name="letter head" fallback={null} resetKey={`${title}|${f.form}`}><FormHead form={f} meta={meta} photoUrl={f.form === 'postcard' ? photoUrl : null} signature={signature} /></ErrorBoundary>}
       {isTicket && d.ticket && f?.form !== 'ticket' && <TicketBanner ticket={d.ticket} />}
 
       <h2 className={f?.form === 'envelope' ? 'lp-title lpf-sr' : 'lp-title'} id={titleId}>{title}</h2>

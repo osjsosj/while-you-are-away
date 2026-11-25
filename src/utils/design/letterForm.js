@@ -52,10 +52,20 @@ export function toIso(text) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
+/** The part of a place a postmark ring can carry: before the first comma, whole words, about 22 letters. */
+export function markPlace(place) {
+  const first = String(place || '').split(',')[0].trim()
+  if (first.length <= 22) return first
+  const words = first.split(' ')
+  let out = ''
+  for (const w of words) { if ((out ? `${out} ${w}` : w).length > 22) break; out = out ? `${out} ${w}` : w }
+  return out || first.slice(0, 22)
+}
+
 /** "Open when you can't sleep" → "you can't sleep"; any other label stays whole. */
 export function openWhenReason(label) {
   const m = String(label || '').match(/^open (?:this )?when\s*(.*)$/i)
-  return m ? m[1].replace(/[.…]+$/, '').trim() : String(label || '').trim()
+  return m ? m[1].replace(/\.+$/, '').trim() : String(label || '').trim()
 }
 
 const FORMS = ['sealed', 'diary', 'ticket', 'envelope', 'folded', 'card', 'saying', 'postcard', 'tally', 'leaf', 'classic']
@@ -91,7 +101,8 @@ export function letterForm(item = {}, box = {}) {
       const parting = pins.find((p) => p.kind === 'parting')
       const { place, date: partedOn } = splitSub(parting?.sub)
       const kind = transportOf(box, pins)
-      return done('ticket', { kind, name: TICKET_NAMES[kind] || 'Ticket', color: TICKETS[kind]?.color || '', passenger: box.toName || '', from: box.fromName || '', departs: shortDate(box.partDate || item.opensOn), returns: shortDate(box.returnDate), place: [place, partedOn].filter(Boolean).join(', ') }, parting ? [parting] : [], { info: kind ? `The night you part, and how you travel (${kind})` : 'The night you part', design: `a ${(TICKET_NAMES[kind] || 'ticket stub').toLowerCase()} with your names and dates` })
+      const longest = Math.max(String(box.toName || '').length, String(box.fromName || '').length)
+      return done('ticket', { kind, wide: longest > 10, name: TICKET_NAMES[kind] || 'Ticket', color: TICKETS[kind]?.color || '', passenger: box.toName || '', from: box.fromName || '', departs: shortDate(box.partDate || item.opensOn), returns: shortDate(box.returnDate), place: [place, partedOn].filter(Boolean).join(', ') }, parting ? [parting] : [], { info: kind ? `The night you part, and how you travel (${kind})` : 'The night you part', design: `a ${(TICKET_NAMES[kind] || 'ticket stub').toLowerCase()} with your names and dates` })
     }
     case 'anytime':
       return done('envelope', { reason: openWhenReason(item.label), to, from: box.fromName || '', ...(box.seal ? { seal: box.seal } : {}) }, [], { info: `“${item.label}”`, design: 'an envelope with that reason written on it' })
@@ -111,7 +122,7 @@ export function letterForm(item = {}, box = {}) {
     if (place || date) {
       const stamp = (box.stamps || []).find((s) => s.memory === memory.ref)
       const sticker = stamp?.sticker || (item.stickers || [])[0] || null
-      return done('postcard', { title: memory.text, place, date, iso: toIso(date), to, from: box.fromName || '', sticker }, [memory], { info: `“${memory.text}”`, design: `a postcard${place ? ` from ${place}` : ''}` })
+      return done('postcard', { title: memory.text, place, mark: markPlace(place), date, iso: toIso(date), to, from: box.fromName || '', sticker }, [memory], { info: `“${memory.text}”`, design: `a postcard${place ? ` from ${place}` : ''}` })
     }
   }
 

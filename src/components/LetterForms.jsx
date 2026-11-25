@@ -28,7 +28,7 @@ export default function FormHead({ form, meta, photoUrl = null, signature = null
       )
     case 'ticket':
       return (
-        <div className={`lpf-ticket${h.kind ? ` lpf-ticket--${h.kind}` : ''}`} role="group" aria-label={h.name} style={h.color ? { '--lpf-tk': h.color } : undefined}>
+        <div className={`lpf-ticket${h.kind ? ` lpf-ticket--${h.kind}` : ''}${h.wide ? ' lpf-ticket--wide' : ''}`} role="group" aria-label={h.name} style={h.color ? { '--lpf-tk': h.color } : undefined}>
           <p className="lpf-ticket-name">{h.name}</p>
           <dl className="lpf-ticket-main">
             {h.passenger && <div><dt>Passenger</dt><dd>{h.passenger}</dd></div>}
@@ -76,7 +76,7 @@ export default function FormHead({ form, meta, photoUrl = null, signature = null
           <div className="lpf-postcard-addr">
             <div className="lpf-postcard-marks">
               {h.sticker && <Stamp id={h.sticker} size={46} />}
-              {h.place && h.iso && <span className="lpf-postcard-pm"><Postmark place={h.place} date={h.iso} size={78} /></span>}
+              {h.mark && h.iso && <span className="lpf-postcard-pm"><Postmark place={h.mark} date={h.iso} size={78} /></span>}
             </div>
             {h.to && <p className="lpf-postcard-line">To {h.to}</p>}
             {h.from && <p className="lpf-postcard-line lpf-postcard-line--soft lpf-from">from {signature?.d ? <Signed signature={signature} name={h.from} /> : h.from}</p>}
@@ -86,9 +86,9 @@ export default function FormHead({ form, meta, photoUrl = null, signature = null
     case 'leaf':
       return (
         <div className="lpf-leaf">
-          <ol className="lpf-leaf-weeks" aria-label={`Week ${h.filled} of ${h.weeks}`}>
-            {Array.from({ length: h.weeks }, (_, i) => <li key={i} className={i < h.filled - 1 ? 'is-gone' : i === h.filled - 1 ? 'is-now' : ''} />)}
-          </ol>
+          <div className="lpf-leaf-weeks" role="img" aria-label={`Week ${h.filled} of ${h.weeks}`}>
+            {Array.from({ length: h.weeks }, (_, i) => <i key={i} className={i < h.filled - 1 ? 'is-gone' : i === h.filled - 1 ? 'is-now' : ''} />)}
+          </div>
           <p className="lpf-leaf-left">{h.left}</p>
         </div>
       )

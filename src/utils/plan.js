@@ -22,7 +22,15 @@ export const SECTION_INFO = {
 
 const SCHEDULE_FROM_LEGACY = { 'Every day': 'daily', 'Every week': 'weekly', 'Every two weeks': 'biweekly' }
 const isISO = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s)
-const clean = (s, n = 80) => (typeof s === 'string' ? s.trim().slice(0, n) : '')
+// labels are trimmed at a word with an ellipsis, never mid-word
+const clean = (s, n = 80) => {
+  if (typeof s !== 'string') return ''
+  const t = s.trim()
+  if (t.length <= n) return t
+  const cut = t.slice(0, n - 1)
+  const at = cut.lastIndexOf(' ')
+  return `${(at > n * 0.6 ? cut.slice(0, at) : cut).replace(/[\s,;:.\-–—]+$/, '')}…`
+}
 
 function list(arr, prefix) {
   const used = new Set()

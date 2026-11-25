@@ -238,9 +238,9 @@
 /* Leaf: one page of their own calendar, the weeks already behind them filled in */
 .lpf-leaf { display: grid; gap: 12px; margin: 0 0 20px; }
 .lpf-leaf-weeks { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; padding: 0; list-style: none; }
-.lpf-leaf-weeks li { width: 14px; height: 14px; border-radius: 3px; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--lp-ink) 32%, transparent); }
-.lpf-leaf-weeks li.is-gone { background: color-mix(in srgb, var(--lp-ink) 55%, transparent); box-shadow: none; }
-.lpf-leaf-weeks li.is-now { background: var(--lp-accent); box-shadow: none; }
+.lpf-leaf-weeks i { width: 14px; height: 14px; border-radius: 3px; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--lp-ink) 32%, transparent); }
+.lpf-leaf-weeks i.is-gone { background: color-mix(in srgb, var(--lp-ink) 55%, transparent); box-shadow: none; }
+.lpf-leaf-weeks i.is-now { background: var(--lp-accent); box-shadow: none; }
 .lpf-leaf-left { font-size: 14px; color: var(--lp-soft); }
 .lp--form-leaf :is(.lp-title, .lp-body) { text-align: left; margin-inline: 0; }
 .lp--form-leaf .lp-title { font-size: 30px; }
@@ -300,3 +300,15 @@
 .lp--quiet .lpf-envelope-flap { background: #F1F2F4; }
 .lp--quiet .lpf-saying { transform: none; background: #F6F6F3; box-shadow: none; }
 .lp--quiet .lpf-saying::before { display: none; }
+
+/* Long names get the whole width of the ticket instead of breaking mid-word */
+.lpf-ticket dd { overflow-wrap: break-word; hyphens: manual; }
+.lpf-ticket--wide .lpf-ticket-main { grid-template-columns: minmax(0, 1fr); }
+
+/* A very long word breaks with a hyphen where the language allows, not at any letter */
+.lp-body, .lpf-postcard-title, .lpf-saying blockquote, .lpf-envelope-reason { hyphens: auto; -webkit-hyphens: auto; }
+
+/* The ticket's own colour is darkened enough to carry small light type (4.5:1), whatever colour the story gave it */
+.lpf-ticket-name { background: color-mix(in srgb, var(--lpf-tk) 46%, #10131C); }
+.lpf-ticket-stub span { color: color-mix(in srgb, var(--lpf-tk) 46%, #10131C); }
+.lpf-leaf-weeks i { display: block; }

@@ -2,7 +2,9 @@
  * Run: node scripts/test-forms.mjs */
 import assert from 'node:assert/strict'
 import { recipientView } from '../src/utils/boxModel.js'
-import { letterForm, FORMS, splitSub, openWhenReason, toIso, whoSays } from '../src/utils/design/letterForm.js'
+import { letterForm, FORMS, splitSub, openWhenReason, toIso, whoSays, markPlace } from '../src/utils/design/letterForm.js'
+import { clip } from '../src/utils/story.js'
+import { normalizePlan } from '../src/utils/plan.js'
 import { LETTER_STORIES } from '../src/pages/lab/letterStories.js'
 
 let failed = 0
@@ -80,6 +82,28 @@ test('helpers read facts as given', () => {
   assert.equal(whoSays('Mom', { toName: 'Diego', fromName: 'Mom' }), 'I say this a lot')
   assert.equal(whoSays('Dad', { toName: 'Diego', fromName: 'Mom' }), 'Dad says this a lot')
   assert.equal(whoSays('Your running joke', {}), 'Your running joke')
+})
+
+test('long texts are trimmed at a word with an ellipsis, never mid-word', () => {
+  const long = 'If you are reading this then you owe me a coffee and also a very long phone call about absolutely everything'
+  const c = clip(long, 90)
+  assert.ok(c.endsWith('…') && c.length <= 90, c)
+  assert.ok(long.startsWith(c.slice(0, -1)), c)
+  assert.match(c, /\S…$/)
+  assert.equal(clip('short', 90), 'short')
+  const label = normalizePlan({ anytime: [{ id: 's0', label: 'Open when the whole world feels like it is far too loud and you just need someone who knows you' }] }).anytime[0].label
+  assert.ok(label.endsWith('need…'), label)
+  assert.equal(openWhenReason(label), 'the whole world feels like it is far too loud and you just need…')
+})
+
+test('a postmark carries a place it can fit; long names widen the ticket', () => {
+  assert.equal(markPlace('Point Wilson Lighthouse boardwalk, Port Townsend, Washington'), 'Point Wilson')
+  assert.equal(markPlace('Seattle Ferry Terminal'), 'Seattle Ferry Terminal')
+  const edge = boxes.find((b) => b.key === 'edge-cases')
+  const t = edge.letters.find((l) => l.form.form === 'ticket')
+  assert.equal(t.form.head.wide, true)
+  const p = edge.letters.find((l) => l.form.form === 'postcard')
+  assert.ok(p.form.head.mark.length <= 22, p.form.head.mark)
 })
 
 test('the seed only moves small things: the same letter always gets the same form and side', () => {

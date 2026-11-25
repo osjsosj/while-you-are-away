@@ -176,4 +176,28 @@ export const LETTER_STORIES = [
     occasions: [{ label: 'Mom and Dad’s anniversary', date: '2026-06-20', text: 'Call them. I’ll hold the phone up to the cake.' }],
     last: 'Welcome back. You owe me eleven memes.',
   }),
+  // the edges: very long names and places, a long saying, a Korean letter, a long "open when" reason, big numbers
+  draft({
+    key: 'edge-cases', from: 'Christopher-Montgomery', to: 'Maximiliana Josephine', relationship: 'friend', mood: 'flowers', part: '2026-05-01', weeks: 3,
+    situation: 'Maximiliana is moving abroad', nicknames: 'Maximiliana-the-Magnificent', ticket: 'train',
+    story: {
+      about: 'Everything, all the time.', callEachOther: 'Maximiliana-the-Magnificent',
+      memories: [{ id: 'boardwalk', title: 'The very long boardwalk next to the old lighthouse where we got caught in the rain', place: 'Point Wilson Lighthouse boardwalk, Port Townsend, Washington', date: '2019-09-14', sticker: 'lighthouse' }],
+      catchphrases: [{ id: 'coffee', who: 'Christopher-Montgomery', text: 'If you are reading this then you owe me a coffee and also a very long phone call about absolutely everything' }],
+      partings: [{ id: 'gap', date: '2020-01-02', place: 'Seattle–Tacoma International Airport, North Satellite', what: 'The gap year that turned into two' }],
+      stats: { total: 1284530, calls: 12040, callMinutes: 998000, from: '2010-01-01', to: '2026-04-20', spanDays: 5953, daysTalked: 5800, first: { at: '2010-01-01T00:01', text: 'happy new year from the worst party in the entire state of washington' }, lateNight: { at: '2025-12-31T05:59', text: 'go to sleep' }, byMonth: months('2010-01', 196, (i) => 500 + 400 * Math.abs(Math.sin(i / 7))) },
+    },
+    letters: {
+      tonight: '보고 싶어. 매일 밤 네 생각해. 잘 도착하면 꼭 연락해 줘.',
+      weeks: [
+        { text: 'Antidisestablishmentarianism is the only word long enough for how much I miss you this week.', pins: [{ kind: 'memory', ref: 'boardwalk', text: 'The very long boardwalk next to the old lighthouse where we got caught in the rain', sub: 'Point Wilson Lighthouse boardwalk, Port Townsend, Washington · Sep 14, 2019' }] },
+        { text: 'You know what you owe me.', pins: [{ kind: 'quote', ref: 'coffee', text: 'If you are reading this then you owe me a coffee and also a very long phone call about absolutely everything', sub: 'Christopher-Montgomery' }] },
+        { text: 'Sixteen years.', pins: [{ kind: 'stat', ref: 'total', text: '1,284,530 messages', sub: 'since January 1, 2010, through every single phone either of us ever dropped in a lake' }, { kind: 'stat', ref: 'calls', text: '16,633 hours', sub: 'on the phone, over 12,040 calls' }] },
+      ],
+    },
+    anytime: [{ label: 'Open when the whole world feels like it is far too loud and you just need someone who knows you', text: 'Breathe. I am right here, just very far away.' }],
+    never: [{ label: 'The thing about the lighthouse', text: 'I knew then.' }],
+    occasions: [{ label: 'The anniversary of the worst party in the entire state', date: '2026-05-10', text: 'Happy worst-party day.' }],
+    last: 'Come home. The lighthouse is still there.',
+  }),
 ]

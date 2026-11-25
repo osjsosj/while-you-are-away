@@ -1,3 +1,4 @@
+import ErrorBoundary from './components/ErrorBoundary'
 import { useEffect, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { track, installClickTracking } from './utils/track'
@@ -26,6 +27,12 @@ const LabPhone = import.meta.env.DEV ? lazy(() => import('./pages/lab/LabPhone')
 const LetterLab = import.meta.env.DEV ? lazy(() => import('./pages/lab/LetterLab')) : null
 
 /* Page views on every route change. Recipient boxes (/b/...) are reported by the box itself, without a visitor id. */
+/* A crash on one page shows a calm screen with a retry instead of a blank one; a new route tries again. */
+function Guarded({ children }) {
+  const { pathname } = useLocation()
+  return <ErrorBoundary resetKey={pathname}>{children}</ErrorBoundary>
+}
+
 function Tracker() {
   const { pathname } = useLocation()
   useEffect(() => { installClickTracking() }, [])
@@ -41,6 +48,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Tracker />
+      <Guarded>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/services" element={<Services />} />
@@ -66,6 +74,7 @@ export default function App() {
         {LabPhone && <Route path="/lab/phone/:key" element={<Suspense fallback={null}><LabPhone /></Suspense>} />}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+      </Guarded>
     </BrowserRouter>
   )
 }
