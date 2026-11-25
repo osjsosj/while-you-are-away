@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { recipientView } from '../../utils/boxModel'
 import { formatLong } from '../../utils/diary'
-import { letterForm, marginNotes } from '../../utils/design/letterForm'
+import { letterForm, marginNotes, firstsOf } from '../../utils/design/letterForm'
 import { sheetStyle } from '../../utils/design/paperStyle'
 import { postmarkLetterId } from '../../utils/decor'
 import { StickerArtContext } from '../../utils/stickerArt'
@@ -47,7 +47,7 @@ export default function LetterLab() {
                   decor={box.decor}
                   paper={paper}
                   form={form}
-                  notes={marginNotes(item, box.look?.facts || null, form, { firstScheduled: items.find((i) => i.section === 'scheduled')?.id, firstAnytime: items.find((i) => i.section === 'anytime')?.id })}
+                  notes={marginNotes(item, box.look?.facts || null, form, firstsOf(items))}
                   title={item.label}
                   meta={item.section === 'before' ? `${item.stamp} · ${item.date}` : item.opensOn ? formatLong(item.opensOn) : ''}
                   letter={item.letter}

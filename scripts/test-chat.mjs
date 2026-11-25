@@ -211,5 +211,45 @@ test('Excerpts stay within budget and use confirmed names', () => {
   assert.ok(!/\b[AS]: /.test(x.text), 'raw author ids replaced by names')
 })
 
+// ── firsts, day starters, questions, hours, quickest hour (adopted from What Brandon Thinks, as facts) ──
+{
+  const { chatMoments } = await import('../src/utils/chat/stats.js')
+  const msgs = []
+  const add = (at, role, text, kind = 'text') => msgs.push({ at, role, text, kind, author: role })
+  for (let d = 1; d <= 25; d++) {
+    const day = `2024-03-${String(d).padStart(2, '0')}`
+    add(`${day}T08:05`, d % 3 ? 'them' : 'me', 'good morning')
+    add(`${day}T23:10`, 'me', d % 2 ? 'did you eat?' : 'Did you eat??')
+    add(`${day}T23:10`, 'them', '그래')
+    add(`${day}T23:11`, 'them', '아니')
+    add(`${day}T23:11`, 'me', 'ok Em')
+  }
+  add('2024-03-04T00:30', 'me', 'still up', 'text')
+  add('2024-03-02T21:00', 'them', 'voice call 12:03', 'call')
+  add('2024-03-09T23:12', 'them', 'love you')
+  msgs.sort((a, b) => a.at.localeCompare(b.at))
+  const r = chatMoments(msgs, { nicknames: ['Em'] })
+  test('the same question asked two ways counts once, word for word', () => {
+    assert.equal(r.questions.me.count, 25)
+    assert.match(r.questions.me.text, /^did you eat/i)
+  })
+  test('Korean words that only end like questions are not questions', () => {
+    assert.equal(r.questions.them, null)
+  })
+  test('a 12:30 a.m. message belongs to the day before; the morning starter is counted per day', () => {
+    assert.equal(r.starts.me + r.starts.them, 25)
+    assert.equal(r.starts.them, 17)
+  })
+  test('firsts: the first "love you", the first nickname, the first call that connected', () => {
+    assert.equal(r.firsts.loveYou.at, '2024-03-09T23:12')
+    assert.equal(r.firsts.nickname.text, 'ok Em')
+    assert.equal(r.firsts.call.at, '2024-03-02T21:00')
+  })
+  test('the quickest hour is for both together, never per person', () => {
+    assert.equal(r.quick.hour, 23)
+    assert.deepEqual(Object.keys(r.quick).sort(), ['hour', 'replies', 'seconds'])
+  })
+}
+
 console.log(failed ? `\n${failed} failed` : '\nall passed')
 process.exit(failed ? 1 : 0)

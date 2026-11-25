@@ -122,8 +122,11 @@ export function chatFacts(st) {
     voices: num(s.voices), photos: num(s.photos),
     from: typeof s.from === 'string' ? s.from.slice(0, 10) : '',
     words,
+    firstLove: s.firsts?.loveYou?.at ? String(s.firsts.loveYou.at).slice(0, 16) : '',
+    asked: s.questions?.them?.text ? { text: clip(s.questions.them.text, 60), count: num(s.questions.them.count) } : null,
+    hours: s.talkHours && Number.isInteger(s.talkHours.start) ? { start: s.talkHours.start, end: s.talkHours.end } : null,
     moments: (st?.memories || []).filter((m) => /^\d{4}-\d{2}-\d{2}$/.test(m.date || '')).map((m) => ({ title: String(m.title || '').slice(0, 80), date: m.date })),
   }
-  const any = out.first || out.late || out.goodnight || out.missYou || out.loveYou || out.laugh || out.voices || out.photos || out.words.length || out.moments.length
+  const any = out.firstLove || out.asked || out.hours || out.first || out.late || out.goodnight || out.missYou || out.loveYou || out.laugh || out.voices || out.photos || out.words.length || out.moments.length
   return any ? out : null
 }

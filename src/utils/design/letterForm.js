@@ -152,6 +152,7 @@ export function letterForm(item = {}, box = {}) {
 // ── Margin notes (docs/letter-design-rules.md § Margin notes from their messages) ─────────────
 
 const n = (v) => Number(v).toLocaleString('en-US')
+const hourName = (h) => (h === 0 ? 'midnight' : h === 12 ? 'noon' : `${h % 12} ${h < 12 ? 'a.m.' : 'p.m.'}`)
 const clockOf = (at) => {
   const m = String(at || '').match(/T(\d{2}):(\d{2})/)
   if (!m) return ''
@@ -183,9 +184,11 @@ export function marginNotes(item = {}, facts = null, form = null, box = {}) {
   switch (item.section) {
     case 'tonight':
       if (facts.goodnight >= 3) add({ id: 'goodnight', main: `Good night no. ${n(facts.goodnight + 1)}`, sub: `after ${n(facts.goodnight)} in your messages` })
+      if (facts.hours) add({ id: 'hours', main: `${hourName(facts.hours.start)} to ${hourName(facts.hours.end)}`, sub: 'when you two talk most' })
       break
     case 'last':
       if (facts.loveYou >= 2) add({ id: 'loveyou', main: `“I love you”, ${n(facts.loveYou)} times`, sub: 'typed before today' })
+      if (facts.firstLove) add({ id: 'firstlove', main: `The first one: ${shortDate(facts.firstLove)}`, sub: clockOf(facts.firstLove) })
       break
     case 'never':
       if (facts.first?.role && facts.first.at) add({ id: 'whofirst', main: facts.first.role === 'them' ? 'You sent the first message' : 'I sent the first message', sub: shortDate(facts.first.at) })
@@ -197,6 +200,7 @@ export function marginNotes(item = {}, facts = null, form = null, box = {}) {
       if (facts.words?.length && box.firstAnytime === item.id) add({ id: 'word', main: `“${facts.words[0].word}”, ${n(facts.words[0].count)} times`, sub: 'what you call each other' })
       break
     case 'scheduled':
+      if (box.secondScheduled === item.id && facts.asked) add({ id: 'asked', main: `“${facts.asked.text}”`, sub: `what you ask most, ${n(facts.asked.count)} times` })
       if (box.firstScheduled === item.id && facts.first?.text) add({ id: 'first', main: `“${facts.first.text}”`, sub: `the first message${facts.first.at ? `, ${shortDate(facts.first.at)}` : ''}` })
       if (form?.form === 'leaf' && isDate(facts.from) && isDate(item.opensOn)) {
         const d = daysBetween(facts.from, item.opensOn) + 1
@@ -212,5 +216,6 @@ export function marginNotes(item = {}, facts = null, form = null, box = {}) {
 
 /** The first letter on the rhythm and the first "open when": they carry the first message and their word. */
 export function firstsOf(items = []) {
-  return { firstScheduled: items.find((i) => i.section === 'scheduled')?.id, firstAnytime: items.find((i) => i.section === 'anytime')?.id }
+  const sched = items.filter((i) => i.section === 'scheduled')
+  return { firstScheduled: sched[0]?.id, secondScheduled: sched[1]?.id, firstAnytime: items.find((i) => i.section === 'anytime')?.id }
 }

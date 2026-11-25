@@ -105,7 +105,9 @@ export default function ChatImport() {
 
   const confirmWho = () => {
     const msgs = withRoles(parsed.messages, roles)
-    const stats = chatStats(msgs)
+    // the names they gave in the basics let the count find the first time one was used
+    const nicknames = String(getDraft().phase2?.nicknames || '').split(/[,·/]| and /).map((x) => x.trim()).filter(Boolean)
+    const stats = chatStats(msgs, { nicknames })
     const keyDates = [p1.startDate].filter(Boolean)
     const { text } = pickExcerpts(msgs, { names, keyDates })
     const next = { excerpts: text, stats, names, source: parsed.source, messages: parsed.messages.length }

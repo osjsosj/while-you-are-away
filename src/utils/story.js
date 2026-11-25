@@ -121,6 +121,29 @@ export function statFacts(stats) {
   if (p.missYou >= 2) out.push({ id: 'miss', text: `“I miss you” ${n(p.missYou)} times`, sub: 'and that’s just the ones we typed' })
   if (p.thanks >= 3) out.push({ id: 'thanks', text: `${n(p.thanks)} thank-yous`, sub: 'back and forth' })
   if (stats.busiest?.count >= 20) out.push({ id: 'busiest', text: `${n(stats.busiest.count)} messages`, sub: `in one day, ${shortDate(stats.busiest.date)}` })
+  // firsts (Brandon's "tone shifts", told as the day each thing was first said)
+  const f = stats.firsts || {}
+  const on = (m) => (m?.at ? `${shortDate(m.at.slice(0, 10))}, ${clock(m.at)}` : '')
+  if (f.loveYou?.text) out.push({ id: 'firstLove', text: `“${f.loveYou.text}”`, sub: `the first “I love you”, ${on(f.loveYou)}` })
+  if (f.missYou?.text) out.push({ id: 'firstMiss', text: `“${f.missYou.text}”`, sub: `the first “I miss you”, ${on(f.missYou)}` })
+  if (f.nickname?.text) out.push({ id: 'firstNick', text: `“${f.nickname.text}”`, sub: `the first time a nickname came up, ${on(f.nickname)}` })
+  if (f.call?.at) out.push({ id: 'firstCall', text: shortDate(f.call.at.slice(0, 10)), sub: 'our first call' })
+  // who starts the day, as a fact about the two of them, never a score
+  const st = stats.starts || {}
+  const days = (st.me || 0) + (st.them || 0)
+  if (days >= 14) {
+    const meShare = Math.round(((st.me || 0) / days) * 100)
+    if (meShare >= 40 && meShare <= 60) out.push({ id: 'starts', text: 'We take turns', sub: `starting the day, over ${n(days)} days` })
+    else out.push({ id: 'starts', text: `${Math.max(meShare, 100 - meShare)}% of our days`, sub: meShare > 50 ? 'start with a message from me' : 'start with a message from you' })
+  }
+  // each one's most-asked question, word for word
+  const q = stats.questions || {}
+  if (q.me?.text) out.push({ id: 'askMe', text: `“${q.me.text}”`, sub: `what I ask most, ${n(q.me.count)} times` })
+  if (q.them?.text) out.push({ id: 'askThem', text: `“${q.them.text}”`, sub: `what you ask most, ${n(q.them.count)} times` })
+  // the hours they talk, and the hour they're quickest together
+  const hr = (h) => (h === 0 ? 'midnight' : h === 12 ? 'noon' : `${h % 12} ${h < 12 ? 'a.m.' : 'p.m.'}`)
+  if (stats.talkHours) out.push({ id: 'hours', text: `${hr(stats.talkHours.start)} to ${hr(stats.talkHours.end)}`, sub: `when we talk most, ${stats.talkHours.share}% of our messages` })
+  if (stats.quick) out.push({ id: 'quick', text: hr(stats.quick.hour), sub: stats.quick.seconds <= 60 ? 'when we answer each other within a minute' : `when we answer each other fastest, in about ${Math.round(stats.quick.seconds / 60)} minutes` })
   return out
 }
 
