@@ -251,5 +251,31 @@ test('Excerpts stay within budget and use confirmed names', () => {
   })
 }
 
+// ── Instagram / Messenger JSON and LINE ──
+{
+  const enc = (t) => Array.from(new TextEncoder().encode(t), (b) => String.fromCharCode(b)).join('')
+  const meta = JSON.stringify({ participants: [{ name: 'Emma' }, { name: 'Sam' }], messages: [
+    { sender_name: 'Sam', timestamp_ms: Date.UTC(2024, 2, 14, 12, 13), content: enc('보고 싶어 ❤️') },
+    { sender_name: enc('엠마'), timestamp_ms: Date.UTC(2024, 2, 14, 12, 12), content: 'did you get home okay?' },
+    { sender_name: 'Sam', timestamp_ms: Date.UTC(2024, 2, 14, 12, 20), photos: [{ uri: 'x.jpg' }] },
+    { sender_name: 'Sam', timestamp_ms: Date.UTC(2024, 2, 14, 12, 30), call_duration: 723 },
+  ] })
+  test('Instagram and Messenger JSON: oldest first, Meta’s escaped UTF-8 decoded, photos and calls known', () => {
+    const r = parseChat(meta)
+    assert.equal(r.source, 'meta')
+    assert.deepEqual(r.messages.map((m) => m.author), ['엠마', 'Sam', 'Sam', 'Sam'])
+    assert.equal(r.messages[1].text, '보고 싶어 ❤️')
+    assert.equal(r.messages[2].kind, 'photo')
+    assert.equal(r.messages[3].kind, 'call')
+  })
+  test('LINE: day lines, tab-separated messages, 12-hour times, continued lines', () => {
+    const line = '[LINE] Chat history with Emma\nSaved on: 2024/06/01 21:00\n\n2024/03/14(Thu)\n21:12\tEmma\tdid you get home okay?\n21:13\tSam\tjust now\nsecond line\n2024/03/15(Fri)\n오후 9:12\tEmma\t잘 자\n9:30 PM\tSam\tgood night\n'
+    const r = parseChat(line)
+    assert.equal(r.source, 'line')
+    assert.deepEqual(r.messages.map((m) => m.at), ['2024-03-14T21:12', '2024-03-14T21:13', '2024-03-15T21:12', '2024-03-15T21:30'])
+    assert.equal(r.messages[1].text, 'just now\nsecond line')
+  })
+}
+
 console.log(failed ? `\n${failed} failed` : '\nall passed')
 process.exit(failed ? 1 : 0)

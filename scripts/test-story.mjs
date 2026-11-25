@@ -188,5 +188,26 @@ test('moments with no sticker get one drawn, once, and it shows everywhere', () 
   })
 }
 
+// ── a second reading of the same chat, and lines kept from search ──
+{
+  const { mergeStories, momentFromLine } = await import('../src/utils/story.js')
+  test('a later reading adds what is new and keeps what was there', () => {
+    const prev = { memories: [{ id: 'bikes', title: 'Bikes' }], catchphrases: [{ id: 'q', text: 'drive safe' }], partings: [], plans: [], stats: { total: 1 } }
+    const next = { memories: [{ id: 'm1', title: 'bikes' }, { id: 'snow', title: 'Snow' }], catchphrases: [{ id: 'q2', text: 'Drive safe' }], partings: [], plans: [{ id: 'l', text: 'Lisbon' }], stats: { total: 2 } }
+    const m = mergeStories(prev, next)
+    assert.deepEqual(m.memories.map((x) => x.id), ['bikes', 'snow'])
+    assert.equal(m.catchphrases.length, 1)
+    assert.equal(m.plans[0].text, 'Lisbon')
+    assert.equal(m.stats.total, 2)
+  })
+  test('a kept line becomes a moment whose evidence is its own words', () => {
+    const k = momentFromLine({ at: '2024-06-02T22:01', text: 'we should go to Lisbon someday' })
+    assert.equal(k.title, 'we should go to Lisbon someday')
+    assert.equal(k.date, '2024-06-02')
+    assert.equal(k.evidence.quote, 'we should go to Lisbon someday')
+    assert.ok(normalizeStory({ memories: [k] }).memories[0].evidence)
+  })
+}
+
 console.log(failed ? `\n${failed} failed` : '\nall passed')
 process.exit(failed ? 1 : 0)

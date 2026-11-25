@@ -9,7 +9,7 @@
  * Sources: KakaoTalk (phone TXT, PC TXT, PC CSV), WhatsApp (iOS, Android), iMessage (Mac export TXT), pasted lines.
  */
 
-export const SOURCES = ['kakao', 'kakao-pc', 'kakao-csv', 'whatsapp', 'imessage', 'paste']
+export const SOURCES = ['kakao', 'kakao-pc', 'kakao-csv', 'whatsapp', 'imessage', 'meta', 'line', 'paste']
 
 // ── time ─────────────────────────────────────────────────────
 
@@ -301,6 +301,70 @@ export function parsePaste(text) {
   return out
 }
 
+// ── Instagram and Messenger (Meta's "Download your information", JSON) ──
+// { participants: [{ name }], messages: [{ sender_name, timestamp_ms, content, photos, videos, audio_files, call_duration }] }
+// Meta writes UTF-8 text as Latin-1 escapes ("Ã¬Â•Âˆ" for "안"), so each string is decoded back to UTF-8.
+
+function metaText(s) {
+  const t = String(s || '')
+  if (!/[\u00c0-\u00ff][\u0080-\u00bf]/.test(t)) return t
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(Uint8Array.from(t, (c) => c.charCodeAt(0) & 255))
+  } catch {
+    return t
+  }
+}
+
+export function parseMeta(text) {
+  let data
+  try { data = JSON.parse(text) } catch { return [] }
+  const list = Array.isArray(data?.messages) ? data.messages : []
+  const out = []
+  for (const m of [...list].sort((a, b) => (a?.timestamp_ms || 0) - (b?.timestamp_ms || 0))) {
+    if (!m || !m.sender_name || !Number.isFinite(m.timestamp_ms)) continue
+    const d = new Date(m.timestamp_ms)
+    const at = stamp(d.getFullYear(), d.getMonth() + 1, d.getDate(), d.getHours(), d.getMinutes())
+    const who = metaText(m.sender_name)
+    let body = metaText(m.content)
+    if (Number.isFinite(m.call_duration)) {
+      const s = Math.max(0, Math.round(m.call_duration))
+      body = s ? `voice call ${Math.floor(s / 60)}:${pad(s % 60)}` : 'missed voice call'
+    } else if (!body && m.photos?.length) body = 'photo'
+    else if (!body && m.videos?.length) body = 'video'
+    else if (!body && m.audio_files?.length) body = 'voice message'
+    else if (!body && (m.sticker || m.gifs?.length)) body = 'sticker'
+    if (!body) continue
+    push(out, at, who, body)
+  }
+  return out
+}
+
+// ── LINE (.txt "Chat history") ─────────────────────────────────
+// "2024/03/14(Thu)" or "2024.03.14 Thursday" on a line of its own, then "21:12<tab>Emma<tab>hi"
+// (or "오후 9:12", "9:12 PM"). Lines without a tab continue the message before.
+
+const LINE_DAY = /^(\d{4})[./-](\d{1,2})[./-](\d{1,2})(?:\s*\(?[^\d\s)]*\)?)?\s*(?:\S+요일|[A-Za-z]+day)?\s*$/
+const LINE_MSG = new RegExp(`^${AMPM}?\\s*(\\d{1,2}):(\\d{2})\\s*${AMPM}?\\t([^\\t]+)\\t(.*)$`)
+const LINE_HEAD = /^\[LINE\]|^\[라인\]|^Saved on|^저장한 날짜|chat history with|님과의 대화/i
+
+export function parseLine(text) {
+  const out = []
+  let day = null
+  for (const line of clean(text).split('\n')) {
+    if (!line.trim() || LINE_HEAD.test(line.trim())) continue
+    const d = line.trim().match(LINE_DAY)
+    if (d) { day = [d[1], d[2], d[3]]; continue }
+    const m = line.match(LINE_MSG)
+    if (m && day) {
+      const h = to24(m[2], m[1] || m[4])
+      push(out, stamp(day[0], day[1], day[2], h, m[3]), m[5], m[6])
+      continue
+    }
+    cont(out, line)
+  }
+  return out.filter((m) => !SYSTEM.test(m.text))
+}
+
 // ── detect + parse ───────────────────────────────────────────
 
 const PARSERS = {
@@ -309,13 +373,17 @@ const PARSERS = {
   'kakao-csv': parseKakaoCSV,
   whatsapp: parseWhatsApp,
   imessage: parseIMessage,
+  meta: parseMeta,
+  line: parseLine,
   paste: parsePaste,
 }
 
 /** The export format, from the first few hundred lines. */
 export function detect(raw) {
   const text = clean(raw)
+  if (/^\s*\{/.test(text) && /"sender_name"\s*:/.test(text.slice(0, 20000))) return 'meta'
   const head = text.split('\n').filter((l) => l.trim()).slice(0, 300)
+  if (/^\[(LINE|라인)\]/.test(head[0] || '') || head.filter((l) => LINE_MSG.test(l)).length >= 3) return 'line'
   if (/^\s*"?date"?\s*,\s*"?user"?\s*,\s*"?message"?/i.test(head[0] || '')) return 'kakao-csv'
   const score = {
     'kakao-pc': head.filter((l) => PC_MSG.test(l) || PC_SEP.test(l.trim())).length,
@@ -334,11 +402,13 @@ export function detect(raw) {
 export function parseChat(raw, hint = 'auto') {
   const text = clean(raw)
   const detected = detect(text)
+  // Meta's JSON is decoded byte by byte, so it is read before the cleanup that swaps odd spaces
+  const input = (src) => (src === 'meta' ? String(raw).replace(/^\uFEFF/, '') : text)
   let source = PARSERS[hint] ? hint : detected
-  let messages = PARSERS[source](text)
+  let messages = PARSERS[source](input(source))
   if (messages.length < 2 && source !== detected) {
     source = detected
-    messages = PARSERS[source](text)
+    messages = PARSERS[source](input(source))
   }
   const counts = new Map()
   for (const m of messages) counts.set(m.author, (counts.get(m.author) || 0) + 1)

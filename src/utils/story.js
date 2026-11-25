@@ -276,6 +276,39 @@ export const MAX_PINS = 3
  * What changes in the draft when a story comes in: the story itself, letters made in advance
  * from it, and the finding pinned to each of those letters. Returns null for an empty story.
  */
+/**
+ * A later reading of the same chat added to the earlier one: new findings join, ones already there
+ * (same id, or the same words) stay as they were, so nothing the sender pinned moves.
+ */
+export function mergeStories(prev, next) {
+  if (!prev || typeof prev !== 'object') return next
+  if (!next || typeof next !== 'object') return prev
+  const key = (x) => String(x.title || x.text || x.what || '').toLowerCase().replace(/\s+/g, ' ').trim()
+  const join = (a = [], b = []) => {
+    const ids = new Set(a.map((x) => x.id))
+    const words = new Set(a.map(key))
+    return [...a, ...b.filter((x) => x && !ids.has(x.id) && !words.has(key(x)))]
+  }
+  return {
+    ...prev,
+    about: prev.about || next.about || '',
+    callEachOther: prev.callEachOther || next.callEachOther || '',
+    memories: join(prev.memories, next.memories),
+    catchphrases: join(prev.catchphrases, next.catchphrases),
+    partings: join(prev.partings, next.partings),
+    plans: join(prev.plans, next.plans),
+    repair: prev.repair?.how ? prev.repair : next.repair || null,
+    stats: next.stats || prev.stats || null,
+  }
+}
+
+/** A line the sender kept from a search of their chat, as a moment with its own words as evidence. */
+export function momentFromLine(m, i = 0) {
+  const text = String(m.text || '').replace(/\s+/g, ' ').trim()
+  const date = String(m.at || '').slice(0, 10)
+  return { id: `k${date.replace(/-/g, '')}${i}`, title: clip(text, 60), date: isISO(date) ? date : '', place: '', sticker: '', prompt: '', from: 'search', evidence: { quote: clip(text, 120), date: isISO(date) ? date : '' } }
+}
+
 export function draftWithStory(draft, raw) {
   const st = normalizeStory(raw)
   if (!st) return null

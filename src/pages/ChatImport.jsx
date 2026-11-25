@@ -5,7 +5,7 @@ import Mascot from '../components/Mascot'
 import { getDraft, saveDraft } from '../utils/storage'
 import { chatStats, parseChatAsync, pickExcerpts, readChatFile, suggestRoles, withRoles } from '../utils/chat'
 import { clearLocalChat, loadLocalChat, saveLocalChat } from '../utils/chat/local'
-import { draftWithStory, groupCount, normalizeStory, shortDate, statFacts, storyFindings } from '../utils/story'
+import { draftWithStory, groupCount, mergeStories, momentFromLine, normalizeStory, shortDate, statFacts, storyFindings } from '../utils/story'
 import { AIUnavailableError, PaymentRequiredError, SignInRequiredError, findStory } from '../utils/aiService'
 import { getUser } from '../utils/supabase'
 import { track } from '../utils/track'
@@ -30,10 +30,25 @@ const SOURCES = [
     pc: 'On an iPhone you may get a .zip: open it and pick the _chat.txt inside.',
   },
   {
+    id: 'instagram',
+    name: 'Instagram',
+    steps: ['In Instagram: your profile → ☰ → Accounts Center → Your information and permissions → Download your information.', 'Choose Messages, format JSON, and download.', 'Unzip it and open messages/inbox, then the folder with their name.', 'Pick message_1.json here.'],
+  },
+  {
+    id: 'messenger',
+    name: 'Messenger',
+    steps: ['In Facebook: Settings → Accounts Center → Your information and permissions → Download your information.', 'Choose Messages, format JSON, and download.', 'Unzip it and open messages/inbox, then the folder with their name.', 'Pick message_1.json here.'],
+  },
+  {
     id: 'kakao',
     name: 'KakaoTalk',
     steps: ['Open the chat with them.', 'Tap ≡ at the top right, then the ⚙ (설정).', 'Choose “Export chat” (대화 내용 내보내기), then “Text only” (텍스트만 보내기).', 'Save it to Files, then pick it here.'],
     pc: 'On a computer: in the chat window press Ctrl+S (⌘S on a Mac) and pick the saved .txt.',
+  },
+  {
+    id: 'line',
+    name: 'LINE',
+    steps: ['Open the chat with them.', 'Tap ≡ at the top right, then Settings.', 'Choose “Export chat history”.', 'Save the .txt to Files, then pick it here.'],
   },
   {
     id: 'paste',
@@ -44,9 +59,17 @@ const SOURCES = [
 
 const ERRORS = {
   too_large: 'That file is over 30 MB. Export “text only”, without photos, and try again.',
-  zip_unsupported: 'That’s a .zip. Open it on your phone or computer and pick the .txt inside.',
+  zip_unsupported: 'That’s a .zip. Open it on your phone or computer and pick the .txt (or, from Instagram or Messenger, the message_1.json) inside.',
+  too_few: 'We need at least 8 messages from the two of you to read. Check the names above, or bring in a longer chat.',
   empty: 'We couldn’t find messages in that. Check it’s the exported chat (a .txt or .csv), or try Paste.',
   read: 'We couldn’t read that file. Try exporting it again.',
+}
+
+/** A short, stable tag for a chat (from its first message), so a later import of it is recognised. */
+function fingerprint(s) {
+  let h = 2166136261
+  for (const c of String(s)) { h ^= c.codePointAt(0); h = Math.imul(h, 16777619) }
+  return (h >>> 0).toString(36)
 }
 
 const ROLE_LABEL = (toName) => [['me', 'Me'], ['them', toName || 'Them'], ['other', 'Someone else']]
@@ -72,6 +95,8 @@ export default function ChatImport() {
   const [chat, setChat] = useState(saved) // { excerpts, stats, names, source, messages }
   const [found, setFound] = useState(null)
   const fileRef = useRef(null)
+  const [searchMsgs, setSearchMsgs] = useState(null) // the chat with roles, in memory only, for searching while this page is open
+  const [query, setQuery] = useState('')
   const headRef = useRef(null)
 
   useEffect(() => { headRef.current?.focus() }, [step])
@@ -106,12 +131,22 @@ export default function ChatImport() {
 
   const confirmWho = () => {
     const msgs = withRoles(parsed.messages, roles)
+    if (msgs.filter((m) => m.role === 'me' || m.role === 'them').length < 8) return setError(ERRORS.too_few)
+    setError('')
+    // a chat brought in before is recognised by its first message; then only what's new is read again
+    const firstMsg = msgs.find((m) => m.at && m.kind === 'text')
+    const fp = firstMsg ? fingerprint(`${firstMsg.at}|${firstMsg.text}`) : ''
+    const before = getDraft().chatSource
+    const lastAt = msgs.reduce((x, m) => (m.at && m.at > x ? m.at : x), '')
+    const sameChat = !!(fp && before?.fp === fp && before.lastAt)
+    const fresh = sameChat ? msgs.filter((m) => m.at && m.at > before.lastAt) : msgs
+    setSearchMsgs(msgs.filter((m) => m.role === 'me' || m.role === 'them'))
     // the names they gave in the basics let the count find the first time one was used
     const nicknames = String(getDraft().phase2?.nicknames || '').split(/[,·/]| and /).map((x) => x.trim()).filter(Boolean)
     const stats = chatStats(msgs, { nicknames })
     const keyDates = [p1.startDate].filter(Boolean)
-    const { text } = pickExcerpts(msgs, { names, keyDates })
-    const next = { excerpts: text, stats, names, source: parsed.source, messages: parsed.messages.length }
+    const { text } = pickExcerpts(sameChat && fresh.length >= 8 ? fresh : msgs, { names, keyDates })
+    const next = { excerpts: text, stats, names, source: parsed.source, messages: parsed.messages.length, fp, lastAt, ...(sameChat ? { newSince: before.lastAt, newCount: fresh.length } : {}), kept: [] }
     setChat(next)
     saveLocalChat(next)
     setParsed(null) // the full chat isn't kept in memory longer than needed
@@ -123,11 +158,14 @@ export default function ChatImport() {
     setStep('finding')
     try {
       const raw = await findStory({ excerpts: chat.excerpts, stats: chat.stats, names: chat.names, repair })
-      const story = { ...raw, stats: chat.stats }
-      if (!normalizeStory(story)) throw new AIUnavailableError(502)
       const d = getDraft()
+      // a second reading of the same chat adds to the first; kept search lines come along as moments
+      const kept = (chat.kept || []).map(momentFromLine)
+      const read = { ...raw, stats: chat.stats, memories: [...(raw.memories || []), ...kept] }
+      const story = chat.newSince && d.story ? mergeStories(d.story, read) : read
+      if (!normalizeStory(story)) throw new AIUnavailableError(502)
       // letters are made from the story once the box has a plan; before that it waits for the editor
-      saveDraft(d.plan ? draftWithStory(d, story) : { story, storyPending: true })
+      saveDraft({ ...(d.plan ? draftWithStory(d, story) : { story, storyPending: true }), chatSource: { fp: chat.fp || '', lastAt: chat.lastAt || '' } })
       clearLocalChat()
       setFound(story)
       setStep('done')
@@ -193,11 +231,12 @@ export default function ChatImport() {
               </>
             ) : (
               <>
-                <input ref={fileRef} type="file" accept=".txt,.csv,text/plain,text/csv" className="wf-sr" onChange={onFile} tabIndex={-1} aria-hidden="true" />
+                <input ref={fileRef} type="file" accept=".txt,.csv,.json,text/plain,text/csv,application/json" className="wf-sr" onChange={onFile} tabIndex={-1} aria-hidden="true" />
                 <button type="button" className="wf-btn wf-btn--block" onClick={() => fileRef.current?.click()}>Choose the exported file</button>
               </>
             )}
             {error && <p className="wf-error" role="alert">{error}</p>}
+            <p className="wf-fine ci-fine">We need at least 8 messages from the two of you. Photos, videos and voice notes are counted, never opened.</p>
             <p className="wf-fine ci-fine">Only you and {names.them} should be in this chat, or a family group you’re both in. Read how we handle it in our <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</p>
           </>
         )}
@@ -214,7 +253,7 @@ export default function ChatImport() {
         {step === 'who' && parsed && (
           <>
             <h1 className="wf-h1" tabIndex={-1} ref={headRef}>Who is who?</h1>
-            <p className="wf-lede">We found {parsed.messages.length.toLocaleString('en-US')} messages{parsed.from ? `, from ${shortDate(parsed.from)} to ${shortDate(parsed.to)}` : ''}. Tell us which name is you and which is {names.them}.</p>
+            <p className="wf-lede">We found {parsed.messages.length.toLocaleString('en-US')} messages{parsed.from ? `, from ${shortDate(parsed.from)} to ${shortDate(parsed.to)}` : ''}. Tell us which name is you and which is {names.them}. If one of you shows up under two names (a renamed contact), give both the same answer.</p>
             <ul className="ci-who">
               {authors.map((a) => (
                 <li key={a.name} className="wf-card ci-person">
@@ -237,6 +276,7 @@ export default function ChatImport() {
           <>
             <h1 className="wf-h1" tabIndex={-1} ref={headRef}>What your chat already says</h1>
             <p className="wf-lede">{chat.stats.total.toLocaleString('en-US')} messages{chat.stats.spanDays ? ` over ${chat.stats.spanDays.toLocaleString('en-US')} days` : ''}. Counted on this device; nothing has been sent yet.</p>
+            {chat.newSince && <p className="wf-note ci-new">The same chat as before: {(chat.newCount || 0).toLocaleString('en-US')} new messages since {shortDate(chat.newSince.slice(0, 10))}. Only those are read again; what you found before stays.</p>}
             <ul className="ci-facts">
               {facts.map((f) => (
                 <li key={f.id} className="ci-fact">
@@ -245,6 +285,8 @@ export default function ChatImport() {
                 </li>
               ))}
             </ul>
+
+            <ChatSearch messages={searchMsgs} names={chat.names} kept={chat.kept || []} onKeep={(m) => { const next = { ...chat, kept: [...(chat.kept || []), { at: m.at, text: m.text }].slice(-12) }; setChat(next); saveLocalChat(next) }} query={query} setQuery={setQuery} />
 
             <div className="wf-paper ci-next">
               <p className="ci-next-h">Next: the moments behind the numbers</p>
@@ -282,5 +324,51 @@ export default function ChatImport() {
         )}
       </div>
     </FlowFrame>
+  )
+}
+
+/*
+ * Find in your chat: a word or a name, searched on this device only. Up to 30 lines, newest first.
+ * "Keep" saves a line as a moment (its own words as evidence) that goes into the letters with the reading.
+ * The chat itself is never saved for this: after a reload, the file is picked again to search.
+ */
+function ChatSearch({ messages, names, kept, onKeep, query, setQuery }) {
+  const q = query.trim().toLowerCase()
+  const hits = useMemo(() => {
+    if (!messages || q.length < 2) return []
+    const out = []
+    for (let i = messages.length - 1; i >= 0 && out.length < 30; i--) {
+      const m = messages[i]
+      if (m.kind === 'text' && m.text.toLowerCase().includes(q)) out.push(m)
+    }
+    return out
+  }, [messages, q])
+  const keptSet = new Set(kept.map((k) => `${k.at}|${k.text}`))
+  return (
+    <section className="wf-card ci-search" aria-labelledby="ci-search-h">
+      <h2 id="ci-search-h" className="ci-search-h">Find in your chat</h2>
+      {messages ? (
+        <>
+          <label htmlFor="ci-search-q" className="wf-sr">Search your chat</label>
+          <input id="ci-search-q" className="wf-input" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="A place, a word, a name…" />
+          {q.length >= 2 && <p className="wf-note" role="status">{hits.length ? `${hits.length === 30 ? 'The 30 newest' : hits.length} of the lines that say “${query.trim()}”` : `No line says “${query.trim()}”.`}</p>}
+          <ul className="ci-hits">
+            {hits.map((m) => {
+              const k = `${m.at}|${m.text}`
+              return (
+                <li key={k} className="ci-hit">
+                  <span className="ci-hit-meta">{m.role === 'me' ? names.me : names.them}{m.at ? `, ${shortDate(m.at.slice(0, 10))}` : ''}</span>
+                  <span className="ci-hit-text">{m.text.length > 160 ? `${m.text.slice(0, 159)}…` : m.text}</span>
+                  <button type="button" className="wf-btn wf-btn--ghost wf-btn--small" disabled={keptSet.has(k)} onClick={() => onKeep(m)}>{keptSet.has(k) ? 'Kept' : 'Keep'}</button>
+                </li>
+              )
+            })}
+          </ul>
+        </>
+      ) : (
+        <p className="wf-note">Pick the file again to search it. Your chat isn’t kept on this device for searching.</p>
+      )}
+      {kept.length > 0 && <p className="wf-note">{kept.length} kept {kept.length === 1 ? 'line' : 'lines'}. They join your moments when you find them below.</p>}
+    </section>
   )
 }
