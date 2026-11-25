@@ -153,5 +153,40 @@ test('moments with no sticker get one drawn, once, and it shows everywhere', () 
   assert.equal(storyFromDraft({ ...draft, drawnStickers: { 'talk-t0': '<svg>' } }).memories[0].sticker, '', 'only real drawn ids')
 })
 
+// ── plans, evidence and making up (adopted from What Brandon Thinks as letter material) ──
+{
+  const { checkEvidence } = await import('../api/_lib/chatStory.js')
+  const excerpts = '2023-04-02 21:14 Emma: we got so lost lol\n2024-06-02 22:01 Sam: we should go to Lisbon someday\n2024-07-01 23:30 Emma: sending you the sky'
+  const reply = () => ({
+    about: '', callEachOther: '',
+    memories: [{ id: 'bikes', title: 'Bikes', date: '2023-04-02', place: '', sticker: '', prompt: '', evidence: { quote: 'we got so lost lol', date: '2023-04-02' } }],
+    catchphrases: [{ id: 'q', who: 'Emma', text: 'drive safe', evidence: { quote: 'drive safe!!', date: '2024-01-01' } }],
+    partings: [],
+    plans: [{ id: 'lisbon', text: 'Lisbon someday', who: 'Sam', date: '2024-06-02', place: 'Lisbon', evidence: { quote: 'We should go to   Lisbon someday', date: '2024-06-02' } }],
+    repair: { how: 'One of you sends a photo of the sky', evidence: { quote: 'sending you the sky', date: '2024-07-01' } },
+  })
+  test('evidence is kept only when the line is really in the excerpts', () => {
+    const r = checkEvidence(reply(), excerpts)
+    assert.equal(r.memories[0].evidence.quote, 'we got so lost lol')
+    assert.equal(r.catchphrases[0].evidence.quote, '', 'a quote the chat does not hold is dropped')
+    assert.ok(r.plans[0].evidence.quote, 'spacing and case may differ')
+  })
+  test('how they make up is cleared unless the sender asked for it', () => {
+    assert.equal(checkEvidence(reply(), excerpts, false).repair.how, '')
+    assert.equal(checkEvidence(reply(), excerpts, true).repair.how, 'One of you sends a photo of the sky')
+  })
+  test('plans and evidence survive normalizing and become findings and pins', () => {
+    const story = normalizeStory(checkEvidence(reply(), excerpts, true))
+    assert.equal(story.plans[0].text, 'Lisbon someday')
+    assert.equal(story.memories[0].evidence.date, '2023-04-02')
+    const groups = storyFindings(story)
+    const plans = groups.find((g) => g.id === 'plans')
+    assert.equal(plans.items[0].pin.kind, 'plan')
+    assert.ok(groups.find((g) => g.id === 'repair'))
+    assert.equal(cleanPins([plans.items[0].pin])[0].kind, 'plan')
+    assert.equal(storyFindings(normalizeStory(checkEvidence(reply(), excerpts, false))).find((g) => g.id === 'repair'), undefined)
+  })
+}
+
 console.log(failed ? `\n${failed} failed` : '\nall passed')
 process.exit(failed ? 1 : 0)

@@ -29,6 +29,8 @@ export function clip(text, n) {
 const str = (v, n) => (typeof v === 'string' ? clip(v, n) : '')
 const isISO = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s)
 const iso = (s) => (isISO(s) ? s : '')
+/** The chat line a finding stands on, if the reading kept one. */
+const ev = (e) => (e && typeof e === 'object' && str(e.quote, 120) ? { quote: str(e.quote, 120), date: iso(e.date) } : null)
 
 export function normalizeStory(raw) {
   if (!raw || typeof raw !== 'object') return null
@@ -36,12 +38,14 @@ export function normalizeStory(raw) {
   const story = {
     about: str(raw.about, 400),
     callEachOther: str(raw.callEachOther, 80),
-    memories: list(raw.memories).map((m, i) => ({ id: str(m.id, 40) || `m${i}`, title: str(m.title, 80), date: iso(m.date), place: str(m.place, 40), sticker: str(m.sticker, 40), prompt: str(m.prompt, 160) })).filter((m) => m.title),
-    catchphrases: list(raw.catchphrases).map((c, i) => ({ id: str(c.id, 40) || `c${i}`, who: str(c.who, 30), text: str(c.text, 80) })).filter((c) => c.text),
-    partings: list(raw.partings, 12).map((p, i) => ({ id: str(p.id, 40) || `p${i}`, date: iso(p.date), place: str(p.place, 40), what: str(p.what, 60), back: iso(p.back) })).filter((p) => p.date || p.what),
+    memories: list(raw.memories).map((m, i) => ({ id: str(m.id, 40) || `m${i}`, title: str(m.title, 80), date: iso(m.date), place: str(m.place, 40), sticker: str(m.sticker, 40), prompt: str(m.prompt, 160), evidence: ev(m.evidence) })).filter((m) => m.title),
+    catchphrases: list(raw.catchphrases).map((c, i) => ({ id: str(c.id, 40) || `c${i}`, who: str(c.who, 30), text: str(c.text, 80), evidence: ev(c.evidence) })).filter((c) => c.text),
+    partings: list(raw.partings, 12).map((p, i) => ({ id: str(p.id, 40) || `p${i}`, date: iso(p.date), place: str(p.place, 40), what: str(p.what, 60), back: iso(p.back), evidence: ev(p.evidence) })).filter((p) => p.date || p.what),
+    plans: list(raw.plans, 8).map((p, i) => ({ id: str(p.id, 40) || `pl${i}`, text: str(p.text, 80), who: str(p.who, 30), date: iso(p.date), place: str(p.place, 40), evidence: ev(p.evidence) })).filter((p) => p.text),
+    repair: raw.repair && typeof raw.repair === 'object' && str(raw.repair.how, 200) ? { how: str(raw.repair.how, 200), evidence: ev(raw.repair.evidence) } : null,
     stats: raw.stats && typeof raw.stats === 'object' ? raw.stats : null,
   }
-  return story.memories.length || story.catchphrases.length || story.partings.length || story.stats ? story : null
+  return story.memories.length || story.catchphrases.length || story.partings.length || story.plans.length || story.stats ? story : null
 }
 
 /**
@@ -87,6 +91,8 @@ export function storyFromDraft(draft = {}) {
     memories: [...(chat?.memories || []), ...fromTalk].map(withDrawn),
     catchphrases: [...(chat?.catchphrases || []), ...talk.catchphrases],
     partings: chat?.partings || [],
+    plans: chat?.plans || [],
+    repair: chat?.repair || null,
     stats: chat?.stats || null,
     hasChat: !!chat,
     colorWords: [p2.shared, p2.symbols, p2.special, p2.transport, p2.song].map((x) => str(x, 200)).filter(Boolean),
@@ -154,17 +160,29 @@ export function storyFindings(story) {
     {
       id: 'moments',
       title: 'Moments',
-      items: story.memories.map((m) => ({ from: m.from || 'chat', key: `memory:${m.id}`, title: m.title, sub: [m.place, shortDate(m.date)].filter(Boolean).join(' · '), prompt: m.prompt, sticker: m.sticker, pin: { kind: 'memory', ref: m.id, text: m.title, sub: [m.place, shortDate(m.date)].filter(Boolean).join(' · ') } })),
+      items: story.memories.map((m) => ({ from: m.from || 'chat', key: `memory:${m.id}`, evidence: m.evidence || null, title: m.title, sub: [m.place, shortDate(m.date)].filter(Boolean).join(' · '), prompt: m.prompt, sticker: m.sticker, pin: { kind: 'memory', ref: m.id, text: m.title, sub: [m.place, shortDate(m.date)].filter(Boolean).join(' · ') } })),
     },
     {
       id: 'sayings',
       title: 'Things you always say',
-      items: story.catchphrases.map((c) => ({ from: c.from || 'chat', key: `quote:${c.id}`, title: `“${c.text}”`, sub: c.who ? `${c.who} says this a lot` : c.from === 'talk' ? 'Your running joke' : '', pin: { kind: 'quote', ref: c.id, text: c.text, sub: c.who } })),
+      items: story.catchphrases.map((c) => ({ from: c.from || 'chat', key: `quote:${c.id}`, evidence: c.evidence || null, title: `“${c.text}”`, sub: c.who ? `${c.who} says this a lot` : c.from === 'talk' ? 'Your running joke' : '', pin: { kind: 'quote', ref: c.id, text: c.text, sub: c.who } })),
     },
     {
       id: 'goodbyes',
       title: 'Goodbyes before this one',
-      items: story.partings.map((p) => ({ key: `parting:${p.id}`, title: p.what || 'A goodbye', sub: [p.place, shortDate(p.date), p.back && `back ${shortDate(p.back)}`].filter(Boolean).join(' · '), pin: { kind: 'parting', ref: p.id, text: p.what || 'A goodbye', sub: [p.place, shortDate(p.date)].filter(Boolean).join(' · ') } })),
+      items: story.partings.map((p) => ({ key: `parting:${p.id}`, evidence: p.evidence || null, title: p.what || 'A goodbye', sub: [p.place, shortDate(p.date), p.back && `back ${shortDate(p.back)}`].filter(Boolean).join(' · '), pin: { kind: 'parting', ref: p.id, text: p.what || 'A goodbye', sub: [p.place, shortDate(p.date)].filter(Boolean).join(' · ') } })),
+    },
+    {
+      // plans they made for one day (Brandon's "follow-through", kept as promises still ahead)
+      id: 'plans',
+      title: 'Plans you made',
+      items: (story.plans || []).map((p) => ({ key: `plan:${p.id}`, evidence: p.evidence || null, title: p.text, sub: [p.who && `${p.who} said it`, p.place, shortDate(p.date)].filter(Boolean).join(' · '), pin: { kind: 'plan', ref: p.id, text: p.text, sub: [p.place, shortDate(p.date) && `said ${shortDate(p.date)}`].filter(Boolean).join(' · ') } })),
+    },
+    {
+      // only when the sender asked for it before the reading (off by default)
+      id: 'repair',
+      title: 'How you make up',
+      items: story.repair?.how ? [{ key: 'repair:r0', evidence: story.repair.evidence || null, title: story.repair.how, sub: 'Only you see this unless you put it on a letter', pin: { kind: 'repair', ref: 'r0', text: story.repair.how, sub: '' } }] : [],
     },
     {
       id: 'numbers',
@@ -267,7 +285,7 @@ export function draftWithStory(draft, raw) {
   return { story: raw, plan: normalizePlan(plan), capsuleData: caps }
 }
 
-const PIN_KINDS = new Set(['memory', 'quote', 'parting', 'stat'])
+const PIN_KINDS = new Set(['memory', 'quote', 'parting', 'stat', 'plan', 'repair'])
 
 /** Pins as stored on a letter: known kinds, short text, at most three. */
 export function cleanPins(pins) {

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Motif } from './Decor'
-import { MAX_PINS, groupCount, storyFindings } from '../utils/story'
+import { MAX_PINS, groupCount, storyFindings, shortDate } from '../utils/story'
 
 /*
  * "From your chats" in the editor: what we found about the two of them, laid out so the sender can
@@ -9,7 +9,7 @@ import { MAX_PINS, groupCount, storyFindings } from '../utils/story'
  */
 
 const KIND_MARK = { memory: '◆', quote: '“', parting: '↗', stat: '#' }
-const KIND_NAME = { memory: 'A moment', quote: 'Something you say', parting: 'An earlier goodbye', stat: 'A number' }
+const KIND_NAME = { memory: 'A moment', quote: 'Something you say', parting: 'An earlier goodbye', stat: 'A number', plan: 'A plan you made', repair: 'How you make up' }
 
 /** The card on the writing page that opens the panel. */
 export function StoryEntry({ story, onOpen }) {
@@ -107,6 +107,7 @@ export function FindingsPanel({ story, target, pinnedOn, letterFor, onPin, onUnp
                         <span className="we-find-title">{it.title}</span>
                         {it.sub && <span className="we-find-sub">{it.sub}</span>}
                         {it.prompt && <span className="we-find-prompt">{it.prompt}</span>}
+                        {it.evidence?.quote && <span className="we-find-evidence">From your chat{it.evidence.date ? `, ${shortDate(it.evidence.date)}` : ''}: “{it.evidence.quote}”</span>}
                         {on.length > 0 && <span className="we-find-on">On {on.map((t) => `“${t}”`).join(', ')}</span>}
                       </div>
                     </div>

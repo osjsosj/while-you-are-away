@@ -247,3 +247,6 @@
 .we-why-notes .gn-switch[aria-checked='true'] i { transform: translateX(18px); }
 .we-why-notes .gn-switch:focus-visible { outline: 2px solid var(--light, #F0B341); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { .we-why-notes .gn-switch, .we-why-notes .gn-switch i { transition: none; } }
+
+/* The line from their chat a finding stands on, so the sender can check it before pinning */
+.we-find-evidence { margin-top: 6px; padding-left: 10px; border-left: 2px solid var(--paper-line, #DDD5C4); font-size: 13px; line-height: 1.45; color: var(--ink-soft); overflow-wrap: anywhere; }

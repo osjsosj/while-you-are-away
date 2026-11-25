@@ -68,6 +68,7 @@ export default function ChatImport() {
   const [error, setError] = useState('')
   const [parsed, setParsed] = useState(null)
   const [roles, setRoles] = useState({})
+  const [repair, setRepair] = useState(false) // how they make up: read only when the sender asks
   const [chat, setChat] = useState(saved) // { excerpts, stats, names, source, messages }
   const [found, setFound] = useState(null)
   const fileRef = useRef(null)
@@ -121,7 +122,7 @@ export default function ChatImport() {
     setError('')
     setStep('finding')
     try {
-      const raw = await findStory({ excerpts: chat.excerpts, stats: chat.stats, names: chat.names })
+      const raw = await findStory({ excerpts: chat.excerpts, stats: chat.stats, names: chat.names, repair })
       const story = { ...raw, stats: chat.stats }
       if (!normalizeStory(story)) throw new AIUnavailableError(502)
       const d = getDraft()
@@ -247,7 +248,11 @@ export default function ChatImport() {
 
             <div className="wf-paper ci-next">
               <p className="ci-next-h">Next: the moments behind the numbers</p>
-              <p className="ci-next-p">We read a selection of your messages (about {Math.round(chat.excerpts.length / 1000)}k characters, not the whole chat) to find shared moments, things you always say, and the goodbyes before this one. You pick what goes on a letter; nothing goes in the box by itself.</p>
+              <p className="ci-next-p">We read a selection of your messages (about {Math.round(chat.excerpts.length / 1000)}k characters, not the whole chat) to find shared moments, things you always say, plans you made and the goodbyes before this one. Each comes with the line from your chat it stands on. You pick what goes on a letter; nothing goes in the box by itself.</p>
+              <label className="ci-opt">
+                <input id="ci-repair" type="checkbox" checked={repair} onChange={(e) => setRepair(e.target.checked)} />
+                <span><b>Also notice how you make up after a hard day</b> A gentle line about what you do, never who was at fault. Off unless you turn it on.</span>
+              </label>
               {signedIn === false ? (
                 <button type="button" className="wf-btn wf-btn--ink wf-btn--block" onClick={() => navigate('/start?next=/chats')}>Sign in to find our moments</button>
               ) : (

@@ -1,6 +1,6 @@
 import { db } from './_lib/server.js'
 import { allowAI } from './_lib/access.js'
-import { STICKER_LIBRARY, chatRequest, readChatReply } from './_lib/chatStory.js'
+import { STICKER_LIBRARY, chatRequest, readChatReply, checkEvidence } from './_lib/chatStory.js'
 import { STICKER_IDS } from '../src/utils/stickers.js'
 
 /**
@@ -237,7 +237,7 @@ async function imageBlocks(req, refs, max) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { kind, sessionId, messages, phase1, allData, summary, today, images, excerpts, stats, names, story } = req.body || {}
+  const { kind, sessionId, messages, phase1, allData, summary, today, images, excerpts, stats, names, story, repair } = req.body || {}
   if (!['interview', 'companion', 'theme', 'chat'].includes(kind)) return res.status(400).json({ error: 'invalid_kind' })
   // signed in is enough to plan, write and read a chat; paying at handover raises the limits
   const access = await allowAI(req, kind, sessionId)
@@ -280,7 +280,7 @@ export default async function handler(req, res) {
     if (text.length > MAX_EXCERPT_CHARS) return res.status(413).json({ error: 'too_large' })
     const st = JSON.stringify(stats ?? {})
     if (st.length > MAX_STATS_CHARS) return res.status(413).json({ error: 'too_large' })
-    body = chatRequest({ excerpts: text, statsJson: st, names, today: isoToday(today) })
+    body = chatRequest({ excerpts: text, statsJson: st, names, today: isoToday(today), repair: repair === true })
   } else {
     return res.status(400).json({ error: 'invalid_kind' })
   }
@@ -304,7 +304,8 @@ export default async function handler(req, res) {
     if (data.stop_reason === 'refusal') return res.status(502).json({ error: 'refused' })
     if (kind === 'chat') {
       const out = readChatReply(data)
-      return out.story ? res.status(200).json({ text: JSON.stringify(out.story) }) : res.status(502).json({ error: out.error })
+      if (!out.story) return res.status(502).json({ error: out.error })
+      return res.status(200).json({ text: JSON.stringify(checkEvidence(out.story, excerpts, repair === true)) })
     }
     const tool = data.content?.find((b) => b.type === 'tool_use')
     const text = tool ? JSON.stringify(tool.input) : data.content?.find((b) => b.type === 'text')?.text || ''

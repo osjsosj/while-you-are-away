@@ -107,10 +107,11 @@ export function extractComplete(text) {
  * Throws SignInRequiredError when signed out, PaymentRequiredError after the free reading,
  * AIUnavailableError(429) after the paid ones.
  */
-export async function findStory({ excerpts, stats, names }) {
+export async function findStory({ excerpts, stats, names, repair = false }) {
   const small = { ...(stats || {}) }
   delete small.byMonth // the month-by-month counts aren't needed to find moments
-  const text = await callClaude({ kind: 'chat', excerpts, stats: small, names })
+  delete small.byHour // so is the hour-by-hour count
+  const text = await callClaude({ kind: 'chat', excerpts, stats: small, names, repair })
   return JSON.parse(text)
 }
 
