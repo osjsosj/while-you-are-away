@@ -6,9 +6,9 @@ import { StoryHero } from './StoryArt'
  * them for a letter that has Korean in it. */
 const FONT_FAMILIES = {
   tender: 'Fraunces:opsz,wght@9..144,400;9..144,600&family=Gowun+Batang:wght@400;700&family=Nanum+Pen+Script',
-  warm: 'Lora:wght@500;700&family=Source+Sans+3:wght@400;600&family=Kalam&family=Hahmlet:wght@500;700&family=Gowun+Dodum&family=Nanum+Pen+Script',
-  playful: 'Nunito:wght@400;700&family=Patrick+Hand&family=Gowun+Dodum&family=Gaegu:wght@400;700',
-  plain: 'IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Sans+KR:wght@400;600&family=Nanum+Pen+Script',
+  warm: 'Lora:wght@500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Kalam&family=Hahmlet:wght@500;700&family=Nanum+Pen+Script',
+  playful: 'Young+Serif&family=Patrick+Hand&family=Gowun+Batang:wght@400;700&family=Gaegu:wght@400;700',
+  plain: 'Newsreader:opsz,wght@6..72,400;6..72,600&family=Gowun+Batang:wght@400;700&family=Nanum+Pen+Script',
 }
 
 export function useStoryFonts(typeKey) {

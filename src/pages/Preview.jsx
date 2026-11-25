@@ -135,7 +135,7 @@ function PreviewSheet({ item, box, showPostmark, onClose }) {
   }
   return (
     <div className="wb" style={{ minHeight: 0, padding: 0, ...(box.accent ? { '--light': box.accent } : {}) }}>
-      <LetterSheet item={resolved} replies={[]} toName={box.toName} fromName={box.fromName} signature={box.signature} decor={box.decor} paper={box.look?.paper || null} art={box.look?.art} showPostmark={showPostmark} onClose={onClose} onReply={async () => {}} preview />
+      <LetterSheet item={resolved} replies={[]} toName={box.toName} fromName={box.fromName} signature={box.signature} decor={box.decor} paper={box.look?.paper || null} art={box.look?.art} look={box.look || null} partDate={box.partDate} returnDate={box.returnDate} showPostmark={showPostmark} onClose={onClose} onReply={async () => {}} preview />
     </div>
   )
 }

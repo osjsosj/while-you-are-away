@@ -135,3 +135,112 @@
 }
 .wb-sheet--story { position: relative; isolation: isolate; }
 .wb-sheet--story::after { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background-image: var(--sheet-grain-img); opacity: calc(var(--sheet-grain, 0.2) * 0.5); mix-blend-mode: multiply; pointer-events: none; }
+
+/* ── Letter forms (utils/design/letterForm.js, docs/letter-design-rules.md) ───────────────
+   Each form is a piece of real paper made from the letter's own facts. Thin rules, a crease,
+   perforations; no gloss. Composed at 320px first. */
+.lp { --lp-accent: var(--lp-pm); --lpf-hand: var(--lp-hand-face, 'Caveat', 'Segoe Print', cursive); --lpf-title: var(--lp-title-face, 'Literata', Georgia, serif); }
+.lpf-sr { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.lp--form .lp-head { min-height: 0; margin-bottom: 12px; }
+
+/* Sealed: the last letter, centred under their seal */
+.lpf-sealed { display: grid; justify-items: center; gap: 8px; margin: 4px 0 24px; text-align: center; }
+.lpf-sealed .dl-seal { filter: drop-shadow(0 6px 10px rgba(40, 20, 10, .22)); }
+.lpf-sealed-until { margin-top: 8px; font-size: 14px; color: var(--lp-soft); }
+.lpf-sealed-to { font-family: var(--lpf-hand); font-size: 26px; line-height: 1.1; color: var(--lp-ink); }
+.lp--form-sealed .lp-title { text-align: center; font-size: 30px; }
+.lp--form-sealed .lp-body { margin-inline: auto; }
+.lp--form-sealed .lp-foot { justify-content: center; }
+.lp--form-sealed .lp-sign { margin-left: 0; }
+
+/* Diary page: hangs from a margin rule, the day it was written in the hand */
+.lp--form-diary { padding-left: 24px; }
+.lp--form-diary::before { content: ''; position: absolute; top: -8px; bottom: -8px; left: 6px; width: 1.5px; background: color-mix(in srgb, #C8564B 55%, transparent); }
+.lpf-diary { margin: 0 0 16px; }
+.lpf-diary-day { font-family: var(--lpf-hand); font-size: 34px; line-height: 1; color: var(--lp-ink); }
+.lpf-diary-date { margin-top: 8px; font-size: 14px; color: var(--lp-soft); }
+.lp--form-diary .lp-title { font-size: 22px; margin-top: 0; }
+
+/* Ticket: a boarding-pass stub, read left to right */
+.lpf-ticket { display: grid; grid-template-columns: minmax(0, 1fr) 54px; margin: 0 0 24px; border: 1.5px solid color-mix(in srgb, var(--lp-ink) 40%, transparent); border-radius: 10px; background: color-mix(in srgb, var(--lp-paper) 82%, var(--lp-accent)); }
+.lpf-ticket-main { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; margin: 0; padding: 16px 16px 16px 16px; }
+.lpf-ticket-main div { min-width: 0; }
+.lpf-ticket-wide { grid-column: 1 / -1; }
+.lpf-ticket dt { font-size: 10.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--lp-soft); }
+.lpf-ticket dd { margin: 2px 0 0; font-family: var(--lpf-title); font-size: 18px; line-height: 1.2; overflow-wrap: anywhere; color: var(--lp-ink); }
+.lpf-ticket-stub { position: relative; display: grid; place-items: center; border-left: 2px dashed color-mix(in srgb, var(--lp-ink) 30%, transparent); }
+.lpf-ticket-stub span { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--lp-accent); }
+
+/* Envelope: the reason written on its front, the flap open above the sheet */
+.lpf-envelope { position: relative; margin: 0 0 24px; }
+.lpf-envelope-front { position: relative; z-index: 1; display: grid; gap: 16px; padding: 32px 16px 16px; border-radius: 6px; background: color-mix(in srgb, var(--lp-paper) 82%, var(--lp-accent)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--lp-ink) 14%, transparent); }
+.lpf-envelope-flap { position: absolute; z-index: 2; left: 0; right: 0; top: 0; height: 26px; background: color-mix(in srgb, var(--lp-paper) 72%, var(--lp-accent)); clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.lpf-envelope-reason { font-family: var(--lpf-hand); font-size: 30px; line-height: 1.15; text-align: center; text-wrap: balance; overflow-wrap: anywhere; color: var(--lp-ink); }
+.lpf-envelope-reason span { display: block; font-size: .62em; color: var(--lp-soft); }
+.lpf-envelope-addr { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 13px; color: var(--lp-soft); }
+
+/* Folded note: creased in four, in the hand */
+.lp--form-folded { background-image: linear-gradient(to right, transparent calc(50% - .5px), color-mix(in srgb, var(--lp-ink) 9%, transparent) 50%, transparent calc(50% + .5px)), linear-gradient(to bottom, transparent calc(50% - .5px), color-mix(in srgb, var(--lp-ink) 9%, transparent) 50%, transparent calc(50% + .5px)); }
+.lp--form-folded .lp-body { font-family: var(--lpf-hand); font-size: calc(var(--lp-size, 18px) * 1.2); line-height: 1.5; }
+.lp--form-folded .lp-title { font-family: var(--lpf-hand); font-size: 30px; }
+
+/* Card: a greeting card set on its day */
+.lpf-card { margin: 0 0 8px; padding-bottom: 12px; border-bottom: 1px solid var(--lp-line); text-align: center; }
+.lpf-card-day { font-size: 14px; color: var(--lp-soft); }
+.lp--form-card .lp-title { text-align: center; font-size: 32px; }
+
+/* Saying: the words one of them always says, on a taped note */
+.lpf-saying { position: relative; margin: 8px 0 24px; padding: 24px 20px 16px; background: var(--note, #FFF6C9); transform: rotate(-1.2deg); box-shadow: 0 8px 14px -10px rgba(40, 28, 16, .45); }
+.lpf-saying::before { content: ''; position: absolute; top: -9px; left: 50%; width: 64px; height: 18px; transform: translateX(-50%) rotate(2deg); background: var(--lp-tape); }
+.lpf-saying blockquote { margin: 0; font-family: var(--lpf-hand); font-size: 32px; line-height: 1.15; text-wrap: balance; color: #2B2420; overflow-wrap: anywhere; }
+.lpf-saying figcaption { margin-top: 8px; font-size: 13px; color: #5E554B; }
+.lpf-saying figcaption::before { content: '— '; }
+
+/* Postcard: the moment as the picture side, the address side with stamp and postmark */
+.lpf-postcard { display: grid; gap: 16px; margin: 0 0 24px; padding-bottom: 16px; border-bottom: 1px solid var(--lp-line); }
+.lpf-postcard-pic { position: relative; min-width: 0; }
+.lpf-postcard-sticker { float: right; margin: -4px 0 4px 12px; }
+.lpf-postcard--left .lpf-postcard-sticker { float: left; margin: -4px 12px 4px 0; }
+.lpf-postcard-title { font-family: var(--lpf-hand); font-size: 32px; line-height: 1.08; text-wrap: balance; overflow-wrap: anywhere; color: var(--lp-ink); }
+.lpf-postcard-where { clear: both; margin-top: 8px; font-size: 14px; color: var(--lp-soft); }
+.lpf-postcard-addr { display: grid; align-content: start; gap: 8px; min-width: 0; }
+.lpf-postcard-marks { position: relative; display: flex; justify-content: flex-end; align-items: flex-start; min-height: 58px; }
+.lpf-postcard-marks .dc-stamp { transform: rotate(3deg); filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .15)); }
+.lpf-postcard-pm { position: absolute; top: -10px; right: 28px; color: var(--lp-pm); opacity: .8; transform: rotate(-10deg); mix-blend-mode: multiply; }
+.lpf-postcard-line { padding: 0 0 4px; border-bottom: 1px solid color-mix(in srgb, var(--lp-ink) 26%, transparent); font-family: var(--lpf-hand); font-size: 22px; line-height: 1.2; overflow-wrap: anywhere; }
+.lpf-postcard-line--soft { font-size: 18px; color: var(--lp-soft); }
+@media (min-width: 440px) {
+  .lpf-postcard { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 0; }
+  .lpf-postcard-pic { padding-right: 16px; }
+  .lpf-postcard-addr { padding-left: 16px; border-left: 1px solid color-mix(in srgb, var(--lp-ink) 22%, transparent); }
+  .lpf-postcard--right .lpf-postcard-pic { order: 2; padding: 0 0 0 16px; }
+  .lpf-postcard--right .lpf-postcard-addr { order: 1; padding: 0 16px 0 0; border-left: 0; border-right: 1px solid color-mix(in srgb, var(--lp-ink) 22%, transparent); }
+}
+
+/* Tally: their numbers set like a receipt */
+.lpf-tally { width: 100%; margin: 0 0 24px; border-collapse: collapse; border-block: 1.5px dashed color-mix(in srgb, var(--lp-ink) 35%, transparent); font-variant-numeric: tabular-nums; }
+.lpf-tally tr { display: block; padding: 12px 0; }
+.lpf-tally tr + tr { border-top: 1px dotted color-mix(in srgb, var(--lp-ink) 24%, transparent); }
+.lpf-tally th, .lpf-tally td { display: block; padding: 0; text-align: left; }
+.lpf-tally th { font-family: var(--lpf-title); font-size: 24px; font-weight: 500; line-height: 1.15; overflow-wrap: anywhere; color: var(--lp-ink); }
+.lpf-tally td { margin-top: 4px; font-size: 14px; line-height: 1.35; color: var(--lp-soft); }
+@media (min-width: 440px) {
+  .lpf-tally tr { display: grid; grid-template-columns: minmax(0, 11em) minmax(0, 1fr); gap: 16px; align-items: baseline; }
+  .lpf-tally td { margin-top: 0; }
+}
+
+/* Alignment belongs to the form: real paper of these kinds reads from the left; only the sealed letter,
+   the card and the envelope centre (docs/letter-design-rules.md § 6). */
+.lp--form:is(.lp--form-ticket, .lp--form-postcard, .lp--form-saying, .lp--form-tally, .lp--form-diary, .lp--form-folded) :is(.lp-title, .lp-prompt, .lp-body) { text-align: left; margin-inline: 0; }
+.lp--form:is(.lp--form-ticket, .lp--form-postcard, .lp--form-saying, .lp--form-tally, .lp--form-diary, .lp--form-folded) .lp-body p { text-wrap: pretty; }
+.lp--form-envelope :is(.lp-body) { text-align: center; margin-inline: auto; }
+
+/* Leaf: one page of their own calendar, the weeks already behind them filled in */
+.lpf-leaf { display: grid; gap: 12px; margin: 0 0 20px; }
+.lpf-leaf-weeks { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.lpf-leaf-weeks li { width: 14px; height: 14px; border-radius: 3px; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--lp-ink) 32%, transparent); }
+.lpf-leaf-weeks li.is-gone { background: color-mix(in srgb, var(--lp-ink) 55%, transparent); box-shadow: none; }
+.lpf-leaf-weeks li.is-now { background: var(--lp-accent); box-shadow: none; }
+.lpf-leaf-left { font-size: 14px; color: var(--lp-soft); }
+.lp--form-leaf :is(.lp-title, .lp-body) { text-align: left; margin-inline: 0; }
+.lp--form-leaf .lp-title { font-size: 30px; }

@@ -10,6 +10,7 @@ import Moon from '../components/Moon'
 import { moonOn } from '../utils/sky'
 import { filmFrom } from '../utils/film'
 import { postmarkLetterId } from '../utils/decor'
+import { letterForm } from '../utils/design/letterForm'
 import LetterPaper from '../components/LetterPaper'
 import { Motif } from '../components/Decor'
 import LetterApp from './box/LetterApp'
@@ -159,6 +160,9 @@ export default function Box() {
           decor={box.decor}
           paper={box.look?.paper || null}
           art={box.look?.art}
+          look={box.look || null}
+          partDate={box.partDate}
+          returnDate={box.returnDate}
           showPostmark={current.id === postmarkLetterId(items)}
           onClose={() => setOpenId(null)}
           onReply={async (body) => {
@@ -243,7 +247,7 @@ export function LetterSheet({ art = 'flat', ...props }) {
   )
 }
 
-function LetterSheetBody({ item, replies, toName, fromName, signature = null, decor = null, paper = null, showPostmark = false, onClose, onReply, preview = false }) {
+function LetterSheetBody({ item, replies, toName, fromName, signature = null, decor = null, paper = null, look = null, partDate = null, returnDate = null, showPostmark = false, onClose, onReply, preview = false }) {
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -278,6 +282,7 @@ function LetterSheetBody({ item, replies, toName, fromName, signature = null, de
   }
 
   const style = decor?.style || 'night'
+  const form = letterForm(item, { fromName, toName, partDate, returnDate, nickname: look?.seal?.text, seal: look?.seal, stamps: look?.stamps })
   const meta = item.section === 'before' ? `${item.stamp} · ${item.date}` : item.opensOn ? formatLong(item.opensOn) : SECTION_TITLES[item.section] || ''
 
   return (
@@ -296,6 +301,7 @@ function LetterSheetBody({ item, replies, toName, fromName, signature = null, de
           letter={item.letter}
           stickers={item.stickers || []}
           pins={item.pins || []}
+          form={form}
           photoUrl={item.photo?.url}
           videoUrl={item.video?.url}
           voiceUrl={item.voice?.url}

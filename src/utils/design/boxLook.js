@@ -9,6 +9,7 @@
  *  - the pattern is their months of messages, which the recipient was half of
  * The trace (which fact made which choice) stays with the sender. Pure: runs on the server too.
  */
+import { letterForm } from './letterForm.js'
 import { designFromStory, appTheme, mix } from './storyDesign.js'
 import { storyFromDraft } from '../story.js'
 
@@ -69,6 +70,7 @@ export function boxLook(draft, items, isOpen) {
       lines: spec.paper.lines,
       stain: spec.paper.stain,
       faces: { title: spec.type.title, body: spec.type.body, hand: spec.type.hand },
+      accent: spec.palette.accent,
     },
   }
 }
@@ -83,5 +85,21 @@ export function explainLook(draft, written) {
   const spec = designFromStory(st, Number(draft.lookVariant) || 0)
   const look = boxLook(draft, written, () => true)
   // only what the box actually shows (the lab also tries per-letter decorations, edges and a goodbye map)
-  return { look, lines: spec.trace.filter((t) => !/^The letter /.test(t.info) && !/edge$|map of your goodbyes/.test(t.design)) }
+  const lines = spec.trace.filter((t) => !/^The letter /.test(t.info) && !/edge$|map of your goodbyes/.test(t.design))
+  return { look, lines: [...lines, ...formLines(draft, written, look)] }
+}
+
+/** One line per letter form the box uses, from the first letter that called for it (docs/letter-design-rules.md § 1). */
+function formLines(draft, written, look) {
+  const p1 = draft.phase1 || {}
+  const ctx = { fromName: p1.fromName, toName: p1.toName, partDate: p1.startDate, returnDate: p1.endDate, nickname: look?.seal?.text, seal: look?.seal, stamps: look?.stamps }
+  const seen = new Map()
+  for (const it of written) {
+    const f = letterForm({ ...it, pins: it.content?.pins || [] }, ctx)
+    if (f.form === 'classic' || !f.why[0]) continue
+    const e = seen.get(f.form)
+    if (e) e.n++
+    else seen.set(f.form, { ...f.why[0], n: 1 })
+  }
+  return [...seen.values()].map((w) => ({ info: w.n > 1 ? `${w.info}, and ${w.n - 1} more like it` : w.info, design: w.design }))
 }

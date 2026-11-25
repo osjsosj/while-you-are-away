@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { Motif, Stamp, Postmark, TicketBanner } from './Decor'
+import FormHead from './LetterForms'
 import { paperVars } from '../utils/design/paperStyle'
 import '../styles/decor.css'
 
 /*
  * One letter on paper, dressed by the letter box's decorations.
  * Reading comes first: decorations sit in the header and footer, never over the words.
+ * `form` (utils/design/letterForm.js) picks the paper's composition from what the letter carries:
+ * a postcard, a ticket, an envelope, a diary page… Without it the letter is the classic sheet.
  */
 
 const SIZES = [16, 18, 21]
@@ -20,13 +23,17 @@ function paragraphs(text) {
 
 export default function LetterPaper({
   decor, title, titleId, meta, prompt, letter, photoUrl, videoUrl, voiceUrl, fromName,
-  signature, note, showPostmark = false, isTicket = false, textSizeControl = true, celebrate = false, stickers = [], pins = [], paper = null,
+  signature, note, showPostmark = false, isTicket = false, textSizeControl = true, celebrate = false, stickers = [], pins = [], paper = null, form = null,
 }) {
   const d = decor || { style: 'night', motifs: [], postmark: null, ticket: null, tape: true }
   const [size, setSize] = useState(readSize)
   const [unfolded, setUnfolded] = useState(false)
   const setTextSize = (n) => { setSize(n); try { localStorage.setItem('wya_text_size', String(n)) } catch { /* private mode */ } }
   const lead = d.motifs[0]?.id
+  const f = form && form.form !== 'classic' ? form : null
+  const ownMarks = f && ['postcard', 'ticket', 'sealed', 'envelope', 'diary'].includes(f.form)
+  const showMeta = !f || !['diary', 'sealed', 'ticket', 'card', 'envelope'].includes(f.form)
+  const shownPins = f ? f.pins : pins
   const paras = paragraphs(letter)
   // this letter's own stickers (from what it says) first, then the box's
   const scatter = [...stickers.map((id) => ({ id })), ...d.motifs].filter((m, i, a) => a.findIndex((x) => x.id === m.id) === i).slice(0, 3)
@@ -42,30 +49,35 @@ export default function LetterPaper({
   )
 
   return (
-    <div className={`lp lp--${d.style} lp--${layout}${paper ? ` lp--story lp--lines-${paper.lines}` : ''}`} style={{ '--lp-size': `${size}px`, ...paperVars(paper) }}>
+    <div className={`lp lp--${d.style} lp--${layout}${paper ? ` lp--story lp--lines-${paper.lines}` : ''}${f ? ` lp--form lp--form-${f.form}` : ''}`} style={{ '--lp-size': `${size}px`, ...paperVars(paper) }}>
       {celebrate && (
         <div className="lp-pop" aria-hidden="true">
           <Motif id="birthday-cake" size={64} className="lp-pop-cake" />
           {Array.from({ length: 18 }, (_, i) => <i key={i} style={{ '--a': `${(i * 360) / 18}deg`, '--d': `${70 + (i % 4) * 26}px`, '--c': ['#F0B341', '#E07A7A', '#7FC4D9', '#9FCB9A', '#B9A4E8'][i % 5] }} />)}
         </div>
       )}
+      {showMeta && (
       <div className="lp-head">
         <div className="lp-meta">
           {d.style === 'flowers' && <Motif id="blossom" size={44} className="lp-pressed" />}
           {d.style === 'night' && <span className="lp-twinkle" aria-hidden="true">✦</span>}
           <span>{meta}</span>
         </div>
+        {!ownMarks && (
         <div className="lp-marks">
           {!isTicket && lead && <Stamp id={lead} text={fromName ? `from ${fromName}` : ''} size={50} />}
           {showPostmark && d.postmark && <span className="lp-postmark"><Postmark place={d.postmark.place} date={d.postmark.date} size={88} /></span>}
         </div>
+        )}
       </div>
+      )}
 
-      {isTicket && d.ticket && <TicketBanner ticket={d.ticket} />}
+      {f && <FormHead form={f} meta={meta} />}
+      {isTicket && d.ticket && f?.form !== 'ticket' && <TicketBanner ticket={d.ticket} />}
 
-      <h2 className="lp-title" id={titleId}>{title}</h2>
+      <h2 className={f?.form === 'envelope' ? 'lp-title lpf-sr' : 'lp-title'} id={titleId}>{title}</h2>
       {prompt && <p className="lp-prompt">{prompt}</p>}
-      <Pins pins={pins} />
+      <Pins pins={shownPins} />
 
       {textSizeControl && chars > 400 && (
         <div className="lp-size" role="group" aria-label="Text size">

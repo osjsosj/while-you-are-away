@@ -30,7 +30,7 @@ export const stickerLabel = (id) => {
 /* Which words may call up a sticker on their own. Precision matters more than reach: a wrong sticker
    ("stop sign" for "two more stops") is worse than none. A sticker answers to its full name, to the
    words people use for it (aliases), and to its main noun when the name is short ("cake" → birthday cake). */
-const GENERIC = new Set(['with', 'face', 'and', 'the', 'place', 'button', 'symbol', 'sign', 'mark', 'medium', 'small', 'large', 'white', 'black', 'seat', 'window', 'door', 'open', 'closed', 'high', 'top', 'down', 'back', 'old', 'hand', 'hands', 'person', 'man', 'woman', 'light', 'new', 'way', 'letter', 'left', 'right', 'tilted', 'stop', 'clock', 'oclock', 'day', 'night', 'time', 'house', 'box', 'card', 'bag', 'home', 'love'])
+const GENERIC = new Set(['with', 'face', 'and', 'the', 'place', 'button', 'symbol', 'sign', 'mark', 'medium', 'small', 'large', 'white', 'black', 'seat', 'window', 'door', 'open', 'closed', 'high', 'top', 'down', 'back', 'old', 'hand', 'hands', 'person', 'man', 'woman', 'light', 'new', 'way', 'letter', 'left', 'right', 'tilted', 'stop', 'clock', 'oclock', 'day', 'night', 'time', 'house', 'box', 'card', 'bag', 'home', 'love', 'park', 'done', 'away', 'dashing', 'over', 'first', 'last', 'next', 'red', 'blue', 'green', 'yellow', 'one', 'two', 'three', 'four', 'food'])
 let terms = null
 function stickerTerms() {
   if (terms) return terms

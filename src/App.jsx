@@ -23,6 +23,7 @@ import Box from './pages/Box'
 // design lab: only in local development, never in the built site
 const DesignLab = import.meta.env.DEV ? lazy(() => import('./pages/lab/DesignLab')) : null
 const LabPhone = import.meta.env.DEV ? lazy(() => import('./pages/lab/LabPhone')) : null
+const LetterLab = import.meta.env.DEV ? lazy(() => import('./pages/lab/LetterLab')) : null
 
 /* Page views on every route change. Recipient boxes (/b/...) are reported by the box itself, without a visitor id. */
 function Tracker() {
@@ -61,6 +62,7 @@ export default function App() {
         <Route path="/privacy" element={<Legal doc="privacy" />} />
         <Route path="/refunds" element={<Legal doc="refunds" />} />
         {DesignLab && <Route path="/lab/design" element={<Suspense fallback={null}><DesignLab /></Suspense>} />}
+        {LetterLab && <Route path="/lab/letters" element={<Suspense fallback={null}><LetterLab /></Suspense>} />}
         {LabPhone && <Route path="/lab/phone/:key" element={<Suspense fallback={null}><LabPhone /></Suspense>} />}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

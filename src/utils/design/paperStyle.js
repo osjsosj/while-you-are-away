@@ -34,5 +34,6 @@ export function paperVars(paper) {
     '--lp-title-face': paper.faces.title,
     '--lp-body-face': paper.faces.body,
     '--lp-hand-face': paper.faces.hand,
+    ...(paper.accent ? { '--lp-accent': paper.accent } : {}),
   }
 }

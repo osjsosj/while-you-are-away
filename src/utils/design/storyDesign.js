@@ -112,13 +112,14 @@ const BASE = {
   quiet: { bg: '#E4E1DA', paper: '#FFFFFF', ink: '#1E1E1E', dark: false },
 }
 
-/** Type pairings: a title face, a body face and a hand. English faces first; a Korean face follows in each stack
+/** Type pairings: a title face, a body face and a hand, always a book serif or a hand (never a sans:
+ * the sender's words must not look like the product talking). English faces first; a Korean face follows in each stack
  * and is only fetched when a letter has Korean in it (Google Fonts serves it by unicode range). */
 export const TYPE = {
   tender: { title: "'Fraunces', 'Gowun Batang', 'Literata', serif", body: "'Literata', 'Gowun Batang', serif", hand: "'Caveat', 'Nanum Pen Script', cursive", label: 'Fraunces + Caveat' },
-  warm: { title: "'Lora', 'Hahmlet', 'Literata', serif", body: "'Source Sans 3', 'Gowun Dodum', system-ui, sans-serif", hand: "'Kalam', 'Nanum Pen Script', cursive", label: 'Lora + Kalam' },
-  playful: { title: "'Nunito', 'Gowun Dodum', system-ui, sans-serif", body: "'Nunito', 'Gowun Dodum', system-ui, sans-serif", hand: "'Patrick Hand', 'Gaegu', cursive", label: 'Nunito + Patrick Hand' },
-  plain: { title: "'IBM Plex Sans', 'IBM Plex Sans KR', 'Schibsted Grotesk', sans-serif", body: "'IBM Plex Sans', 'IBM Plex Sans KR', system-ui, sans-serif", hand: "'Caveat', 'Nanum Pen Script', cursive", label: 'IBM Plex Sans + Caveat' },
+  warm: { title: "'Lora', 'Hahmlet', 'Literata', serif", body: "'Source Serif 4', 'Hahmlet', 'Literata', serif", hand: "'Kalam', 'Nanum Pen Script', cursive", label: 'Lora + Kalam' },
+  playful: { title: "'Young Serif', 'Gowun Batang', 'Literata', serif", body: "'Literata', 'Gowun Batang', serif", hand: "'Patrick Hand', 'Gaegu', cursive", label: 'Young Serif + Patrick Hand' },
+  plain: { title: "'Newsreader', 'Gowun Batang', 'Literata', serif", body: "'Newsreader', 'Gowun Batang', 'Literata', serif", hand: "'Caveat', 'Nanum Pen Script', cursive", label: 'Newsreader + Caveat' },
 }
 const ART_NAMES = { flat: 'flat', color: 'soft color', noto: 'rounded', twemoji: 'bright' }
 const TYPE_FOR = { partner: 'tender', parent: 'warm', child: 'warm', sibling: 'playful', friend: 'playful' }
