@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import SiteLayout from './SiteLayout'
 import { CONTACT, STEPS } from './content'
-import { StepFragment } from './Fragments'
+import { Phone } from './Scenes'
 
 const TOPICS = ['A question before I start', 'Help with my letter box', 'A refund', 'Something else']
 
@@ -66,7 +66,8 @@ export default function Contact() {
         <ul className="ct-shots">
           {STEPS.map((s) => (
             <li key={s.title} data-rise>
-              <StepFragment kind={s.frag} />
+              {/* each step's own screen, the same ones the services page shows */}
+              <Phone className="ct-phone"><img src={`/site/shots/${s.shot}.webp`} width="390" height="844" alt={s.alt} loading="lazy" /></Phone>
               <p>{s.title}</p>
             </li>
           ))}
