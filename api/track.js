@@ -16,6 +16,8 @@ function db() {
 const NAMES = new Set([
   'page_view', 'cta_start', 'interview_step', 'interview_done', 'checkout_start', 'ai_start', 'plan_ready',
   'box_dressed', 'diary_entry', 'link_made', 'link_copied', 'link_shared', 'box_opened', 'reply_sent',
+  // sign-in and chat import steps, and remaking a link: sent by the app, dropped until 2026-11-25
+  'sign_in_start', 'sign_in_done', 'chat_parsed', 'chat_story_found', 'chat_offer_taken', 'link_remade',
 ])
 const PROP_KEYS = new Set(['where', 'step', 'kind'])
 const clip = (v, n = 60) => (typeof v === 'string' ? v.replace(/[^\w\-./:+ ]/g, '').slice(0, n) : null)
