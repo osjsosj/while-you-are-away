@@ -64,6 +64,8 @@ export default function Interview() {
     }
   })
   const [step, setStep] = useState(0)
+  // someone who got a box and is now making one back: the first question says whose turn it is
+  const [madeBack] = useState(() => !!getDraft().madeBack)
   const [dir, setDir] = useState(1)
   const [reply, setReply] = useState('')
   const [tried, setTried] = useState(false)
@@ -141,7 +143,7 @@ export default function Interview() {
   }
 
   const progress = Math.min(1, step / (steps.length - 2))
-  const bubble = key === 'building' ? 'Creating your profile…' : key === 'promise' ? 'This isn’t just an online letter.' : reply || ASK[key]
+  const bubble = key === 'building' ? 'Creating your profile…' : key === 'promise' ? 'This isn’t just an online letter.' : reply || (key === 'reason' && madeBack && form.toName ? `Your turn to write for ${form.toName}. What’s taking you two apart?` : ASK[key])
   // asking → talk, answered → notice, making the profile → walk, the promise → cheer (once)
   const move = key === 'building' ? 'walk' : key === 'promise' ? 'cheer' : reply ? 'notice' : 'talk'
   const center = key === 'building' || key === 'promise'

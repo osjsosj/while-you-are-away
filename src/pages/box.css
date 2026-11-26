@@ -162,3 +162,4 @@
 .wb-perigan:hover:not(:disabled) { transform: translateY(-4px); }
 .wb-perigan:active:not(:disabled) { transform: translateY(2px) scale(.98); }
 .wb-perigan:disabled { cursor: default; }
+.wb-back { margin-top: 20px; border-top: 1px solid rgba(233, 236, 242, 0.12); }

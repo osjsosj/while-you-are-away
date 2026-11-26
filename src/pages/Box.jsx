@@ -1,6 +1,7 @@
 import { track } from '../utils/track'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
+import { getDraft, saveDraft } from '../utils/storage'
 import { localISODate, formatLong } from '../utils/diary'
 import Dog from '../components/pets/Dog'
 import Cat from '../components/pets/Cat'
@@ -157,7 +158,7 @@ export default function Box() {
         film={film}
         onFilm={film ? () => setPlaying(true) : null}
         onOpen={(id) => { setOpenId(id); markOpened(id) }}
-        story={<><OurSky ids={opened} /><Story box={box} token={token} today={today} /></>}
+        story={<><OurSky ids={opened} /><Story box={box} token={token} today={today} /><WriteBack box={box} opened={opened.length} /></>}
       />
       <InstallHint token={token} />
       {current && (
@@ -408,6 +409,29 @@ export function Story({ box, token, today: day }) {
       )}
       {!box.decor?.song && !box.partDate && !box.pet && box.timeline.length === 0 && <p className="wb-note">Nothing here yet.</p>}
     </>
+  )
+}
+
+/** After a few letters, the recipient can make a box of their own for the sender. Their names are filled in on this phone only. */
+export function WriteBack({ box, opened, preview = false }) {
+  const navigate = useNavigate()
+  const them = (box.fromName || '').trim()
+  if (opened < 2 || !them) return null
+  const start = () => {
+    if (preview) return
+    const d = getDraft()
+    const p = d.phase1 || {}
+    // never touch a box this phone is already making
+    if (!p.toName && !p.fromName) saveDraft({ phase1: { ...p, toName: them, fromName: (box.toName || '').trim() }, madeBack: true })
+    track('make_back', { where: 'box_story' }, { anon: false })
+    navigate('/interview?utm_source=box&utm_medium=make_back')
+  }
+  return (
+    <section className="wb-section wb-back" aria-labelledby="wb-back-title">
+      <h2 id="wb-back-title">Letters for {them}</h2>
+      <p className="wb-quiet">{them} wrote these for your time apart. You can write some back, for {them} to open on the days you pick. Every word stays yours. Free to start.</p>
+      <button type="button" className="wb-btn wb-btn--light" onClick={start}>Write letters for {them}</button>
+    </section>
   )
 }
 
