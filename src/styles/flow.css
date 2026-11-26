@@ -235,3 +235,15 @@
 .ai-chat-offer-h { margin-bottom: 6px; font-family: var(--serif); font-size: 19px; line-height: 1.3; color: #F4F1E6; }
 .ai-chat-offer-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
 .ai-chat-offer-btns .wf-btn { flex: 1 1 140px; }
+
+/* paywall: the two ways to hand it over */
+.pw-tiers { display: flex; flex-direction: column; gap: 10px; margin: 0 0 12px; padding: 0; border: 0; min-width: 0; }
+.pw-tiers legend { margin-bottom: 8px; padding: 0; }
+.pw-tier { display: flex; gap: 12px; align-items: flex-start; padding: 14px 14px; border-radius: 12px; border: 1.5px solid #CBD2DC; background: #fff; cursor: pointer; }
+.pw-tier.is-on { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+.pw-tier input { flex: none; width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--ink); }
+.pw-tier-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.pw-tier-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.pw-tier-name { font-weight: 600; font-size: 16px; line-height: 1.3; color: var(--ink); }
+.pw-tier-price { flex: none; font-family: var(--serif); font-size: 22px; line-height: 1; color: var(--ink); }
+.pw-tier-line { font-size: 14px; line-height: 1.5; color: var(--ink-soft); }

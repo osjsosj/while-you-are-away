@@ -20,7 +20,7 @@ export const DOCS = {
         'You must be at least 18 to buy a letter box. Recipients can be any age; if you write to a child, you are responsible for what you send them.',
       ]],
       ['Price and payment', [
-        `A letter box costs ${PRICE}, paid once. There is no subscription and nothing renews. Payments are processed by Stripe; we never see or store your card number.`,
+        `A letter box costs ${PRICE}, paid once, or $19.99 with the keepsake book (every letter and reply gathered into a book to print or save as a PDF). The keepsake book can also be added later for $10. There is no subscription and nothing renews. Payments are processed by Stripe; we never see or store your card number.`,
         'One payment covers one letter box for one recipient, including the planning conversation, the writing companion (up to a fair-use limit of 300 messages), and hosting as described below.',
       ]],
       ['Refunds', [
@@ -105,7 +105,7 @@ export const DOCS = {
     intro: 'Writing these letters takes a lot of you. If it isn’t right for you, you shouldn’t pay for it.',
     sections: [
       ['14 days, any reason', [
-        `Within 14 days of your purchase, you can get a full refund of the ${PRICE}, for any reason. Email ${CONTACT} from the address you used at checkout (or include it), and tell us it’s a refund request. You don’t have to explain.`,
+        `Within 14 days of your purchase, you can get a full refund of what you paid, for any reason. Email ${CONTACT} from the address you used at checkout (or include it), and tell us it’s a refund request. You don’t have to explain.`,
       ]],
       ['After 14 days', [
         'After 14 days we generally don’t refund, because your letter box is being kept and delivered over many months. But if something on our side stopped it from working and we can’t fix it, we’ll refund you in full, at any time.',

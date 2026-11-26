@@ -9,20 +9,39 @@ function stripe() {
   return stripeClient
 }
 
-const paidCache = new Set() // per warm instance: skip re-asking Stripe about a session we already saw paid
+const tierCache = new Map() // per warm instance: skip re-asking Stripe about a session we already saw paid
 
-export async function isPaid(sessionId) {
-  if (typeof sessionId !== 'string' || !sessionId.startsWith('cs_')) return false
-  if (paidCache.has(sessionId)) return true
+/**
+ * What a checkout session paid for: 'keepsake' (the letter box with the keepsake book, or the keepsake added later),
+ * 'box' (the letter box), or null (not paid, not ours, or Stripe unreachable).
+ */
+export async function paidTier(sessionId) {
+  if (typeof sessionId !== 'string' || !sessionId.startsWith('cs_')) return null
+  if (tierCache.has(sessionId)) return tierCache.get(sessionId)
   try {
     const session = await stripe().checkout.sessions.retrieve(sessionId)
     // 'no_payment_required' = a 100%-off promotion code (friends, testers) on a completed checkout
     const paid = session.payment_status === 'paid' || (session.status === 'complete' && session.payment_status === 'no_payment_required')
-    if (paid) paidCache.add(sessionId)
-    return paid
+    if (!paid) return null
+    const t = session.metadata?.tier
+    const tier = t === 'keepsake' || t === 'upgrade' ? 'keepsake' : 'box'
+    tierCache.set(sessionId, tier)
+    return tier
   } catch {
-    return false
+    return null
   }
+}
+
+/** A letter box was paid for (either tier). */
+export async function isPaid(sessionId) {
+  return !!(await paidTier(sessionId))
+}
+
+/** Does this sender have the keepsake book: bought with the box, or added later with its own checkout. */
+export async function hasKeepsake(draft = {}, boxSessionId = null) {
+  const main = boxSessionId || draft.paymentSessionId
+  if ((await paidTier(main)) === 'keepsake') return true
+  return !!draft.keepsakeSessionId && (await paidTier(draft.keepsakeSessionId)) === 'keepsake'
 }
 
 let admin = null

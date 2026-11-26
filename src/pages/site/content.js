@@ -2,6 +2,7 @@
 
 export const CONTACT = 'hello@getwhileyouareaway.com'
 export const PRICE = '$9.99'
+export const KEEPSAKE_PRICE = '$19.99'
 
 export const FAQ = [
   { q: 'What if I miss a day of writing?', a: 'They’ll never know. Each entry shows the day it was written, never the days in between. No streaks and no empty pages, just what you had to say.' },
@@ -9,7 +10,7 @@ export const FAQ = [
   { q: 'How early should I start?', a: 'A month before is ideal, but a week is plenty. You can also write everything in one evening. It’s your goodbye.' },
   { q: 'What do they actually receive?', a: 'A letter box you hand over on the day you part. It opens in their phone’s browser with nothing to install, works offline, and keeps their replies.' },
   { q: 'Who can read what I write?', a: 'Your drafts are saved to your account so you can write from any device. The recipient opens their box using the link you share. Keep that link private.' },
-  { q: 'How much does it cost?', a: `Planning, reading your chats once and writing are free. When you hand it over, it’s ${PRICE}, paid once for the whole letter box. No subscription, and a full refund within 14 days for any reason.` },
+  { q: 'How much does it cost?', a: `Planning, reading your chats once and writing are free. When you hand it over, it’s ${PRICE}, paid once for the whole letter box, or ${KEEPSAKE_PRICE} with the keepsake book: every letter and reply gathered to print or save as a PDF. No subscription, and a full refund within 14 days for any reason.` },
 ]
 
 export const STEPS = [

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import SiteLayout from './SiteLayout'
-import { STEPS, KINDS, INCLUDED, PRICE } from './content'
+import { STEPS, KINDS, INCLUDED, PRICE, KEEPSAKE_PRICE } from './content'
 import { Phone } from './Scenes'
 import './scenes.css'
 
@@ -20,6 +20,7 @@ export default function Services() {
         <div className="price" data-rise>
           <p className="price-big">{PRICE}</p>
           <p className="price-what">Paid once, when you hand it over. Planning and writing are free until then.</p>
+          <p className="price-what">Or {KEEPSAKE_PRICE} with the keepsake book: every letter and reply, gathered to print or save as a PDF, for both of you.</p>
           <p className="price-what">No subscription, nothing renews.</p>
           <p className="price-what">Full refund within 14 days, for any reason.</p>
           <Link to="/interview" className="ws-btn" data-track="cta_start" data-track-where="services">Start your letter box</Link>

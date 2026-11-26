@@ -13,6 +13,7 @@ import { filmFrom } from '../utils/film'
 import { postmarkLetterId } from '../utils/decor'
 import { letterForm, marginNotes, firstsOf } from '../utils/design/letterForm'
 import LetterPaper from '../components/LetterPaper'
+import KeepsakeBook from '../components/KeepsakeBook'
 import { Motif } from '../components/Decor'
 import LetterApp from './box/LetterApp'
 import { storyLook, useStoryFonts } from '../components/storyLook'
@@ -97,6 +98,7 @@ export default function Box() {
   const [sealed, setSealed] = useState(() => !read(`wya_seen_${token}`))
   const [playing, setPlaying] = useState(false)
   const [filmSeen, setFilmSeen] = useState(() => !!read(`wya_film_${token}`))
+  const [bookOpen, setBookOpen] = useState(false)
 
   const reported = useRef(false)
   useEffect(() => {
@@ -158,9 +160,10 @@ export default function Box() {
         film={film}
         onFilm={film ? () => setPlaying(true) : null}
         onOpen={(id) => { setOpenId(id); markOpened(id) }}
-        story={<><OurSky ids={opened} /><Story box={box} token={token} today={today} /><WriteBack box={box} opened={opened.length} /></>}
+        story={<><OurSky ids={opened} />{data.keepsake && <KeepIt box={box} onOpen={() => setBookOpen(true)} />}<Story box={box} token={token} today={today} /><WriteBack box={box} opened={opened.length} /></>}
       />
       <InstallHint token={token} />
+      {bookOpen && <KeepsakeBook box={box} items={items.filter((i) => i.open)} replies={replies} onClose={() => setBookOpen(false)} />}
       {current && (
         <LetterSheet
           item={current}
@@ -409,6 +412,17 @@ export function Story({ box, token, today: day }) {
       )}
       {!box.decor?.song && !box.partDate && !box.pet && box.timeline.length === 0 && <p className="wb-note">Nothing here yet.</p>}
     </>
+  )
+}
+
+/** From the day they meet again (when the sender chose the keepsake): every letter and reply, to keep. */
+function KeepIt({ box, onOpen }) {
+  return (
+    <section className="wb-section wb-keep" aria-labelledby="wb-keep-title">
+      <h2 id="wb-keep-title">Keep them all</h2>
+      <p className="wb-quiet">Every letter from {box.fromName || 'them'} and everything you wrote back, in one book to print or save as a PDF.</p>
+      <button type="button" className="wb-btn wb-btn--light" onClick={onOpen}>Open the book</button>
+    </section>
   )
 }
 

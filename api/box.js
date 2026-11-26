@@ -1,11 +1,12 @@
 import { randomBytes } from 'node:crypto'
-import { db, isPaid } from './_lib/server.js'
+import { db, isPaid, paidTier, hasKeepsake } from './_lib/server.js'
 import { recipientView, allItems, trustedToday } from '../src/utils/boxModel.js'
 
 /**
  * /api/box
  *   POST {action:'publish'}  + Authorization: Bearer <supabase access token>  → { token }
  *   POST {action:'relink'}   + Authorization: Bearer …  → { token } (a new link; the old one stops working)
+ *   POST {action:'keepsake'} + Authorization: Bearer …  → { tier, book? } (every letter and reply, for the keepsake book)
  *   GET  ?token=…&today=YYYY-MM-DD                                           → recipient view
  *   POST ?token=… {action:'reply', itemId, body} | {action:'open', itemId}    → { ok }
  */
@@ -16,6 +17,7 @@ export default async function handler(req, res) {
     if (!token) {
       if (req.method === 'POST' && req.body?.action === 'publish') return await publish(req, res)
       if (req.method === 'POST' && req.body?.action === 'relink') return await relink(req, res)
+      if (req.method === 'POST' && req.body?.action === 'keepsake') return await keepsake(req, res)
       return res.status(400).json({ error: 'missing_token' })
     }
     if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) return res.status(404).json({ error: 'not_found' })
@@ -55,6 +57,32 @@ async function relink(req, res) {
   return res.status(200).json({ token: shareToken })
 }
 
+/**
+ * The sender's keepsake book: every letter as it will read once all are open, with photos signed and every reply.
+ * Only with the keepsake (bought with the box, or added later); otherwise just which tier they have.
+ */
+async function keepsake(req, res) {
+  const user = await senderOf(req)
+  if (!user) return res.status(401).json({ error: 'sign_in_required' })
+  const [{ data: draftRow }, { data: row }] = await Promise.all([
+    db().from('drafts').select('data').eq('user_id', user.id).maybeSingle(),
+    db().from('boxes').select('stripe_session_id').eq('user_id', user.id).maybeSingle(),
+  ])
+  const draft = draftRow?.data || {}
+  const main = row?.stripe_session_id || draft.paymentSessionId
+  if (!(await hasKeepsake(draft, main))) return res.status(200).json({ tier: (await paidTier(main)) ? 'box' : null })
+  const book = await bookOf(draft, user.id, '9999-12-31')
+  return res.status(200).json({ tier: 'keepsake', book })
+}
+
+/** Every letter open on `today`, photos signed, with the replies: the keepsake book's pages. */
+async function bookOf(draft, userId, today) {
+  const data = recipientView(draft, today)
+  await signMedia(data.items.map((it) => [it, 'photo']), userId)
+  const { data: replies } = await db().from('box_replies').select('item_id, body, created_at').eq('box_user_id', userId).order('created_at', { ascending: true })
+  return { box: data.box, items: data.items.filter((it) => it.open), replies: replies || [] }
+}
+
 async function publish(req, res) {
   const user = await senderOf(req)
   if (!user) return res.status(401).json({ error: 'sign_in_required' })
@@ -76,10 +104,10 @@ async function publish(req, res) {
 }
 
 async function loadBox(token) {
-  const { data: box } = await db().from('boxes').select('user_id, share_token').eq('share_token', token).maybeSingle()
+  const { data: box } = await db().from('boxes').select('user_id, share_token, stripe_session_id').eq('share_token', token).maybeSingle()
   if (!box) return null
   const { data: draftRow } = await db().from('drafts').select('data').eq('user_id', box.user_id).maybeSingle()
-  return { userId: box.user_id, draft: draftRow?.data || {} }
+  return { userId: box.user_id, sessionId: box.stripe_session_id, draft: draftRow?.data || {} }
 }
 
 async function view(req, res, box) {
@@ -104,7 +132,10 @@ async function view(req, res, box) {
     db().from('box_replies').select('item_id, body, created_at').eq('box_user_id', box.userId).order('created_at', { ascending: true }),
     db().from('box_opens').select('item_id').eq('box_user_id', box.userId).order('opened_at', { ascending: true }),
   ])
-  return res.status(200).json({ ...data, today, replies: replies || [], opened: (opens || []).map((o) => o.item_id) })
+  // from the day they meet again, a box with the keepsake lets the recipient keep every letter too
+  const ret = data.box.returnDate
+  const keepsakeOpen = !!ret && today >= ret && (await hasKeepsake(box.draft, box.sessionId))
+  return res.status(200).json({ ...data, today, replies: replies || [], opened: (opens || []).map((o) => o.item_id), ...(keepsakeOpen ? { keepsake: true } : {}) })
 }
 
 async function act(req, res, box) {

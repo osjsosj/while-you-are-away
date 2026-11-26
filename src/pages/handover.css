@@ -46,12 +46,14 @@
 .wh-reply-body { font-family: var(--serif); font-size: 17px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
 .wh-print { display: none; }
 
+/* the printed card's own page size, so other pages print at their usual size */
+@page card { size: 5in 7in; margin: 0.4in; }
 @media print {
-  @page { size: 5in 7in; margin: 0.4in; }
-  body * { visibility: hidden; }
-  .wh { background: #fff !important; }
-  .wh-print, .wh-print * { visibility: visible; }
-  .wh-print { display: flex; position: fixed; inset: 0; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; color: #1B2536; font-family: 'Literata', Georgia, serif; }
+  html, body { background: #fff !important; }
+  /* only the card prints: everything that isn't the card or holds it is taken out of the page */
+  body:not(.kb-open) #root *:not(:is(.wh-print, .wh-print *, :has(.wh-print))) { display: none !important; }
+  body:not(.kb-open) #root :has(.wh-print) { margin: 0 !important; padding: 0 !important; min-height: 0 !important; background: #fff !important; box-shadow: none !important; }
+  .wh-print { page: card; display: flex; min-height: 6.1in; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; color: #1B2536; font-family: 'Literata', Georgia, serif; }
   .wh-print-for { font-size: 14pt; color: #4E596B; }
   .wh-print-title { font-size: 24pt; }
   .wh-print img { width: 2.4in; height: 2.4in; }
@@ -78,3 +80,6 @@
 .wh-link-btn:focus-visible { outline: 2px solid var(--light, #F0B341); outline-offset: 3px; border-radius: 4px; }
 .wh-relink { display: grid; gap: 10px; margin-top: 8px; padding: 12px 14px; border-radius: 12px; background: rgba(233, 236, 242, 0.06); }
 .wh-relink p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--mist-soft, #C9D0DC); }
+
+.wh-keep { margin-top: 32px; }
+.wh-keep h2 { margin-bottom: 6px; }

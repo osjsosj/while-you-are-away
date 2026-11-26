@@ -1,0 +1,36 @@
+/* The keepsake book: a reading view on screen, one letter per page when printed. */
+.kb { position: fixed; inset: 0; z-index: 90; overflow-y: auto; background: #E9E5DC; color: #1B2536; padding: 0 16px 64px; -webkit-overflow-scrolling: touch; }
+.kb-bar { position: sticky; top: 0; z-index: 2; display: flex; justify-content: flex-end; gap: 10px; margin: 0 -16px; padding: 12px 16px; background: rgba(233, 229, 220, 0.94); backdrop-filter: blur(6px); }
+.kb-btn { min-height: 44px; padding: 10px 18px; border: 0; border-radius: 999px; background: #1B2536; color: #FBFCFD; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+.kb-btn--ghost { margin-right: auto; background: transparent; color: #1B2536; box-shadow: inset 0 0 0 1.5px rgba(27, 37, 54, 0.35); }
+.kb-tip { max-width: 640px; margin: 4px auto 18px; font-size: 13px; line-height: 1.5; color: #5A6070; }
+.kb-page { max-width: 640px; margin: 0 auto 28px; }
+.kb-page .lp { padding: 24px 22px 20px; border-radius: 14px; background: var(--lp-paper); box-shadow: 0 18px 50px -30px rgba(27, 37, 54, 0.55); }
+.kb-cover { display: flex; flex-direction: column; justify-content: center; min-height: min(78vh, 760px); padding: 40px 28px; border-radius: 14px; background: #FBF8F1; box-shadow: 0 18px 50px -30px rgba(27, 37, 54, 0.55); text-align: center; }
+.kb-cover-for { margin: 0 0 18px; font-size: 13px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #8A6A2E; }
+.kb-cover-title { margin: 0; font-family: var(--serif, Georgia, serif); font-weight: 500; font-size: clamp(32px, 9vw, 52px); line-height: 1.08; letter-spacing: -0.01em; text-wrap: balance; overflow-wrap: anywhere; }
+.kb-cover-from { margin: 14px 0 0; font-family: var(--serif, Georgia, serif); font-style: italic; font-size: 20px; color: #3C4658; }
+.kb-cover-span { margin: 36px 0 0; font-size: 15px; color: #3C4658; }
+.kb-cover-count { margin: 6px 0 0; font-size: 14px; color: #5A6070; }
+.kb-back { margin: 14px 6px 0; padding: 14px 16px; border-left: 3px solid #C9A866; background: rgba(255, 255, 255, 0.55); border-radius: 0 10px 10px 0; }
+.kb-back-title { margin: 0 0 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #8A6A2E; }
+.kb-back-one + .kb-back-one { margin-top: 12px; }
+.kb-back-body { margin: 0; font-family: var(--serif, Georgia, serif); font-size: 17px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.kb-back-date { margin: 4px 0 0; font-size: 12px; color: #5A6070; }
+.kb-end { padding: 24px 0 8px; text-align: center; font-size: 14px; color: #5A6070; }
+
+/* its own page size: the handover card sets a small one for itself */
+@page book { size: letter; margin: 14mm; }
+@media print {
+  .kb { page: book; }
+  .kb, .kb * { visibility: visible !important; }
+  body.kb-open > *:not(.kb) { display: none !important; }
+  body.kb-open { overflow: visible !important; background: #fff; }
+  .kb { position: static; overflow: visible; padding: 0; background: #fff; }
+  .kb-bar, .kb-tip { display: none; }
+  .kb-page { max-width: none; margin: 0; break-after: page; break-inside: avoid-page; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .kb-page .lp, .kb-cover { box-shadow: none; }
+  .kb-cover { min-height: 240mm; }
+  .kb-end { break-after: auto; }
+  .lp-size, .lp-textsize { display: none !important; }
+}

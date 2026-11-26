@@ -8,6 +8,12 @@ import { timedFetch } from '../utils/net'
 
 /* The last step: checkout at handover. Planning and writing were free; paying makes their link and raises the AI limits. */
 
+// the two ways to hand it over; both are paid once
+const TIERS = [
+  { id: 'box', price: '$9.99', name: 'The letter box', line: 'Their private link, every letter on its day, their replies back to you.' },
+  { id: 'keepsake', price: '$19.99', name: 'The letter box + keepsake book', line: 'Everything above, plus every letter and reply gathered into a book to print or save as a PDF. For both of you, on the day you meet again.' },
+]
+
 const INCLUDED = [
   ['Their private letter box', 'A link that opens on their phone, works offline, and brings their replies back to you.'],
   ['Every letter, on its day', 'Tonight, while you’re apart, open when…, special days, the day you meet again.'],
@@ -20,6 +26,7 @@ export default function Paywall() {
   const draft = getDraft()
   const p = draft.phase1 || {}
   const [email, setEmail] = useState(draft.email || '')
+  const [tier, setTier] = useState('box')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const limit = new URLSearchParams(window.location.search).get('reason') === 'limit'
@@ -32,11 +39,11 @@ export default function Paywall() {
     setLoading(true)
     setError('')
     try {
-      track('checkout_start')
+      track('checkout_start', { kind: tier })
       const res = await timedFetch('/api/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fromName: p.fromName || 'Someone', toName: p.toName || 'Someone special', email: email.trim(), anonId: trackingId() }),
+        body: JSON.stringify({ tier, fromName: p.fromName || 'Someone', toName: p.toName || 'Someone special', email: email.trim(), anonId: trackingId() }),
       })
       const data = await res.json()
       if (!data.url) throw new Error()
@@ -79,11 +86,19 @@ export default function Paywall() {
         <p style={{ margin: '0 0 16px', fontSize: 15, lineHeight: 1.55, color: 'var(--ink-soft)' }}>
           You bring the words, the memories, the time. That’s the real gift. We only charge what a good box of letter paper and a pen would cost.
         </p>
-        <p style={{ display: 'flex', alignItems: 'baseline', gap: 10, margin: '0 0 4px' }}>
-          <span style={{ fontFamily: 'var(--serif)', fontSize: 44, lineHeight: 1 }}>$9.99</span>
-          <span className="wf-note">once</span>
-        </p>
-        <p className="wf-note" style={{ marginBottom: 20 }}>No subscription. Full refund within 14 days, for any reason. Have a code? Add it on the next page.</p>
+        <fieldset className="pw-tiers">
+          <legend className="wf-label" style={{ color: 'var(--ink)' }}>Choose one</legend>
+          {TIERS.map((t) => (
+            <label key={t.id} className={`pw-tier${tier === t.id ? ' is-on' : ''}`}>
+              <input type="radio" name="tier" value={t.id} checked={tier === t.id} onChange={() => setTier(t.id)} />
+              <span className="pw-tier-text">
+                <span className="pw-tier-head"><span className="pw-tier-name">{t.name}</span><span className="pw-tier-price">{t.price}</span></span>
+                <span className="pw-tier-line">{t.line}</span>
+              </span>
+            </label>
+          ))}
+        </fieldset>
+        <p className="wf-note" style={{ marginBottom: 20 }}>Paid once. No subscription. You can add the keepsake later for $10. Full refund within 14 days, for any reason. Have a code? Add it on the next page.</p>
         <label className="wf-label" htmlFor="p-email" style={{ color: 'var(--ink)' }}>Your email</label>
         <p className="wf-help" style={{ color: 'var(--ink-muted)' }}>For your receipt.</p>
         <input

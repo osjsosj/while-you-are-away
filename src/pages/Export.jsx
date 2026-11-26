@@ -156,7 +156,7 @@ export default function Export() {
             </ul>
             <Readiness draft={draft} onEdit={() => navigate('/editor')} />
             <button type="button" className="wh-btn" onClick={publish} disabled={stage === 'publishing'}>
-              {stage === 'publishing' ? 'Making the link…' : draft.paymentSessionId ? 'Make their link' : 'Make their link · $9.99'}
+              {stage === 'publishing' ? 'Making the link…' : draft.paymentSessionId ? 'Make their link' : 'Make their link · from $9.99'}
             </button>
           </>
         )}
@@ -189,6 +189,12 @@ export default function Export() {
             </div>
 
             <Readiness draft={draft} onEdit={() => navigate('/editor')} live />
+
+            <section className="wh-keep" aria-labelledby="wh-keep-title">
+              <h2 id="wh-keep-title">The keepsake book</h2>
+              <p className="wh-note">Every letter and every reply from {toName}, in one book to print or save as a PDF.</p>
+              <button type="button" className="wh-btn wh-btn--ghost" onClick={() => navigate('/keepsake')}>Open the keepsake book</button>
+            </section>
 
             <section className="wh-replies" aria-labelledby="wh-replies-title">
               <h2 id="wh-replies-title">From {toName}</h2>

@@ -7,7 +7,7 @@ import NightSky from './NightSky'
 import { Opening, Now, Flow, Words, Kinds, StartBar } from './Scenes'
 import TimeApart from './TimeApart'
 import { RHYTHMS } from './letters'
-import { FAQ, PRICE } from './content'
+import { FAQ, PRICE, KEEPSAKE_PRICE } from './content'
 import './home.css'
 import './scenes.css'
 
@@ -83,6 +83,7 @@ function Price() {
         <li><span>Reading your chats for moments</span><span className="is-free">First one free</span></li>
         <li><span>Writing, the companion, the days before</span><span className="is-free">Free</span></li>
         <li><span>Their private link, every letter on its day</span><span>{PRICE} once</span></li>
+        <li><span>With the keepsake book, every letter and reply to print</span><span>{KEEPSAKE_PRICE} once</span></li>
       </ul>
     </section>
   )

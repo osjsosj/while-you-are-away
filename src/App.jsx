@@ -22,6 +22,7 @@ import Diary from './pages/Diary'
 import Box from './pages/Box'
 
 // design lab: only in local development, never in the built site
+const Keepsake = lazy(() => import('./pages/Keepsake'))
 const DesignLab = import.meta.env.DEV ? lazy(() => import('./pages/lab/DesignLab')) : null
 const LabPhone = import.meta.env.DEV ? lazy(() => import('./pages/lab/LabPhone')) : null
 const LetterLab = import.meta.env.DEV ? lazy(() => import('./pages/lab/LetterLab')) : null
@@ -65,6 +66,7 @@ export default function App() {
         <Route path="/b/:token" element={<Box />} />
         <Route path="/preview" element={<Preview />} />
         <Route path="/export" element={<Export />} />
+        <Route path="/keepsake" element={<Suspense fallback={null}><Keepsake /></Suspense>} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/terms" element={<Legal doc="terms" />} />
         <Route path="/privacy" element={<Legal doc="privacy" />} />
