@@ -21,6 +21,7 @@ import { drawSticker, PaymentRequiredError, SignInRequiredError } from '../utils
 import { ChatInvite, FindingsPanel, PinList, StoryEntry } from '../components/StoryFinds'
 import { loadLocalChat } from '../utils/chat/local'
 import DesignWhy from '../components/DesignWhy'
+import { track } from '../utils/track'
 import '../styles/editor.css'
 import './diary.css'
 import { letterForm } from '../utils/design/letterForm'
@@ -59,6 +60,15 @@ export default function Editor() {
   const slots = useMemo(() => planSlots(plan, p1.startDate, p1.endDate), [plan, p1.startDate, p1.endDate])
   const filled = slots.filter((s) => isFilled(caps[s.id])).length
   const diary = Array.isArray(draft.diary) ? draft.diary : []
+  // the weekly funnel counts how far people get into writing: the 1st, 3rd and 5th letter, once each per browser
+  useEffect(() => {
+    for (const n of [1, 3, 5]) {
+      if (filled < n) break
+      const key = `wya_written_${n}`
+      try { if (localStorage.getItem(key)) continue; localStorage.setItem(key, '1') } catch { continue }
+      track('letters_written', { step: n })
+    }
+  }, [filled])
   const name = draft.generatedConfig?.chosenName || draft.phase2?.appName || 'Your letter box'
 
   const setPlan = (next) => update({ plan: normalizePlan(next) })

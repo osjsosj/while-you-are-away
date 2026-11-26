@@ -20,6 +20,8 @@ const NAMES = new Set([
   'sign_in_start', 'sign_in_done', 'chat_parsed', 'chat_story_found', 'chat_offer_taken', 'link_remade',
   // a recipient starting a box of their own for the sender
   'make_back',
+  // how far a sender gets into writing (step: 1, 3 or 5 letters)
+  'letters_written',
 ])
 const PROP_KEYS = new Set(['where', 'step', 'kind'])
 const clip = (v, n = 60) => (typeof v === 'string' ? v.replace(/[^\w\-./:+ ]/g, '').slice(0, n) : null)
