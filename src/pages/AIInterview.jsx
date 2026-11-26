@@ -2,6 +2,7 @@ import { track } from '../utils/track'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDraft, saveDraft } from '../utils/storage'
+import { isFilled } from '../utils/summary'
 import { runAIInterview, extractComplete, extractGathered, PaymentRequiredError, SignInRequiredError } from '../utils/aiService'
 import { normalizePlan, SCHEDULES, SECTION_INFO } from '../utils/plan'
 import { storyBrief, storyFromDraft } from '../utils/story'
@@ -73,8 +74,10 @@ export default function AIInterview() {
       persist(next)
       if (done) {
         const d = done.data || {}
-        const p = normalizePlan(d.plan || {})
         const prev = getDraft()
+        const p = normalizePlan(d.plan || {})
+        // a letter for tonight already written in the first steps is never dropped by the plan
+        if (isFilled(prev.capsuleData?.t0)) p.tonight = true
         saveDraft({
           phase1: { ...prev.phase1, situation: typeof d.situation === 'string' ? d.situation.slice(0, 200) : prev.phase1?.situation || '' },
           phase2: { ...d, situationLabels: p.anytime },

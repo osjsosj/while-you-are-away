@@ -5,6 +5,8 @@ import { getDraft, saveDraft } from '../utils/storage'
 import { localISODate, daysBetween, UNLOCK_OPTIONS, normalizeUnlock } from '../utils/diary'
 import { SECTION_INFO } from '../utils/plan'
 import Mascot from '../components/Mascot'
+import LetterPaper from '../components/LetterPaper'
+import { letterForm } from '../utils/design/letterForm'
 import '../styles/onboard.css'
 
 /* Step 1: the basics, one tap at a time. The guide asks, you pick, it answers back.
@@ -31,7 +33,11 @@ const LETTERS = ['tonight', 'before', 'scheduled', 'never', 'anytime', 'occasion
 const LATER = 'later'
 
 const STEPS = ['reason', 'relationship', 'letters', 'names', 'dates', 'building', 'promise']
-const stepsFor = (letters) => (letters.includes('before') ? ['reason', 'relationship', 'letters', 'opening', ...STEPS.slice(3)] : STEPS)
+// with a letter for tonight, the last step lets them write it right away, before signing in
+const stepsFor = (letters) => {
+  const base = letters.includes('before') ? ['reason', 'relationship', 'letters', 'opening', ...STEPS.slice(3)] : STEPS
+  return letters.includes('tonight') ? [...base, 'first'] : base
+}
 const UNLOCK_REPLY = {
   all: 'Simple. They can read at their own pace.',
   mirror: 'One at a time, then. They’ll have a reason to come back.',
@@ -66,6 +72,7 @@ export default function Interview() {
   const [step, setStep] = useState(0)
   // someone who got a box and is now making one back: the first question says whose turn it is
   const [madeBack] = useState(() => !!getDraft().madeBack)
+  const [first, setFirst] = useState(() => getDraft().capsuleData?.t0?.letter || '')
   const [dir, setDir] = useState(1)
   const [reply, setReply] = useState('')
   const [tried, setTried] = useState(false)
@@ -118,7 +125,12 @@ export default function Interview() {
     setTried(false)
     track('interview_step', { step: String(key) })
     if (key === 'dates') { save(); track('interview_done') }
-    if (key === 'promise') { navigate('/start'); return }
+    if (key === 'first' && first.trim()) {
+      const caps = getDraft().capsuleData || {}
+      saveDraft({ capsuleData: { ...caps, t0: { ...(caps.t0 || {}), letter: first.slice(0, 20000) } } })
+      track('first_letter', { where: 'interview' })
+    }
+    if (step === steps.length - 1) { navigate('/start'); return }
     setDir(1)
     setReply('')
     setStep((s) => Math.min(steps.length - 1, s + 1))
@@ -139,11 +151,11 @@ export default function Interview() {
   }, [key])
 
   const onKey = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey && e.target.tagName !== 'BUTTON' && e.target.type !== 'checkbox') { e.preventDefault(); next() }
+    if (e.key === 'Enter' && !e.shiftKey && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'TEXTAREA' && e.target.type !== 'checkbox') { e.preventDefault(); next() }
   }
 
   const progress = Math.min(1, step / (steps.length - 2))
-  const bubble = key === 'building' ? 'Creating your profile…' : key === 'promise' ? 'This isn’t just an online letter.' : reply || (key === 'reason' && madeBack && form.toName ? `Your turn to write for ${form.toName}. What’s taking you two apart?` : ASK[key])
+  const bubble = key === 'building' ? 'Creating your profile…' : key === 'promise' ? 'This isn’t just an online letter.' : key === 'first' ? `Try one now: the letter ${form.toName.trim() || 'they'} opens the night you part. Two lines is plenty.` : reply || (key === 'reason' && madeBack && form.toName ? `Your turn to write for ${form.toName}. What’s taking you two apart?` : ASK[key])
   // asking → talk, answered → notice, making the profile → walk, the promise → cheer (once)
   const move = key === 'building' ? 'walk' : key === 'promise' ? 'cheer' : reply ? 'notice' : 'talk'
   const center = key === 'building' || key === 'promise'
@@ -265,6 +277,8 @@ export default function Interview() {
 
           {key === 'building' && <Building form={form} />}
 
+          {key === 'first' && <FirstLetter form={form} text={first} onText={setFirst} />}
+
           {key === 'promise' && (
             <div className="ob-promise">
               <p>We don’t just make letters online. We listen closely to the two of you, and turn what we learn into letter paper made for this goodbye alone.</p>
@@ -280,11 +294,31 @@ export default function Interview() {
           <div className="ob-foot-inner">
             {tried && !ready && <p className="ob-foot-msg" role="alert">{key === 'names' || key === 'dates' ? 'A couple of things still need filling in.' : 'Pick one to carry on.'}</p>}
             <button type="button" className="ob-go" onClick={next} aria-disabled={!ready}>
-              {key === 'promise' ? 'Got it, let’s start' : 'Continue'}
+              {key === 'first' ? (first.trim() ? 'Keep it' : 'Write it later') : key === 'promise' ? 'Got it, let’s start' : 'Continue'}
             </button>
           </div>
         </footer>
       )}
+    </div>
+  )
+}
+
+/** The letter for the night they part, written now and shown on the ticket it will arrive on. The words are only theirs. */
+function FirstLetter({ form, text, onText }) {
+  const to = form.toName.trim()
+  const from = form.fromName.trim()
+  const end = form.noEnd ? '' : form.endDate
+  const shape = letterForm({ id: 't0', section: 'tonight', opensOn: form.startDate }, { fromName: from, toName: to, partDate: form.startDate, returnDate: end })
+  return (
+    <div className="ob-first">
+      <div className="ob-field">
+        <label htmlFor="ob-first-text">To {to || 'them'}, for tonight <span>(you can change it any time)</span></label>
+        <textarea id="ob-first-text" className="ob-first-text" rows={5} value={text} maxLength={20000} onChange={(e) => onText(e.target.value)} placeholder="Write it the way you’d say it." />
+      </div>
+      <p className="ob-first-cap">How it reaches {to || 'them'}</p>
+      <div className="ob-first-paper" aria-label="Preview of the letter">
+        <LetterPaper title="Read this tonight" meta="Opens the day you part" letter={text} fromName={from} form={shape} textSizeControl={false} />
+      </div>
     </div>
   )
 }

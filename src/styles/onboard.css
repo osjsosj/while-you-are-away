@@ -172,3 +172,12 @@
   .ob-guide:not(.ob-guide--center) { gap: 6px; }
   .ob-guide:not(.ob-guide--center) .ob-mascot { margin: -10px -14px -10px -12px; transform: scale(0.86); }
 }
+/* the first letter, written before signing in, with the ticket it arrives on */
+.ob-first { display: flex; flex-direction: column; gap: 14px; max-width: 34em; margin: 0 auto; width: 100%; }
+.ob-first-text { width: 100%; min-height: 132px; padding: 14px 16px; border-radius: 14px; border: 1.5px solid var(--line, rgba(233, 236, 242, 0.18)); background: rgba(233, 236, 242, 0.05); color: var(--moonlit); font: inherit; font-size: 17px; line-height: 1.55; resize: vertical; }
+.ob-first-text:focus { outline: none; border-color: var(--light, #F0B341); }
+.ob-first-text::placeholder { color: var(--mist-muted); }
+.ob-first-cap { margin: 8px 0 0; font-size: 14px; font-weight: 600; color: var(--mist-muted); }
+.ob-first-paper { padding-top: 4px; }
+.ob-first-paper .lp { padding: 22px 20px 18px; border-radius: 14px; background: var(--lp-paper); box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.7); }
+.ob-first-paper .lp-title { font-size: 24px; }

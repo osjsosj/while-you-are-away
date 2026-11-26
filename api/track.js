@@ -22,6 +22,8 @@ const NAMES = new Set([
   'make_back',
   // how far a sender gets into writing (step: 1, 3 or 5 letters)
   'letters_written',
+  // the letter for tonight, written in the first steps before signing in
+  'first_letter',
 ])
 const PROP_KEYS = new Set(['where', 'step', 'kind'])
 const clip = (v, n = 60) => (typeof v === 'string' ? v.replace(/[^\w\-./:+ ]/g, '').slice(0, n) : null)
