@@ -88,6 +88,8 @@ export default function SiteLayout({ children, cinematic = false, background = n
           <ul>
             <li><Link to="/">Home</Link></li>
             {LINKS.map(([to, label]) => <li key={to}><Link to={to}>{label}</Link></li>)}
+            {/* static pages outside the app, so a plain link (the router would send it home) */}
+            <li><a href="/guides/">Letter ideas</a></li>
           </ul>
         </nav>
         <div data-rise className="ws-tile ws-tile--time">

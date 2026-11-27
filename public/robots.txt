@@ -1,0 +1,12 @@
+User-agent: *
+Disallow: /b/
+Disallow: /api/
+Disallow: /editor
+Disallow: /export
+Disallow: /paywall
+Disallow: /keepsake
+Disallow: /preview
+Disallow: /auth/
+Disallow: /lab/
+
+Sitemap: https://getwhileyouareaway.com/sitemap.xml

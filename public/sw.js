@@ -63,6 +63,8 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return
+  // the letter guides are plain pages of their own: never treat them as the app (or save them as its offline copy)
+  if (url.pathname.startsWith('/guides/') || url.pathname === '/sitemap.xml' || url.pathname === '/robots.txt') return
 
   // pages: the app is a single page, so any navigation can fall back to the cached shell
   if (req.mode === 'navigate') {
