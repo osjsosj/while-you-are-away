@@ -272,7 +272,7 @@ function PathNode({ node, i, read, isCurrent, onOpen, today, fromName, art = nul
       {isCurrent && (
         <span className="la-callout" aria-hidden="true">{locked ? (soon === 1 ? 'Tomorrow' : soon ? `In ${soon} days` : 'Soon') : 'Open'}</span>
       )}
-      {art && <Motif id={art} size={52} className={`la-step-art ${off > 0 ? 'is-left' : 'is-right'}`} tilt={off > 0 ? 8 : -8} />}
+      {art && <Motif id={art} kit size={48} className={`la-step-art ${off > 0 ? 'is-left' : 'is-right'}`} tilt={off > 0 ? 8 : -8} />}
       <button type="button" className="la-node" aria-label={label} onClick={() => (locked ? setPeek(true) : onOpen(item.id))} disabled={item.empty}>
         <span className="la-node-face" aria-hidden="true">
           {locked ? <LockGlyph big={big} kind={kind} /> : kind === 'before' ? <span className="la-node-d"><b>{mark?.big ?? badge}</b>{mark?.small && <small>{mark.small}</small>}</span> : kind === 'occasion' ? <GiftGlyph /> : kind === 'last' ? <HeartGlyph /> : read ? <CheckGlyph /> : <PaperGlyph form={paper} />}

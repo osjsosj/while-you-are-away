@@ -124,7 +124,12 @@ From Hallmark's floor, Impeccable's craft floor and Taste Skill, as they apply t
 
 - No gradient text, glass panels, purple-to-blue gradients, glows other than the one porch light, or
   side-stripe accent borders.
-- No emoji as icons. Stickers are the die-cut artwork from `public/stickers`.
+- No emoji on the paper (changed 2026-11-26). What sits on a letter comes from the paper kit in
+  `public/paper/`: engraved postage stamps by theme, real masking, washi and kraft tape, pressed flowers,
+  and a scanned paper surface under the words. They were made as photographed objects with Higgsfield
+  (`scripts/paper-kit/`), so they read as things someone put on the page. A sticker whose theme has no
+  stamp is left off the letter rather than shown as an emoji. Emoji stay only as small icons in the
+  sender's tools.
 - Not everything centred: each form has its own alignment (a postcard splits, a diary page hangs from its
   margin, a ticket reads left to right, a sealed letter centres).
 - No identical cards in a row and no card inside a card.

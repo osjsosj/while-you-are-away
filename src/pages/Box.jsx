@@ -377,7 +377,7 @@ export function Story({ box, token, today: day }) {
         <section className="wb-section" aria-labelledby="wb-song">
           <h2 id="wb-song">Our song</h2>
           <a className="wb-song" href={`https://www.youtube.com/results?search_query=${encodeURIComponent(box.decor.song.title)}`} target="_blank" rel="noopener noreferrer">
-            <Motif id="musical-notes" size={46} />
+            <Motif id="musical-notes" kit size={40} />
             <span><span className="wb-row-title">{box.decor.song.title}</span><span className="wb-row-sub">Play it when you miss {box.fromName || 'me'}</span></span>
           </a>
         </section>

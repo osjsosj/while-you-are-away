@@ -1,6 +1,7 @@
 import { useContext } from 'react'
 import { TICKETS, postmarkDate, stickerId, stickerLabel } from '../utils/decor'
 import { StickerArtContext, stickerSrc } from '../utils/stickerArt'
+import { kitStamp } from '../utils/paperKit'
 
 /* The pieces that dress a letter. Stickers are Fluent Emoji (MIT) cut out like vinyl stickers;
    stamps, postmarks, tickets and tape are drawn here. */
@@ -10,10 +11,19 @@ const useSrc = () => {
   return (id) => stickerSrc(id, art)
 }
 
-export function Motif({ id, size = 48, className = '', style, label, tilt = 0 }) {
+export function Motif({ id, size = 48, className = '', style, label, tilt = 0, kit = false }) {
   const src = useSrc()
   const sid = stickerId(id)
   if (!sid) return null
+  // on letters and in their box: the engraved stamp for this theme, or nothing (never an emoji on the paper)
+  if (kit) {
+    const stamp = kitStamp(sid)
+    if (!stamp) return null
+    return (
+      <img className={`dc-motif dc-kit ${className}`} src={stamp} width={size} height={Math.round(size * 1.24)} loading="lazy" decoding="async" draggable="false"
+        alt={label || ''} aria-hidden={label ? undefined : 'true'} style={{ ...style, '--tilt': `${tilt}deg` }} />
+    )
+  }
   return (
     <img className={`dc-motif ${className}`} src={src(sid)} width={size} height={size} loading="lazy" decoding="async" draggable="false"
       alt={label || ''} aria-hidden={label ? undefined : 'true'} title={label || stickerLabel(sid)}
@@ -21,20 +31,11 @@ export function Motif({ id, size = 48, className = '', style, label, tilt = 0 })
   )
 }
 
-/** A perforated postage stamp with a sticker in it. */
-export function Stamp({ id, text = '', size = 56 }) {
-  const src = useSrc()
-  const sid = stickerId(id)
-  if (!sid) return null
-  return (
-    <svg className="dc-stamp" viewBox="0 0 60 72" width={size} height={size * 1.2} aria-hidden="true">
-      <rect x="3" y="3" width="54" height="66" fill="#F3E4C6" />
-      <rect x="3" y="3" width="54" height="66" fill="none" stroke="#FFFDF6" strokeWidth="4" strokeDasharray="0.1 5.9" strokeLinecap="round" />
-      <rect x="9" y="9" width="42" height="48" fill="#FFFAEE" stroke="#CDB98F" strokeWidth=".8" />
-      <image href={src(sid)} x="14" y="13" width="32" height="32" />
-      {text && <text x="30" y="65" textAnchor="middle" fontFamily="Schibsted Grotesk, sans-serif" fontSize="6" fontWeight="600" letterSpacing="1" fill="#8A6A3A">{text.toUpperCase().slice(0, 14)}</text>}
-    </svg>
-  )
+/** An engraved postage stamp for the sticker's theme (from the paper kit), or nothing when the kit has none. */
+export function Stamp({ id, size = 56 }) {
+  const stamp = kitStamp(stickerId(id))
+  if (!stamp) return null
+  return <img className="dc-stamp dc-stamp--kit" src={stamp} width={size} height={Math.round(size * 1.24)} alt="" aria-hidden="true" loading="lazy" decoding="async" draggable="false" />
 }
 
 /** A round postmark with the place and date of a moment from their story. */

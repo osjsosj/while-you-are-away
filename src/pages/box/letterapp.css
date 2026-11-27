@@ -116,7 +116,7 @@
 @keyframes laStep { from { opacity: 0; transform: translateX(calc(var(--x) * 88px)) translateY(18px) scale(0.6); } }
 .la-step--big { --node: 96px; }
 /* a sticker from their story beside the path (design lab / per-box look) */
-.la-step-art { position: absolute; top: 6px; width: 52px; height: 52px; pointer-events: none; transform: rotate(var(--tilt, -8deg)); filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3)); animation: laArt 700ms var(--ease) both; animation-delay: calc(var(--d) + 160ms); }
+.la-step-art { position: absolute; top: 2px; width: 46px; height: auto; pointer-events: none; transform: rotate(var(--tilt, -8deg)); filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3)); animation: laArt 700ms var(--ease) both; animation-delay: calc(var(--d) + 160ms); }
 @keyframes laArt { from { opacity: 0; transform: rotate(var(--tilt, -8deg)) scale(0.5); } }
 .la-step-art.is-right { left: calc(50% + 70px); }
 .la-step-art.is-left { right: calc(50% + 70px); }

@@ -1,0 +1,122 @@
+{
+ "flower-lavender": {
+  "file": "/paper/flower-lavender.webp",
+  "w": 177,
+  "h": 502,
+  "bytes": 21416
+ },
+ "flower-fern": {
+  "file": "/paper/flower-fern.webp",
+  "w": 267,
+  "h": 467,
+  "bytes": 32126
+ },
+ "flower-daisy": {
+  "file": "/paper/flower-daisy.webp",
+  "w": 153,
+  "h": 361,
+  "bytes": 10668
+ },
+ "paper-flowers": {
+  "file": "/paper/paper-flowers.webp",
+  "w": 600,
+  "h": 1200,
+  "bytes": 45780
+ },
+ "paper-night": {
+  "file": "/paper/paper-night.webp",
+  "w": 600,
+  "h": 1200,
+  "bytes": 38882
+ },
+ "paper-quiet": {
+  "file": "/paper/paper-quiet.webp",
+  "w": 600,
+  "h": 1200,
+  "bytes": 14304
+ },
+ "paper-scrapbook": {
+  "file": "/paper/paper-scrapbook.webp",
+  "w": 600,
+  "h": 1200,
+  "bytes": 107664
+ },
+ "stamp-bike": {
+  "file": "/paper/stamp-bike.webp",
+  "w": 360,
+  "h": 440,
+  "bytes": 62380
+ },
+ "stamp-bus": {
+  "file": "/paper/stamp-bus.webp",
+  "w": 360,
+  "h": 291,
+  "bytes": 54044
+ },
+ "stamp-coffee": {
+  "file": "/paper/stamp-coffee.webp",
+  "w": 360,
+  "h": 277,
+  "bytes": 47630
+ },
+ "stamp-flower": {
+  "file": "/paper/stamp-flower.webp",
+  "w": 360,
+  "h": 441,
+  "bytes": 59652
+ },
+ "stamp-moon": {
+  "file": "/paper/stamp-moon.webp",
+  "w": 360,
+  "h": 457,
+  "bytes": 80884
+ },
+ "stamp-music": {
+  "file": "/paper/stamp-music.webp",
+  "w": 360,
+  "h": 466,
+  "bytes": 77036
+ },
+ "stamp-plane": {
+  "file": "/paper/stamp-plane.webp",
+  "w": 360,
+  "h": 435,
+  "bytes": 61664
+ },
+ "stamp-ship": {
+  "file": "/paper/stamp-ship.webp",
+  "w": 360,
+  "h": 275,
+  "bytes": 45128
+ },
+ "stamp-snow": {
+  "file": "/paper/stamp-snow.webp",
+  "w": 360,
+  "h": 480,
+  "bytes": 85808
+ },
+ "stamp-train": {
+  "file": "/paper/stamp-train.webp",
+  "w": 360,
+  "h": 400,
+  "bytes": 66138
+ },
+ "tape-masking": {
+  "file": "/paper/tape-masking.webp",
+  "w": 520,
+  "h": 126,
+  "bytes": 8498
+ },
+ "tape-rose": {
+  "file": "/paper/tape-rose.webp",
+  "w": 520,
+  "h": 129,
+  "bytes": 9956
+ },
+ "tape-kraft": {
+  "file": "/paper/tape-kraft.webp",
+  "w": 520,
+  "h": 124,
+  "bytes": 14550
+ }
+}

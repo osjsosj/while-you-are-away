@@ -29,10 +29,11 @@
 .lp-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; min-height: 64px; }
 .lp-head:has(.lp-postmark) { min-height: 92px; }
 .lp-meta { display: flex; align-items: center; gap: 8px; padding-top: 4px; font-size: 13px; letter-spacing: .02em; color: var(--lp-soft); }
-.lp-pressed { flex: none; margin: -8px 0 -8px -6px; opacity: .85; filter: saturate(.7) sepia(.15); transform: rotate(-14deg); }
+.lp-pressed { flex: none; width: 34px; height: auto; margin: -14px 2px -14px -4px; transform: rotate(-12deg); filter: drop-shadow(0 1px 1px rgba(60, 40, 20, .18)); }
 .lp-twinkle { color: #D9A23A; font-size: 12px; }
 .lp-marks { position: relative; flex: none; display: flex; align-items: flex-start; }
-.lp-marks .dc-stamp { transform: rotate(4deg); filter: drop-shadow(0 2px 3px rgba(0,0,0,.15)); }
+.lp-marks .dc-stamp { transform: rotate(4deg); filter: drop-shadow(0 1px 2px rgba(0,0,0,.18)); }
+.dc-stamp--kit, .dc-kit { height: auto; object-fit: contain; }
 .lp-postmark { position: absolute; top: -4px; right: 34px; color: var(--lp-pm); opacity: .82; transform: rotate(-12deg); pointer-events: none; mix-blend-mode: multiply; }
 .lp-marks:not(:has(.dc-stamp)) .lp-postmark { position: static; }
 
@@ -52,8 +53,7 @@
 .lp-photo img { display: block; width: 100%; height: auto; background: #EEE8DC; }
 .lp--quiet .lp-photo { padding: 0; box-shadow: none; transform: none; width: 100%; }
 .lp--quiet .lp-photo img { border-radius: 4px; }
-.lp-tape { position: absolute; top: -12px; left: 50%; width: 92px; height: 26px; transform: translateX(-50%) rotate(2.5deg); background: var(--lp-tape); clip-path: polygon(3% 0, 97% 5%, 100% 50%, 96% 100%, 2% 95%, 0 50%); }
-.lp-tape::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, rgba(255,255,255,.35) 0 6px, transparent 6px 12px); opacity: .5; }
+.lp-tape { position: absolute; top: -14px; left: 50%; width: 104px; height: auto; transform: translateX(-50%) rotate(2.5deg); pointer-events: none; user-select: none; opacity: .92; }
 .lp-corner { position: absolute; width: 20px; height: 20px; border: 0 solid #A0A5AD; }
 .lp-corner--tl { top: -5px; left: -5px; border-top-width: 2px; border-left-width: 2px; }
 .lp-corner--br { bottom: -5px; right: -5px; border-bottom-width: 2px; border-right-width: 2px; }
@@ -117,7 +117,7 @@
 .lp-pin-num { font-family: 'Literata', Georgia, serif; font-size: 24px; line-height: 1.1; font-weight: 500; }
 .lp-pin-sub { font-size: 12px; line-height: 1.35; color: var(--lp-soft); }
 .lp-pin--quote { flex-basis: 100%; padding-top: 14px; background: var(--note, #FFF6C9); }
-.lp-pin--quote::before { content: ''; position: absolute; top: -6px; left: 50%; width: 46px; height: 13px; transform: translateX(-50%) rotate(3deg); background: var(--lp-tape, rgba(240, 179, 65, 0.7)); }
+.lp-pin--quote::before { content: ''; position: absolute; top: -7px; left: 50%; width: 52px; height: 15px; transform: translateX(-50%) rotate(3deg); background: var(--lp-tape-img, var(--lp-tape, rgba(240, 179, 65, 0.7))) center / 100% 100% no-repeat; }
 .lp-pin--quote .lp-pin-main { font-family: 'Caveat', 'Segoe Print', cursive; font-size: 24px; }
 .lp-pin--quote .lp-pin-sub::before { content: '— '; }
 .lp-pin--memory .lp-pin-main::before { content: '◆ '; font-size: 11px; vertical-align: 2px; color: var(--lp-soft); }
@@ -191,7 +191,7 @@
 
 /* Saying: the words one of them always says, on a taped note */
 .lpf-saying { position: relative; margin: 8px 0 24px; padding: 24px 20px 16px; background: var(--note, #FFF6C9); transform: rotate(-1.2deg); box-shadow: 0 8px 14px -10px rgba(40, 28, 16, .45); }
-.lpf-saying::before { content: ''; position: absolute; top: -9px; left: 50%; width: 64px; height: 18px; transform: translateX(-50%) rotate(2deg); background: var(--lp-tape); }
+.lpf-saying::before { content: ''; position: absolute; top: -10px; left: 50%; width: 76px; height: 22px; transform: translateX(-50%) rotate(2deg); background: var(--lp-tape-img, var(--lp-tape)) center / 100% 100% no-repeat; }
 .lpf-saying blockquote { margin: 0; font-family: var(--lpf-hand); font-size: 32px; line-height: 1.15; text-wrap: balance; color: #2B2420; overflow-wrap: anywhere; }
 .lpf-saying figcaption { margin-top: 8px; font-size: 13px; color: #5E554B; }
 .lpf-saying figcaption::before { content: '— '; }
@@ -284,7 +284,7 @@
 .lp--night .lpf-envelope .lpf-signed path { stroke: #F6F3EA; }
 
 .lp--scrapbook .lpf-ticket { border-color: #8A6A44; background: #E2CBA4; transform: rotate(-.8deg); }
-.lp--scrapbook .lpf-ticket::after { content: ''; position: absolute; top: -10px; right: 22px; width: 58px; height: 18px; transform: rotate(6deg); background: var(--lp-tape); }
+.lp--scrapbook .lpf-ticket::after { content: ''; position: absolute; top: -10px; right: 22px; width: 58px; height: 18px; transform: rotate(6deg); background: var(--lp-tape-img, var(--lp-tape)) center / 100% 100% no-repeat; }
 .lp--scrapbook .lpf-envelope-front { background: #DCC39C; }
 .lp--scrapbook .lpf-envelope-flap { background: #CFB48A; }
 .lp--scrapbook .lpf-postcard-photo { box-shadow: 0 0 0 6px #FFFDF6, 0 6px 12px -6px rgba(40, 28, 16, .45); transform: rotate(-1.5deg); }
@@ -355,3 +355,18 @@
 .lpf-note-main { font-family: var(--lpf-title); font-size: 16px; line-height: 1.3; font-variant-numeric: tabular-nums; color: var(--lp-ink); overflow-wrap: anywhere; }
 .lpf-note-sub { font-size: 13px; line-height: 1.35; color: var(--lp-soft); }
 .lp--form-sealed .lpf-notes, .lp--form-card .lpf-notes { text-align: center; }
+
+/* The paper kit (scripts/paper-kit): real tape for notes, and the paper's own surface under the words.
+   The surface is a grey scan of real paper, multiplied over the sheet's color, so story colors stay and only the fibers show. */
+.lp--night { --lp-tape-img: url(/paper/tape-masking.webp); }
+.lp--scrapbook { --lp-tape-img: url(/paper/tape-kraft.webp); }
+.lp--flowers { --lp-tape-img: url(/paper/tape-rose.webp); }
+.wb-sheet, .gn-paper { isolation: isolate; }
+.wb-sheet::before, .gn-paper::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--kit-paper, none) center top / 100% auto repeat-y; mix-blend-mode: multiply; opacity: .7; pointer-events: none; }
+.wb-sheet--night, .gn-paper.wb-sheet--night { --kit-paper: url(/paper/paper-night.webp); }
+.wb-sheet--scrapbook, .gn-paper.wb-sheet--scrapbook { --kit-paper: url(/paper/paper-scrapbook.webp); }
+.wb-sheet--flowers, .gn-paper.wb-sheet--flowers { --kit-paper: url(/paper/paper-flowers.webp); }
+.wb-sheet--flowers::before, .gn-paper.wb-sheet--flowers::before { opacity: .45; }
+.wb-sheet--quiet, .gn-paper.wb-sheet--quiet { --kit-paper: url(/paper/paper-quiet.webp); }
+@media print { .wb-sheet::before, .gn-paper::before { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+.gn-paper { position: relative; }

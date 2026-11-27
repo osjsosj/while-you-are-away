@@ -1,4 +1,4 @@
-import { Motif, Stamp, Postmark } from './Decor'
+import { Stamp, Postmark } from './Decor'
 import { Seal } from './StoryArt'
 
 /*
@@ -69,7 +69,6 @@ export default function FormHead({ form, meta, photoUrl = null, signature = null
         <div className={`lpf-postcard lpf-postcard--${form.side}`}>
           <div className={`lpf-postcard-pic${photoUrl ? ' has-photo' : ''}`}>
             {photoUrl && <img className="lpf-postcard-photo" src={photoUrl} alt="" loading="lazy" />}
-            {!photoUrl && h.sticker && <Motif id={h.sticker} size={64} tilt={form.side === 'left' ? -6 : 5} className="lpf-postcard-sticker" />}
             <p className="lpf-postcard-title">{h.title}</p>
             {(h.place || h.date) && <p className="lpf-postcard-where">{[h.place, h.date].filter(Boolean).join(', ')}</p>}
           </div>

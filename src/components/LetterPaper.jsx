@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Motif, Stamp, Postmark, TicketBanner } from './Decor'
 import FormHead from './LetterForms'
+import { kitStamp, kitTape, kitFlower } from '../utils/paperKit'
 import ErrorBoundary from './ErrorBoundary'
 import { paperVars } from '../utils/design/paperStyle'
 import '../styles/decor.css'
@@ -38,13 +39,18 @@ export default function LetterPaper({
   const photoInHead = f?.form === 'postcard' && !!photoUrl
   const paras = paragraphs(letter)
   // this letter's own stickers (from what it says) first, then the box's
-  const scatter = [...stickers.map((id) => ({ id })), ...d.motifs].filter((m, i, a) => a.findIndex((x) => x.id === m.id) === i).slice(0, 3)
+  // stamps already on the page (the top corner, or a postcard's own) aren't repeated at the foot
+  const used = new Set([isTicket || ownMarks ? null : kitStamp(lead), kitStamp(f?.head?.sticker)].filter(Boolean))
+  const scatter = [...stickers.map((id) => ({ id })), ...d.motifs]
+    .filter((m) => kitStamp(m.id) && !used.has(kitStamp(m.id)))
+    .filter((m, i, a) => a.findIndex((x) => kitStamp(x.id) === kitStamp(m.id)) === i)
+    .slice(0, 2)
   const chars = paras.join(' ').length
   // a few lines read like a postcard; a short letter with a photo leads with the photo
   const layout = chars > 0 && chars <= 220 && !videoUrl ? 'postcard' : photoUrl && chars < 400 ? 'photo-first' : 'letter'
   const photo = photoUrl && (
     <figure className="lp-photo">
-      {d.tape && d.style !== 'quiet' && <span className="lp-tape" aria-hidden="true" />}
+      {d.tape && kitTape(d.style) && <img className="lp-tape" src={kitTape(d.style)} alt="" aria-hidden="true" draggable="false" />}
       {d.style === 'quiet' && <><span className="lp-corner lp-corner--tl" aria-hidden="true" /><span className="lp-corner lp-corner--br" aria-hidden="true" /></>}
       <img src={photoUrl} alt="" loading="lazy" />
     </figure>
@@ -54,20 +60,19 @@ export default function LetterPaper({
     <div className={`lp lp--${d.style} lp--${layout}${paper ? ` lp--story lp--lines-${paper.lines}` : ''}${f ? ` lp--form lp--form-${f.form}` : ''}`} style={{ '--lp-size': `${size}px`, ...paperVars(paper) }}>
       {celebrate && (
         <div className="lp-pop" aria-hidden="true">
-          <Motif id="birthday-cake" size={64} className="lp-pop-cake" />
           {Array.from({ length: 18 }, (_, i) => <i key={i} style={{ '--a': `${(i * 360) / 18}deg`, '--d': `${70 + (i % 4) * 26}px`, '--c': ['#F0B341', '#E07A7A', '#7FC4D9', '#9FCB9A', '#B9A4E8'][i % 5] }} />)}
         </div>
       )}
       {showMeta && (
       <div className="lp-head">
         <div className="lp-meta">
-          {d.style === 'flowers' && <Motif id="blossom" size={44} className="lp-pressed" />}
+          {d.style === 'flowers' && <img className="lp-pressed" src={kitFlower(title)} alt="" aria-hidden="true" width="40" height="64" draggable="false" />}
           {d.style === 'night' && <span className="lp-twinkle" aria-hidden="true">✦</span>}
           <span>{meta}</span>
         </div>
         {!ownMarks && (
         <div className="lp-marks">
-          {!isTicket && lead && <Stamp id={lead} text={fromName ? `from ${fromName}` : ''} size={50} />}
+          {!isTicket && lead && <Stamp id={lead} size={52} />}
           {showPostmark && d.postmark && <span className="lp-postmark"><Postmark place={d.postmark.place} date={d.postmark.date} size={88} /></span>}
         </div>
         )}
@@ -110,7 +115,7 @@ export default function LetterPaper({
       {(paras.length > 0 || scatter.length > 0) && (
         <div className="lp-foot">
           <div className="lp-stickers" aria-hidden="true">
-            {scatter.map((m, i) => <Motif key={m.id} id={m.id} size={i === 0 ? 52 : 40} tilt={[-8, 6, -3][i]} className={`lp-sticker lp-sticker--${i}`} />)}
+            {scatter.map((m, i) => <Motif key={m.id} id={m.id} kit size={i === 0 ? 52 : 44} tilt={[-8, 6, -3][i]} className={`lp-sticker lp-sticker--${i}`} />)}
           </div>
           {paras.length > 0 && (signature?.d
             ? <svg className="lp-signature" viewBox="0 0 400 150" role="img" aria-label={`Signed, ${fromName || 'me'}`}><path d={signature.d} /></svg>
