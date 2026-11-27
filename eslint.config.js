@@ -5,7 +5,8 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // tool folders (design skills, agents) carry their own code; only the app is linted
+  globalIgnores(['dist', '.agents', '.claude', '.codex', '.taste-skill', '.playwright-mcp', 'liquid-glass-js']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [

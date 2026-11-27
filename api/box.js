@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto'
-import { db, isPaid, paidTier, hasKeepsake } from './_lib/server.js'
+import { db, isPaid, paidTier, hasKeepsake, upgradeBase } from './_lib/server.js'
 import { recipientView, allItems, trustedToday } from '../src/utils/boxModel.js'
 
 /**
@@ -68,8 +68,17 @@ async function keepsake(req, res) {
     db().from('drafts').select('data').eq('user_id', user.id).maybeSingle(),
     db().from('boxes').select('stripe_session_id').eq('user_id', user.id).maybeSingle(),
   ])
-  const draft = draftRow?.data || {}
+  let draft = draftRow?.data || {}
   const main = row?.stripe_session_id || draft.paymentSessionId
+  // just back from adding the keepsake: the page hands over that checkout in case its own save didn't reach us.
+  // It counts only if it was paid and was added to this sender's own letter box; then it's kept on the draft
+  // so the recipient's box knows too.
+  const claimed = typeof req.body?.keepsakeSessionId === 'string' ? req.body.keepsakeSessionId.slice(0, 200) : ''
+  if (claimed && claimed !== draft.keepsakeSessionId && main && (await upgradeBase(claimed)) === main) {
+    draft = { ...draft, keepsakeSessionId: claimed }
+    const { error } = await db().from('drafts').update({ data: draft, updated_at: new Date().toISOString() }).eq('user_id', user.id)
+    if (error) console.warn('keepsake save', error.message)
+  }
   if (!(await hasKeepsake(draft, main))) return res.status(200).json({ tier: (await paidTier(main)) ? 'box' : null })
   const book = await bookOf(draft, user.id, '9999-12-31')
   return res.status(200).json({ tier: 'keepsake', book })

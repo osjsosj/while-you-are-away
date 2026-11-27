@@ -52,7 +52,7 @@ export default function Keepsake() {
         window.history.replaceState(null, '', '/keepsake')
       }
       try {
-        const res = await timedFetch('/api/box', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(await authHeader()) }, body: JSON.stringify({ action: 'keepsake' }) }, 30000)
+        const res = await timedFetch('/api/box', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(await authHeader()) }, body: JSON.stringify({ action: 'keepsake', keepsakeSessionId: getDraft().keepsakeSessionId || undefined }) }, 30000)
         if (res.status === 401) return live && setState('signin')
         const j = await jsonOrNull(res)
         if (!live) return

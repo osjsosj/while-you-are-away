@@ -125,10 +125,11 @@ export default function Interview() {
     setTried(false)
     track('interview_step', { step: String(key) })
     if (key === 'dates') { save(); track('interview_done') }
-    if (key === 'first' && first.trim()) {
+    if (key === 'first') {
       const caps = getDraft().capsuleData || {}
-      saveDraft({ capsuleData: { ...caps, t0: { ...(caps.t0 || {}), letter: first.slice(0, 20000) } } })
-      track('first_letter', { where: 'interview' })
+      // saved when written, and also when an earlier one was cleared (so deleting it really deletes it)
+      if (first.trim() || caps.t0?.letter) saveDraft({ capsuleData: { ...caps, t0: { ...(caps.t0 || {}), letter: first.trim() ? first.slice(0, 20000) : '' } } })
+      if (first.trim()) track('first_letter', { where: 'interview' })
     }
     if (step === steps.length - 1) { navigate('/start'); return }
     setDir(1)

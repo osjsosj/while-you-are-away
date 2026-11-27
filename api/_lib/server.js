@@ -32,6 +32,24 @@ export async function paidTier(sessionId) {
   }
 }
 
+const baseCache = new Map()
+
+/** For a paid "add the keepsake" checkout: the letter box checkout it was added to. Otherwise null. */
+export async function upgradeBase(sessionId) {
+  if (typeof sessionId !== 'string' || !sessionId.startsWith('cs_')) return null
+  if (baseCache.has(sessionId)) return baseCache.get(sessionId)
+  try {
+    const session = await stripe().checkout.sessions.retrieve(sessionId)
+    const paid = session.payment_status === 'paid' || (session.status === 'complete' && session.payment_status === 'no_payment_required')
+    if (!paid || session.metadata?.tier !== 'upgrade') return null
+    const base = session.metadata?.base || null
+    baseCache.set(sessionId, base)
+    return base
+  } catch {
+    return null
+  }
+}
+
 /** A letter box was paid for (either tier). */
 export async function isPaid(sessionId) {
   return !!(await paidTier(sessionId))
