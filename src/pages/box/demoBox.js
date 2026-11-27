@@ -11,6 +11,8 @@ function addDays(iso, n) {
   return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10)
 }
 
+// a letter of its own for "Open when you can't sleep" (recorded for the drama, marketing/drama/ep01.md); made up
+const SLEEP = 'It’s 3 a.m. there, isn’t it. I knew you’d open this one first.\n\nHere’s what I’d do if I were there: make you the terrible tea you pretend to like, and talk about nothing until you fall asleep mid-sentence. You always do.\n\nSo pretend. I’m on the other end of the bed, talking about nothing.\n\nGo to sleep, bug.'
 const LETTER = 'I’m writing this at the kitchen table while you’re asleep.\n\nThe kettle just clicked off and I thought about how you always leave it half full for me. Small things like that are the ones I’ll miss first.\n\nI’ll write again soon.'
 
 export function demoBox(token = 'demo') {
@@ -53,7 +55,7 @@ export function demoBox(token = 'demo') {
     { id: 'n2', section: 'never', label: 'Your mum’s soup' },
   ].map((it) => {
     const isOpen = open(it.opensOn)
-    return isOpen ? { ...it, open: true, letter: LETTER, empty: false } : { ...it, open: false }
+    return isOpen ? { ...it, open: true, letter: it.id === 's0' ? SLEEP : LETTER, empty: false } : { ...it, open: false }
   })
 
   const photo = { d1: '/site/lakefront-trail.jpg', t0: '/site/platform-dusk.jpg', w1: '/site/sunset-stars.jpg', n1: '/site/letter-1864.jpg' }
